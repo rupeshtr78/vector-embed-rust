@@ -1,6 +1,6 @@
 use log::{error, info};
-use pg_vector_embed_rust as pgembed;
-use pgembed::embedding;
+
+mod embedding;
 
 #[tokio::main]
 async fn main() {
