@@ -5,32 +5,32 @@ use log::{error, info};
 use std::error::Error;
 use tokio::io::{stdout, AsyncWriteExt as _};
 
-#[tokio::main]
-async fn run_embed() {
-    colog::init();
-    info!("Starting");
+// #[tokio::main]
+// async fn run_embed() {
+//     colog::init();
+//     info!("Starting");
 
-    // if let Err(e) = simple_get().await {
-    //     error!("Error: {}", e);
-    // }
+//     // if let Err(e) = simple_get().await {
+//     //     error!("Error: {}", e);
+//     // }
 
-    // if let Err(e) = hyper_builder_get().await {
-    //     error!("Error: {}", e);
-    // }
+//     // if let Err(e) = hyper_builder_get().await {
+//     //     error!("Error: {}", e);
+//     // }
 
-    let url = "http://0.0.0.0:11434/api/embed";
-    let model = "nomic-embed-text";
-    let data = EmbedRequest {
-        model: model.to_string(),
-        input: vec!["hello".to_string()],
-    };
+//     let url = "http://0.0.0.0:11434/api/embed";
+//     let model = "nomic-embed-text";
+//     let data = EmbedRequest {
+//         model: model.to_string(),
+//         input: vec!["hello".to_string()],
+//     };
 
-    if let Err(e) = hyper_builder_post(url, data).await {
-        error!("Error: {}", e);
-    }
+//     if let Err(e) = hyper_builder_post(url, data).await {
+//         error!("Error: {}", e);
+//     }
 
-    info!("Done");
-}
+//     info!("Done");
+// }
 
 async fn simple_get() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = Client::new();
@@ -80,12 +80,12 @@ pub async fn hyper_builder_post(
         .body(data_body)?;
 
     // Send the request and await the response.
-    let response = client.request(request).await?;
+    let response_body = client.request(request).await?;
 
-    println!("Response status: {}", response.status());
+    println!("Response status: {}", response_body.status());
     // let body = hyper::body::to_bytes(response.into_body()).await?;
 
-    let response_body = response.into_body();
+    let response_body = response_body.into_body();
     let body_bytes = hyper::body::to_bytes(response_body).await?;
     let body = std::str::from_utf8(&body_bytes)?;
     let response: EmbedResponse = serde_json::from_str(body)?;

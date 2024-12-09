@@ -1,4 +1,8 @@
+use std::thread::{self, Thread};
+
 use log::{error, info};
+use tokio::runtime::Runtime;
+use tokio::task;
 
 mod embedding;
 mod vectordb;
@@ -17,19 +21,31 @@ async fn main() {
 
     if let Err(e) = embedding::vector_embedding::hyper_builder_post(url, data).await {
         error!("Error: {}", e);
-    }
-
-    let mut client = match vectordb::pg_vector::pg_client().await {
-        Ok(client) => client,
-        Err(e) => {
-            error!("Error: {}", e);
-            return;
-        }
+        return;
     };
 
-    vectordb::pg_vector::select_embeddings(&mut client)
-        .await
-        .unwrap_or_else(|e| error!("Error: {}", e));
+    // create new thread
+
+    let embed_thread = thread::spawn(|| {
+        let mut config = match vectordb::pg_vector::pg_client() {
+            Ok(config) => config,
+            Err(e) => {
+                error!("Error: {}", e);
+                return;
+            }
+        };
+
+        match vectordb::pg_vector::select_embeddings(&mut config) {
+            Ok(_) => {
+                info!("Select main successful");
+            }
+            Err(e) => {
+                error!("Error: {}", e);
+            }
+        };
+    });
+
+    embed_thread.join().unwrap();
 
     info!("Done");
 }

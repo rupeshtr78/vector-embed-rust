@@ -1,6 +1,7 @@
 use log::{error, info};
-use postgres::{Client, Config, NoTls};
+use postgres::{config, Client, Config, NoTls};
 use std::{error::Error, time::Duration};
+use tokio::runtime::Runtime;
 
 // fn main() {
 //     // env_logger::builder().filter_level(LevelFilter::Debug).init();
@@ -31,7 +32,7 @@ use std::{error::Error, time::Duration};
 //     info!("Done");
 // }
 
-pub async fn pg_client() -> Result<Client, Box<dyn Error>> {
+pub fn pg_client() -> Result<Client, Box<dyn Error>> {
     let mut config = Config::new();
     config
         .host("10.0.0.213")
@@ -45,14 +46,27 @@ pub async fn pg_client() -> Result<Client, Box<dyn Error>> {
     Ok(client)
 }
 
-pub async fn select_embeddings(pg_client: &mut Client) -> Result<(), Box<dyn Error>> {
+pub fn select_embeddings(client: &mut Client) -> Result<(), Box<dyn Error>> {
+    info!("Select method started");
+
     let query = "SELECT id, text FROM embeddings";
-    let rows = pg_client.query(query, &[])?;
-    for row in rows {
-        let id: i32 = row.get(0);
-        let text: &str = row.get(1);
-        info!("id: {}, name: {}", id, text);
-    }
+    let rows = client.query(query, &[]);
+    match rows {
+        Ok(rows) => {
+            for row in rows {
+                let id: i32 = row.get(0);
+                let text: &str = row.get(1);
+                info!("id: {}, name: {}", id, text);
+            }
+
+            info!("Select successful");
+        }
+        Err(e) => {
+            error!("Error: {}", e);
+        }
+    };
+
+    info!("Select method successful");
 
     Ok(())
 }
