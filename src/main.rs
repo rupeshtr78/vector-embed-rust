@@ -1,9 +1,6 @@
-use std::f32::consts::E;
-use std::thread::{self, Thread};
-
 use embedding::vector_embedding::EmbedResponse;
 use log::{error, info};
-use tokio::runtime::Runtime;
+use std::thread;
 use tokio::task;
 
 mod embedding;
