@@ -94,15 +94,26 @@ pub fn load_vector_data(
     Ok(())
 }
 
-pub fn query_nearest(client: &mut Client, query_vec: &Vector) -> Result<(), Box<dyn Error>> {
-    let row = client.query(
-        "SELECT content FROM items ORDER BY embedding <-> $1 LIMIT 1",
-        &[&query_vec],
-    )?;
+pub fn query_nearest(
+    client: &mut Client,
+    table: &str,
+    query_vec: Vec<Vec<f32>>,
+) -> Result<(), Box<dyn Error>> {
+    // convert input to pg vector
+    let pgv = query_vec
+        .iter()
+        .map(|v| Vector::from(v.clone()))
+        .collect::<Vec<Vector>>();
+
+    let query = format!(
+        "SELECT content FROM {} ORDER BY embedding <-> $1 LIMIT 1",
+        table
+    );
+    let row = client.query(&query, &[&pgv[0]])?;
 
     for r in row {
         let text: &str = r.get(0);
-        info!("Nearest: {}", text);
+        info!("Query Result: {}", text);
     }
 
     Ok(())

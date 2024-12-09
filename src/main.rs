@@ -1,3 +1,4 @@
+use std::f32::consts::E;
 use std::thread::{self, Thread};
 
 use embedding::vector_embedding::EmbedResponse;
@@ -15,7 +16,16 @@ async fn main() {
 
     let url = "http://0.0.0.0:11434/api/embed";
     let model = "nomic-embed-text";
-    let input = vec!["hello".to_string()];
+    // let input = vec!["hello".to_string()];
+    let input: Vec<String> = [
+        "The dog is barking",
+        "The cat is purring",
+        "The bear is growling",
+    ]
+    .iter()
+    .map(|&s| s.to_string())
+    .collect();
+
     let data = embedding::vector_embedding::EmbedRequest {
         model: model.to_string(),
         input: input,
@@ -44,11 +54,38 @@ async fn main() {
         }
     });
 
-    // create new thread
+    // query the embeddings
+    let input = vec!["some animal is purring".to_string()];
+    let query_data = embedding::vector_embedding::EmbedRequest {
+        model: model.to_string(),
+        input: input,
+    };
 
+    let query_embedding = task::spawn(async {
+        match embedding::vector_embedding::create_embed_request(url, query_data).await {
+            Ok(response) => response,
+            Err(e) => {
+                error!("Error: {}", e);
+                return EmbedResponse {
+                    model: "".to_string(),
+                    embeddings: vec![],
+                };
+            }
+        }
+    });
+
+    let query_response = query_embedding.await.unwrap_or_else(|e| {
+        error!("Error: {:?}", e);
+        EmbedResponse {
+            model: "".to_string(),
+            embeddings: vec![],
+        }
+    });
+
+    // create new thread to embed data
     let embed_thread = thread::spawn(|| {
-        let mut config = match vectordb::pg_vector::pg_client() {
-            Ok(config) => config,
+        let mut client = match vectordb::pg_vector::pg_client() {
+            Ok(client) => client,
             Err(e) => {
                 error!("Error: {}", e);
                 return;
@@ -57,7 +94,7 @@ async fn main() {
 
         let table = "from_rust";
         let dim = 768;
-        match vectordb::pg_vector::create_table(&mut config, table, dim) {
+        match vectordb::pg_vector::create_table(&mut client, table, dim) {
             Ok(_) => {
                 info!("Create table successful");
             }
@@ -68,7 +105,7 @@ async fn main() {
         }
 
         match vectordb::pg_vector::load_vector_data(
-            &mut config,
+            &mut client,
             table,
             input_clone,
             response.embeddings,
@@ -82,15 +119,33 @@ async fn main() {
             }
         }
 
-        match vectordb::pg_vector::select_embeddings(&mut config, &table) {
+        // match vectordb::pg_vector::select_embeddings(&mut client, &table) {
+        //     Ok(_) => {
+        //         info!("Select main successful");
+        //     }
+        //     Err(e) => {
+        //         error!("Error: {}", e);
+        //         return;
+        //     }
+        // };
+
+        // query the embeddings
+        let query =
+            vectordb::pg_vector::query_nearest(&mut client, table, query_response.embeddings);
+        match query {
             Ok(_) => {
-                info!("Select main successful");
+                info!("Query nearest successful");
             }
             Err(e) => {
                 error!("Error: {}", e);
                 return;
             }
-        };
+        }
+
+        if let Err(e) = client.close() {
+            error!("Error: {}", e);
+            return;
+        }
     });
 
     if let Err(e) = embed_thread.join() {
@@ -98,5 +153,5 @@ async fn main() {
         return;
     }
 
-    info!("Done");
+    info!("Done with main");
 }
