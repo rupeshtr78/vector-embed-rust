@@ -1,36 +1,7 @@
-use log::{error, info};
+use log::{debug, error, info};
+use pgvector::Vector;
 use postgres::{config, Client, Config, NoTls};
 use std::{error::Error, time::Duration};
-use tokio::runtime::Runtime;
-
-// fn main() {
-//     // env_logger::builder().filter_level(LevelFilter::Debug).init();
-//     colog::init();
-//     info!("Starting");
-
-//     let mut client = match pg_client() {
-//         Ok(client) => client,
-//         Err(e) => {
-//             error!("Error: {}", e);
-//             return;
-//         }
-//     };
-
-//     if let Err(e) = select_embeddings(&mut client) {
-//         error!("Error: {}", e);
-//     }
-
-//     let table = "from_rust";
-//     let dim = 768;
-
-//     if let Err(e) = create_table(&mut client, table, dim) {
-//         error!("Error: {}", e);
-//     }
-
-//     drop(client);
-
-//     info!("Done");
-// }
 
 pub fn pg_client() -> Result<Client, Box<dyn Error>> {
     let mut config = Config::new();
@@ -59,7 +30,7 @@ pub fn select_embeddings(client: &mut Client) -> Result<(), Box<dyn Error>> {
                 info!("id: {}, name: {}", id, text);
             }
 
-            info!("Select successful");
+            info!("Select statement successful");
         }
         Err(e) => {
             error!("Error: {}", e);
@@ -71,7 +42,11 @@ pub fn select_embeddings(client: &mut Client) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn create_table(pg_client: &mut Client, table: &str, dimension: i32) -> Result<(), Box<dyn Error>> {
+pub fn create_table(
+    pg_client: &mut Client,
+    table: &str,
+    dimension: i32,
+) -> Result<(), Box<dyn Error>> {
     let mut transaction = pg_client.transaction()?;
 
     let drop_query = format!("DROP TABLE IF EXISTS {}", table);
@@ -91,7 +66,7 @@ fn create_table(pg_client: &mut Client, table: &str, dimension: i32) -> Result<(
 }
 
 // input []string, embeddings [][]float32, conn *pgx.Conn
-fn load_vector_data(
+pub fn load_vector_data(
     pg_client: &mut Client,
     table: &str,
     input: Vec<String>,
@@ -100,9 +75,17 @@ fn load_vector_data(
     let mut transaction = pg_client.transaction()?;
     let query = format!("INSERT INTO {} (content, embedding) VALUES ($1, $2)", table);
 
+    // convert input to pg vector
+    let pgv = embeddings
+        .iter()
+        .map(|v| Vector::from(v.clone()))
+        .collect::<Vec<Vector>>();
+
+    // iterate over input and embeddings
     for i in 0..input.len() {
         let content = &input[i];
-        let embedding = &embeddings[i];
+        let embedding = &pgv[i];
+        debug!("Content: {}, Embedding: {:?}", content, embedding);
         transaction.execute(&query, &[&content, &embedding])?;
     }
 

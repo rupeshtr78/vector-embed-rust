@@ -1,9 +1,7 @@
-use hyper::body::HttpBody;
 use hyper::{Body, Request};
 use hyper::{Client, Uri};
 use log::{error, info};
 use std::error::Error;
-use tokio::io::{stdout, AsyncWriteExt as _};
 
 // #[tokio::main]
 // async fn run_embed() {
@@ -32,21 +30,6 @@ use tokio::io::{stdout, AsyncWriteExt as _};
 //     info!("Done");
 // }
 
-async fn simple_get() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let client = Client::new();
-    let uri = "http://httpbin.org/ip".parse::<Uri>()?;
-
-    let mut resp = client.get(uri).await?;
-
-    println!("Response: {}", resp.status());
-
-    while let Some(chunk) = resp.body_mut().data().await {
-        stdout().write_all(&chunk?).await?;
-    }
-
-    Ok(())
-}
-
 #[derive(serde::Serialize)]
 pub struct EmbedRequest {
     pub model: String,
@@ -55,14 +38,14 @@ pub struct EmbedRequest {
 
 #[derive(serde::Deserialize, Debug)]
 pub struct EmbedResponse {
-    model: String,
-    embeddings: Vec<Vec<f32>>,
+    pub model: String,
+    pub embeddings: Vec<Vec<f32>>,
 }
 
-pub async fn hyper_builder_post(
+pub async fn create_embed_request(
     url: &str,
     req: EmbedRequest,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
+) -> Result<EmbedResponse, Box<dyn Error + Send + Sync>> {
     // Create an HTTP connector.
     let client = Client::new();
     // Construct a URI.
@@ -82,7 +65,7 @@ pub async fn hyper_builder_post(
     // Send the request and await the response.
     let response_body = client.request(request).await?;
 
-    println!("Response status: {}", response_body.status());
+    info!("Response status: {}", response_body.status());
     // let body = hyper::body::to_bytes(response.into_body()).await?;
 
     let response_body = response_body.into_body();
@@ -90,35 +73,8 @@ pub async fn hyper_builder_post(
     let body = std::str::from_utf8(&body_bytes)?;
     let response: EmbedResponse = serde_json::from_str(body)?;
 
-    println!("Response: {:?}", response.model);
-    println!("Response: {:?}", response.embeddings);
+    info!("Response: {:?}", response.model);
+    info!("Response Length: {:?}", response.embeddings[0].len());
 
-    Ok(())
-}
-
-async fn hyper_builder_get() -> Result<(), Box<dyn Error + Send + Sync>> {
-    // Create an HTTP connector.
-    let client = Client::new();
-
-    // Construct a URI.
-    let url = "http://httpbin.org/ip".parse::<Uri>()?;
-
-    // Build the HTTP GET request using the http crate.
-    let request = Request::builder()
-        .method("GET")
-        .uri(url)
-        .header("Content-Type", "application/json")
-        .body(hyper::Body::empty())?;
-
-    // Send the request and await the response.
-    let mut response = client.request(request).await?;
-
-    println!("Response status: {}", response.status());
-
-    // Print out the response body.
-    while let Some(chunk) = response.body_mut().data().await {
-        stdout().write_all(&chunk?).await?;
-    }
-
-    Ok(())
+    Ok(response)
 }

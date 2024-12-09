@@ -1,5 +1,6 @@
 use std::thread::{self, Thread};
 
+use embedding::vector_embedding::EmbedResponse;
 use log::{error, info};
 use tokio::runtime::Runtime;
 use tokio::task;
@@ -14,15 +15,34 @@ async fn main() {
 
     let url = "http://0.0.0.0:11434/api/embed";
     let model = "nomic-embed-text";
+    let input = vec!["hello".to_string()];
     let data = embedding::vector_embedding::EmbedRequest {
         model: model.to_string(),
-        input: vec!["hello".to_string()],
+        input: input,
     };
 
-    if let Err(e) = embedding::vector_embedding::hyper_builder_post(url, data).await {
-        error!("Error: {}", e);
-        return;
-    };
+    let input_clone = data.input.clone();
+
+    let embedding = task::spawn(async {
+        match embedding::vector_embedding::create_embed_request(url, data).await {
+            Ok(response) => response,
+            Err(e) => {
+                error!("Error: {}", e);
+                return EmbedResponse {
+                    model: "".to_string(),
+                    embeddings: vec![],
+                };
+            }
+        }
+    });
+
+    let response = embedding.await.unwrap_or_else(|e| {
+        error!("Error: {:?}", e);
+        EmbedResponse {
+            model: "".to_string(),
+            embeddings: vec![],
+        }
+    });
 
     // create new thread
 
@@ -44,6 +64,33 @@ async fn main() {
                 return;
             }
         };
+
+        let table = "from_rust";
+        let dim = 768;
+        match vectordb::pg_vector::create_table(&mut config, table, dim) {
+            Ok(_) => {
+                info!("Create table successful");
+            }
+            Err(e) => {
+                error!("Error: {}", e);
+                return;
+            }
+        }
+
+        match vectordb::pg_vector::load_vector_data(
+            &mut config,
+            table,
+            input_clone,
+            response.embeddings,
+        ) {
+            Ok(_) => {
+                info!("Load vector data successful");
+            }
+            Err(e) => {
+                error!("Error: {}", e);
+                return;
+            }
+        }
     });
 
     if let Err(e) = embed_thread.join() {
