@@ -1,6 +1,7 @@
 use log::{error, info};
 
 mod embedding;
+mod vectordb;
 
 #[tokio::main]
 async fn main() {
@@ -15,6 +16,18 @@ async fn main() {
     };
 
     if let Err(e) = embedding::vector_embedding::hyper_builder_post(url, data).await {
+        error!("Error: {}", e);
+    }
+
+    let mut client = match vectordb::pg_vector::pg_client() {
+        Ok(client) => client,
+        Err(e) => {
+            error!("Error: {}", e);
+            return;
+        }
+    };
+
+    if let Err(e) = vectordb::pg_vector::select_embeddings(&mut client) {
         error!("Error: {}", e);
     }
 

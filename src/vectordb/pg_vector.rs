@@ -31,7 +31,7 @@ use std::{error::Error, time::Duration};
 //     info!("Done");
 // }
 
-fn pg_client() -> Result<Client, Box<dyn Error>> {
+pub fn pg_client() -> Result<Client, Box<dyn Error>> {
     let mut config = Config::new();
     config
         .host("10.0.0.213")
@@ -44,7 +44,7 @@ fn pg_client() -> Result<Client, Box<dyn Error>> {
     Ok(client)
 }
 
-fn select_embeddings(pg_client: &mut Client) -> Result<(), Box<dyn Error>> {
+pub fn select_embeddings(pg_client: &mut Client) -> Result<(), Box<dyn Error>> {
     let query = "SELECT id, text FROM embeddings";
     let rows = pg_client.query(query, &[])?;
     for row in rows {
