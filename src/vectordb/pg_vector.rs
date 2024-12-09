@@ -41,6 +41,7 @@ pub async fn pg_client() -> Result<Client, Box<dyn Error>> {
         .connect_timeout(Duration::from_secs(5));
 
     let client = config.connect(NoTls)?;
+
     Ok(client)
 }
 
