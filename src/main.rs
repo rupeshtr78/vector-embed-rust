@@ -41,11 +41,15 @@ async fn main() {
             }
             Err(e) => {
                 error!("Error: {}", e);
+                return;
             }
         };
     });
 
-    embed_thread.join().unwrap();
+    if let Err(e) = embed_thread.join() {
+        error!("Error: {:?}", e);
+        return;
+    }
 
     info!("Done");
 }
