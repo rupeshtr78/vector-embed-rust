@@ -55,16 +55,6 @@ async fn main() {
             }
         };
 
-        match vectordb::pg_vector::select_embeddings(&mut config) {
-            Ok(_) => {
-                info!("Select main successful");
-            }
-            Err(e) => {
-                error!("Error: {}", e);
-                return;
-            }
-        };
-
         let table = "from_rust";
         let dim = 768;
         match vectordb::pg_vector::create_table(&mut config, table, dim) {
@@ -91,6 +81,16 @@ async fn main() {
                 return;
             }
         }
+
+        match vectordb::pg_vector::select_embeddings(&mut config, &table) {
+            Ok(_) => {
+                info!("Select main successful");
+            }
+            Err(e) => {
+                error!("Error: {}", e);
+                return;
+            }
+        };
     });
 
     if let Err(e) = embed_thread.join() {

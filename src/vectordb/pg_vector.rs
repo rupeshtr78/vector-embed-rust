@@ -17,17 +17,17 @@ pub fn pg_client() -> Result<Client, Box<dyn Error>> {
     Ok(client)
 }
 
-pub fn select_embeddings(client: &mut Client) -> Result<(), Box<dyn Error>> {
+pub fn select_embeddings(client: &mut Client, table: &str) -> Result<(), Box<dyn Error>> {
     info!("Select method started");
 
-    let query = "SELECT id, text FROM embeddings";
-    let rows = client.query(query, &[]);
+    let query = format!("SELECT id, content FROM {}", table);
+    let rows = client.query(&query, &[]);
     match rows {
         Ok(rows) => {
             for row in rows {
-                let id: i32 = row.get(0);
+                // let id = row.get(0);
                 let text: &str = row.get(1);
-                info!("id: {}, name: {}", id, text);
+                info!("id: {}, content: {}", 1, text);
             }
 
             info!("Select statement successful");
@@ -91,5 +91,19 @@ pub fn load_vector_data(
 
     info!("Data inserted");
     transaction.commit()?;
+    Ok(())
+}
+
+pub fn query_nearest(client: &mut Client, query_vec: &Vector) -> Result<(), Box<dyn Error>> {
+    let row = client.query(
+        "SELECT content FROM items ORDER BY embedding <-> $1 LIMIT 1",
+        &[&query_vec],
+    )?;
+
+    for r in row {
+        let text: &str = r.get(0);
+        info!("Nearest: {}", text);
+    }
+
     Ok(())
 }
