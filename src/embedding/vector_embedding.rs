@@ -6,7 +6,7 @@ use std::error::Error;
 use tokio::io::{stdout, AsyncWriteExt as _};
 
 #[tokio::main]
-async fn main() {
+async fn run_embed() {
     colog::init();
     info!("Starting");
 
@@ -18,7 +18,7 @@ async fn main() {
     //     error!("Error: {}", e);
     // }
 
-    let url = "http://10.0.0.213:11434/api/embed";
+    let url = "http://0.0.0.0:11434/api/embed";
     let model = "nomic-embed-text";
     let data = EmbedRequest {
         model: model.to_string(),
@@ -48,18 +48,18 @@ async fn simple_get() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 }
 
 #[derive(serde::Serialize)]
-struct EmbedRequest {
-    model: String,
-    input: Vec<String>,
+pub struct EmbedRequest {
+    pub model: String,
+    pub input: Vec<String>,
 }
 
 #[derive(serde::Deserialize, Debug)]
-struct EmbedResponse {
+pub struct EmbedResponse {
     model: String,
     embeddings: Vec<Vec<f32>>,
 }
 
-async fn hyper_builder_post(
+pub async fn hyper_builder_post(
     url: &str,
     req: EmbedRequest,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {

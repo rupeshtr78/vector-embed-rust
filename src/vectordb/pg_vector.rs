@@ -2,34 +2,34 @@ use log::{error, info};
 use postgres::{Client, Config, NoTls};
 use std::{error::Error, time::Duration};
 
-fn main() {
-    // env_logger::builder().filter_level(LevelFilter::Debug).init();
-    colog::init();
-    info!("Starting");
+// fn main() {
+//     // env_logger::builder().filter_level(LevelFilter::Debug).init();
+//     colog::init();
+//     info!("Starting");
 
-    let mut client = match pg_client() {
-        Ok(client) => client,
-        Err(e) => {
-            error!("Error: {}", e);
-            return;
-        }
-    };
+//     let mut client = match pg_client() {
+//         Ok(client) => client,
+//         Err(e) => {
+//             error!("Error: {}", e);
+//             return;
+//         }
+//     };
 
-    if let Err(e) = select_embeddings(&mut client) {
-        error!("Error: {}", e);
-    }
+//     if let Err(e) = select_embeddings(&mut client) {
+//         error!("Error: {}", e);
+//     }
 
-    let table = "from_rust";
-    let dim = 768;
+//     let table = "from_rust";
+//     let dim = 768;
 
-    if let Err(e) = create_table(&mut client, table, dim) {
-        error!("Error: {}", e);
-    }
+//     if let Err(e) = create_table(&mut client, table, dim) {
+//         error!("Error: {}", e);
+//     }
 
-    drop(client);
+//     drop(client);
 
-    info!("Done");
-}
+//     info!("Done");
+// }
 
 fn pg_client() -> Result<Client, Box<dyn Error>> {
     let mut config = Config::new();
