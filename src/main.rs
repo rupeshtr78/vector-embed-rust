@@ -19,7 +19,7 @@ async fn main() {
         error!("Error: {}", e);
     }
 
-    let mut client = match vectordb::pg_vector::pg_client() {
+    let mut client = match vectordb::pg_vector::pg_client().await {
         Ok(client) => client,
         Err(e) => {
             error!("Error: {}", e);
@@ -27,9 +27,9 @@ async fn main() {
         }
     };
 
-    if let Err(e) = vectordb::pg_vector::select_embeddings(&mut client) {
-        error!("Error: {}", e);
-    }
+    vectordb::pg_vector::select_embeddings(&mut client)
+        .await
+        .unwrap_or_else(|e| error!("Error: {}", e));
 
     info!("Done");
 }
