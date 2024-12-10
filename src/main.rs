@@ -14,14 +14,14 @@ async fn main() {
     let url = "http://0.0.0.0:11434/api/embed";
     let model = "nomic-embed-text";
     // let input = vec!["hello".to_string()];
-    let input: Vec<String> = [
+    let input: Vec<&str> = vec![
         "The dog is barking",
         "The cat is purring",
         "The bear is growling",
-    ]
-    .iter()
-    .map(|&s| s.to_string())
-    .collect();
+    ];
+    // .iter()
+    // .map(|&s| s.to_string())
+    // .collect();
 
     let data = embedding::vector_embedding::EmbedRequest {
         model: model.to_string(),
@@ -52,10 +52,10 @@ async fn main() {
     });
 
     // query the embeddings
-    let input = vec!["some animal is purring".to_string()];
+    let query_input = vec!["some animal is purring"];
     let query_data = embedding::vector_embedding::EmbedRequest {
         model: model.to_string(),
-        input: input,
+        input: query_input,
     };
 
     let query_embedding = task::spawn(async {

@@ -17,31 +17,6 @@ pub fn pg_client() -> Result<Client, Box<dyn Error>> {
     Ok(client)
 }
 
-pub fn select_embeddings(client: &mut Client, table: &str) -> Result<(), Box<dyn Error>> {
-    info!("Select method started");
-
-    let query = format!("SELECT id, content FROM {}", table);
-    let rows = client.query(&query, &[]);
-    match rows {
-        Ok(rows) => {
-            for row in rows {
-                // let id = row.get(0);
-                let text: &str = row.get(1);
-                info!("id: {}, content: {}", 1, text);
-            }
-
-            info!("Select statement successful");
-        }
-        Err(e) => {
-            error!("Error: {}", e);
-        }
-    };
-
-    info!("Select method successful");
-
-    Ok(())
-}
-
 pub fn create_table(
     pg_client: &mut Client,
     table: &str,
@@ -69,7 +44,7 @@ pub fn create_table(
 pub fn load_vector_data(
     pg_client: &mut Client,
     table: &str,
-    input: Vec<String>,
+    input: Vec<&str>,
     embeddings: Vec<Vec<f32>>,
 ) -> Result<(), Box<dyn Error>> {
     let mut transaction = pg_client.transaction()?;
@@ -115,6 +90,31 @@ pub fn query_nearest(
         let text: &str = r.get(0);
         info!("Query Result: {}", text);
     }
+
+    Ok(())
+}
+
+pub fn select_embeddings(client: &mut Client, table: &str) -> Result<(), Box<dyn Error>> {
+    info!("Select method started");
+
+    let query = format!("SELECT id, content FROM {}", table);
+    let rows = client.query(&query, &[]);
+    match rows {
+        Ok(rows) => {
+            for row in rows {
+                // let id = row.get(0);
+                let text: &str = row.get(1);
+                info!("id: {}, content: {}", 1, text);
+            }
+
+            info!("Select statement successful");
+        }
+        Err(e) => {
+            error!("Error: {}", e);
+        }
+    };
+
+    info!("Select method successful");
 
     Ok(())
 }

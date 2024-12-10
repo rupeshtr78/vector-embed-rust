@@ -1,39 +1,13 @@
+use hyper::{body, Client, Uri};
 use hyper::{Body, Request};
-use hyper::{Client, Uri};
 use log::{error, info};
 use std::error::Error;
-
-// #[tokio::main]
-// async fn run_embed() {
-//     colog::init();
-//     info!("Starting");
-
-//     // if let Err(e) = simple_get().await {
-//     //     error!("Error: {}", e);
-//     // }
-
-//     // if let Err(e) = hyper_builder_get().await {
-//     //     error!("Error: {}", e);
-//     // }
-
-//     let url = "http://0.0.0.0:11434/api/embed";
-//     let model = "nomic-embed-text";
-//     let data = EmbedRequest {
-//         model: model.to_string(),
-//         input: vec!["hello".to_string()],
-//     };
-
-//     if let Err(e) = hyper_builder_post(url, data).await {
-//         error!("Error: {}", e);
-//     }
-
-//     info!("Done");
-// }
+use std::str;
 
 #[derive(serde::Serialize)]
-pub struct EmbedRequest {
+pub struct EmbedRequest<'a> {
     pub model: String,
-    pub input: Vec<String>,
+    pub input: Vec<&'a str>,
 }
 
 #[derive(serde::Deserialize, Debug)]
@@ -42,9 +16,9 @@ pub struct EmbedResponse {
     pub embeddings: Vec<Vec<f32>>,
 }
 
-pub async fn create_embed_request(
+pub async fn create_embed_request<'a>(
     url: &str,
-    req: EmbedRequest,
+    req: EmbedRequest<'a>,
 ) -> Result<EmbedResponse, Box<dyn Error + Send + Sync>> {
     // Create an HTTP connector.
     let client = Client::new();
@@ -69,8 +43,8 @@ pub async fn create_embed_request(
     // let body = hyper::body::to_bytes(response.into_body()).await?;
 
     let response_body = response_body.into_body();
-    let body_bytes = hyper::body::to_bytes(response_body).await?;
-    let body = std::str::from_utf8(&body_bytes)?;
+    let body_bytes = body::to_bytes(response_body).await?;
+    let body = str::from_utf8(&body_bytes)?;
     let response: EmbedResponse = serde_json::from_str(body)?;
 
     info!("Response: {:?}", response.model);
