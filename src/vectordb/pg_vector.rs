@@ -44,7 +44,7 @@ pub fn create_table(
 pub fn load_vector_data(
     pg_client: &mut Client,
     table: &str,
-    input: Vec<&str>,
+    input: Vec<String>,
     embeddings: Vec<Vec<f32>>,
 ) -> Result<(), Box<dyn Error>> {
     let mut transaction = pg_client.transaction()?;

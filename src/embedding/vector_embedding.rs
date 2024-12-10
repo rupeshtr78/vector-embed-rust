@@ -5,9 +5,9 @@ use std::error::Error;
 use std::str;
 
 #[derive(serde::Serialize)]
-pub struct EmbedRequest<'a> {
+pub struct EmbedRequest {
     pub model: String,
-    pub input: Vec<&'a str>,
+    pub input: Vec<String>,
 }
 
 #[derive(serde::Deserialize, Debug)]
@@ -16,9 +16,9 @@ pub struct EmbedResponse {
     pub embeddings: Vec<Vec<f32>>,
 }
 
-pub async fn create_embed_request<'a>(
+pub async fn create_embed_request(
     url: &str,
-    req: EmbedRequest<'a>,
+    req: EmbedRequest,
 ) -> Result<EmbedResponse, Box<dyn Error + Send + Sync>> {
     // Create an HTTP connector.
     let client = Client::new();
