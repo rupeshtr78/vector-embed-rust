@@ -98,7 +98,8 @@ pub const VECTOR_DB_HOST: &str = "10.0.0.213";
 pub const VECTOR_DB_PORT: u16 = 5555;
 pub const VECTOR_DB_USER: &str = "rupesh";
 pub const VECTOR_DB_NAME: &str = "vectordb";
-
+pub const VECTOR_DB_TABLE: &str = "from_rust";
+pub const VECTOR_DB_DIM: i32 = 768;
 pub struct VectorDbConfig<'a> {
     pub host: &'a str,
     pub port: u16,

@@ -1,5 +1,7 @@
 use crate::config::config::{EmbedRequest, EmbedResponse};
-use crate::config::config::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
+use crate::config::config::{
+    VECTOR_DB_DIM, VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_TABLE, VECTOR_DB_USER,
+};
 use log::{debug, error, info};
 use std::thread;
 use tokio::task;
@@ -99,8 +101,8 @@ async fn main() {
             }
         };
 
-        let table = "from_rust";
-        let dim = 768;
+        let table = VECTOR_DB_TABLE;
+        let dim = VECTOR_DB_DIM;
         match vectordb::pg_vector::create_table(&mut client, table, dim) {
             Ok(_) => {
                 info!("Create table successful");
