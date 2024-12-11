@@ -1,8 +1,9 @@
-use embedding::vector_embedding::EmbedResponse;
+use crate::config::config::{EmbedRequest, EmbedResponse};
 use log::{debug, error, info};
 use std::thread;
 use tokio::task;
 
+mod config;
 mod embedding;
 mod vectordb;
 
@@ -23,7 +24,7 @@ async fn main() {
     .map(|&s| s.to_string())
     .collect();
 
-    let data = embedding::vector_embedding::EmbedRequest {
+    let data = EmbedRequest {
         model: model.to_string(),
         input: input,
     };
@@ -53,7 +54,7 @@ async fn main() {
 
     // query the embeddings
     let query_input = vec!["some animal is purring".to_string()];
-    let query_data = embedding::vector_embedding::EmbedRequest {
+    let query_data = EmbedRequest {
         model: model.to_string(),
         input: query_input,
     };

@@ -4,17 +4,7 @@ use log::{error, info};
 use std::error::Error;
 use std::str;
 
-#[derive(serde::Serialize)]
-pub struct EmbedRequest {
-    pub model: String,
-    pub input: Vec<String>,
-}
-
-#[derive(serde::Deserialize, Debug)]
-pub struct EmbedResponse {
-    pub model: String,
-    pub embeddings: Vec<Vec<f32>>,
-}
+use crate::config::config::{EmbedRequest, EmbedResponse};
 
 pub async fn create_embed_request(
     url: &str,
