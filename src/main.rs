@@ -1,4 +1,5 @@
 use crate::config::config::{EmbedRequest, EmbedResponse};
+use crate::config::config::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
 use log::{debug, error, info};
 use std::thread;
 use tokio::task;
@@ -12,8 +13,9 @@ async fn main() {
     colog::init();
     info!("Starting");
 
-    let url = "http://0.0.0.0:11434/api/embed";
-    let model = "nomic-embed-text";
+    let url = config::config::EMBEDDING_URL;
+    let model = config::config::EMBEDDING_MODEL;
+
     // let input = vec!["hello".to_string()];
     let input: Vec<String> = vec![
         "The dog is barking",
@@ -80,9 +82,16 @@ async fn main() {
         }
     });
 
+    let db_config = config::config::NewVectorDbConfig(
+        VECTOR_DB_HOST,
+        VECTOR_DB_PORT,
+        VECTOR_DB_USER,
+        VECTOR_DB_NAME,
+    );
+
     // create new thread to embed data
     let embed_thread = thread::spawn(move || {
-        let mut client = match vectordb::pg_vector::pg_client() {
+        let mut client = match vectordb::pg_vector::pg_client(&db_config) {
             Ok(client) => client,
             Err(e) => {
                 error!("Error: {}", e);

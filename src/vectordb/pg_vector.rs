@@ -1,16 +1,18 @@
 use log::{debug, error, info};
 use pgvector::Vector;
-use postgres::{config, Client, Config, NoTls};
+use postgres::{Client, Config, NoTls};
 use std::{error::Error, time::Duration};
 
-pub fn pg_client() -> Result<Client, Box<dyn Error>> {
+use crate::config::config::VectorDbConfig;
+
+pub fn pg_client<'a>(db_config: &'a VectorDbConfig) -> Result<Client, Box<dyn Error>> {
     let mut config = Config::new();
     config
-        .host("10.0.0.213")
-        .port(5555)
-        .user("rupesh")
-        .dbname("vectordb")
-        .connect_timeout(Duration::from_secs(5));
+        .host(db_config.host)
+        .port(db_config.port)
+        .user(db_config.user)
+        .dbname(db_config.dbname)
+        .connect_timeout(Duration::from_secs(db_config.timeout));
 
     let client = config.connect(NoTls)?;
 
@@ -26,7 +28,7 @@ pub fn create_table(
 
     let drop_query = format!("DROP TABLE IF EXISTS {}", table);
     transaction.execute(&drop_query, &[])?;
-    info!("Table dropped: {}", table);
+    debug!("Table dropped: {}", table);
 
     let query = format!(
         "CREATE TABLE {} (id bigserial PRIMARY KEY, content text, embedding vector({}))",
@@ -34,7 +36,7 @@ pub fn create_table(
     );
     transaction.execute(&query, &[])?;
 
-    info!("Table created: {}", table);
+    info!("Vector Table created: {}", table);
     transaction.commit()?;
 
     return Ok(());
@@ -64,7 +66,7 @@ pub fn load_vector_data(
         transaction.execute(&query, &[&content, &embedding])?;
     }
 
-    info!("Data inserted");
+    info!("Embedding Data inserted to vector db table: {}", table);
     transaction.commit()?;
     Ok(())
 }
