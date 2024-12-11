@@ -1,0 +1,19 @@
+# Compose a postgres database together with the extension pgvector
+services:
+  db:
+    hostname: db
+    image: pg-vector:v01
+    ports:
+      - 5555:5432
+    restart: always
+    environment:
+      - POSTGRES_DB=vectordb
+      - POSTGRES_USER=rupesh
+      - POSTGRES_PASSWORD=rupesh
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./pgdata:/var/lib/postgresql/data # Named volume for data persistence
+
+volumes:
+  pgdata:
