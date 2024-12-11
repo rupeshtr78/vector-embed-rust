@@ -1,5 +1,5 @@
 use embedding::vector_embedding::EmbedResponse;
-use log::{error, info};
+use log::{debug, error, info};
 use std::thread;
 use tokio::task;
 
@@ -30,8 +30,8 @@ async fn main() {
 
     let input_clone = data.input.clone();
 
-    let embedding = task::spawn(async {
-        match embedding::vector_embedding::create_embed_request(url, data).await {
+    let embedding = task::spawn(async move {
+        match embedding::vector_embedding::create_embed_request(url, &data).await {
             Ok(response) => response,
             Err(e) => {
                 error!("Error: {}", e);
@@ -58,8 +58,8 @@ async fn main() {
         input: query_input,
     };
 
-    let query_embedding = task::spawn(async {
-        match embedding::vector_embedding::create_embed_request(url, query_data).await {
+    let query_embedding = task::spawn(async move {
+        match embedding::vector_embedding::create_embed_request(url, &query_data).await {
             Ok(response) => response,
             Err(e) => {
                 error!("Error: {}", e);
@@ -80,7 +80,7 @@ async fn main() {
     });
 
     // create new thread to embed data
-    let embed_thread = thread::spawn(|| {
+    let embed_thread = thread::spawn(move || {
         let mut client = match vectordb::pg_vector::pg_client() {
             Ok(client) => client,
             Err(e) => {
@@ -104,8 +104,8 @@ async fn main() {
         match vectordb::pg_vector::load_vector_data(
             &mut client,
             table,
-            input_clone,
-            response.embeddings,
+            &input_clone,
+            &response.embeddings,
         ) {
             Ok(_) => {
                 info!("Load vector data successful");
@@ -128,10 +128,10 @@ async fn main() {
 
         // query the embeddings
         let query =
-            vectordb::pg_vector::query_nearest(&mut client, table, query_response.embeddings);
+            vectordb::pg_vector::query_nearest(&mut client, table, &query_response.embeddings);
         match query {
             Ok(_) => {
-                info!("Query nearest successful");
+                debug!("Query nearest vector successful");
             }
             Err(e) => {
                 error!("Error: {}", e);

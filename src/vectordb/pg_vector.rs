@@ -44,8 +44,8 @@ pub fn create_table(
 pub fn load_vector_data(
     pg_client: &mut Client,
     table: &str,
-    input: Vec<String>,
-    embeddings: Vec<Vec<f32>>,
+    input: &Vec<String>,
+    embeddings: &Vec<Vec<f32>>,
 ) -> Result<(), Box<dyn Error>> {
     let mut transaction = pg_client.transaction()?;
     let query = format!("INSERT INTO {} (content, embedding) VALUES ($1, $2)", table);
@@ -72,7 +72,7 @@ pub fn load_vector_data(
 pub fn query_nearest(
     client: &mut Client,
     table: &str,
-    query_vec: Vec<Vec<f32>>,
+    query_vec: &Vec<Vec<f32>>,
 ) -> Result<(), Box<dyn Error>> {
     // convert input to pg vector
     let pgv = query_vec

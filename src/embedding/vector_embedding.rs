@@ -18,7 +18,7 @@ pub struct EmbedResponse {
 
 pub async fn create_embed_request(
     url: &str,
-    req: EmbedRequest,
+    req: &EmbedRequest,
 ) -> Result<EmbedResponse, Box<dyn Error + Send + Sync>> {
     // Create an HTTP connector.
     let client = Client::new();
