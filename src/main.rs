@@ -1,6 +1,7 @@
 use crate::config::config::{EmbedRequest, EmbedResponse};
 use crate::config::config::{
-    VECTOR_DB_DIM, VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_TABLE, VECTOR_DB_USER,
+    EMBEDDING_MODEL, EMBEDDING_URL, VECTOR_DB_DIM, VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT,
+    VECTOR_DB_TABLE, VECTOR_DB_USER,
 };
 use log::{debug, error, info};
 use std::thread;
@@ -15,8 +16,8 @@ async fn main() {
     colog::init();
     info!("Starting");
 
-    let url = config::config::EMBEDDING_URL;
-    let model = config::config::EMBEDDING_MODEL;
+    let url = EMBEDDING_URL;
+    let model = EMBEDDING_MODEL;
 
     // let input = vec!["hello".to_string()];
     let input: Vec<String> = vec![
