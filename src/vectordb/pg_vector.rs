@@ -5,6 +5,11 @@ use std::{error::Error, time::Duration};
 
 use crate::config::config::VectorDbConfig;
 
+/// Create a connection to the Postgres database
+/// Argumemts:
+/// - db_config: &VectorDbConfig
+/// Returns:
+/// - Result<Client, Box<dyn Error>>
 pub fn pg_client<'a>(db_config: &'a VectorDbConfig) -> Result<Client, Box<dyn Error>> {
     let mut config = Config::new();
     config
@@ -19,6 +24,13 @@ pub fn pg_client<'a>(db_config: &'a VectorDbConfig) -> Result<Client, Box<dyn Er
     Ok(client)
 }
 
+/// Create a table in the Postgres database
+/// Arguments:
+/// - pg_client: &mut Client
+/// - table: &str
+/// - dimension: i32 (dimension of the vector)
+/// Returns:
+/// - Result<(), Box<dyn Error>>
 pub fn create_table(
     pg_client: &mut Client,
     table: &str,
@@ -42,7 +54,14 @@ pub fn create_table(
     return Ok(());
 }
 
-// input []string, embeddings [][]float32, conn *pgx.Conn
+///  Load vector data into the Postgres database
+/// Arguments:
+/// - pg_client: &mut Client
+/// - table: &str
+/// - input: &Vec<String>
+/// - embeddings: &Vec<Vec<f32>>
+/// Returns:
+/// - Result<(), Box<dyn Error>>
 pub fn load_vector_data(
     pg_client: &mut Client,
     table: &str,
@@ -71,6 +90,13 @@ pub fn load_vector_data(
     Ok(())
 }
 
+/// Query the nearest vector in the Postgres database
+/// Arguments:
+/// - client: &mut Client
+/// - table: &str
+/// - query_vec: &Vec<Vec<f32>>
+/// Returns:
+/// - Result<(), Box<dyn Error>>
 pub fn query_nearest(
     client: &mut Client,
     table: &str,
@@ -96,6 +122,7 @@ pub fn query_nearest(
     Ok(())
 }
 
+/// Select embeddings from the Postgres database
 pub fn select_embeddings(client: &mut Client, table: &str) -> Result<(), Box<dyn Error>> {
     info!("Select method started");
 

@@ -6,6 +6,12 @@ use std::str;
 
 use crate::config::config::{EmbedRequest, EmbedResponse};
 
+/// Create an embedding request
+/// Arguments:
+/// - url: &str
+/// - req: &EmbedRequest
+/// Returns:
+/// - Result<EmbedResponse, Box<dyn Error + Send + Sync>>
 pub async fn create_embed_request(
     url: &str,
     req: &EmbedRequest,
