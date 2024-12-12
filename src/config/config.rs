@@ -1,6 +1,6 @@
 // add configs here
 
-#[derive(serde::Deserialize, serde::Serialize, Debug)]
+#[derive(serde::Serialize, Debug)]
 pub struct EmbedRequest {
     pub model: String,
     pub input: Vec<String>,
@@ -13,7 +13,9 @@ pub struct EmbedResponse {
 }
 
 pub fn NewEmbedRequest(model: String, input: Vec<String>) -> EmbedRequest {
-    EmbedRequest { model, input }
+    let data = EmbedRequest { model, input };
+
+    data
 }
 
 pub fn NewEmbedResponse(model: String, embeddings: Vec<Vec<f32>>) -> EmbedResponse {
@@ -38,17 +40,13 @@ pub fn EmptyEmbedRequest() -> EmbedRequest {
     }
 }
 
-impl EmbedRequest {
+impl<'a> EmbedRequest {
     pub fn to_json(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(self)
     }
 
-    pub fn from_json(json: &str) -> Result<EmbedRequest, serde_json::Error> {
-        serde_json::from_str(json)
-    }
-
-    pub fn add_input(&mut self, input: String) {
-        self.input.push(input);
+    pub fn add_input(&mut self, input: &'a str) {
+        self.input.push(input.to_string());
     }
 
     pub fn set_model(&mut self, model: String) {

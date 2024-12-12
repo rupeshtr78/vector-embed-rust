@@ -3,7 +3,7 @@ use pgvector::Vector;
 use postgres::{Client, Config, NoTls};
 use std::{error::Error, time::Duration};
 
-use crate::config::config::VectorDbConfig;
+use crate::config::config::{EmbedRequest, VectorDbConfig};
 
 /// Create a connection to the Postgres database
 /// Argumemts:
@@ -65,7 +65,7 @@ pub fn create_table(
 pub fn load_vector_data(
     pg_client: &mut Client,
     table: &str,
-    input: &Vec<String>,
+    input: &EmbedRequest,
     embeddings: &Vec<Vec<f32>>,
 ) -> Result<(), Box<dyn Error>> {
     let mut transaction = pg_client.transaction()?;
@@ -78,8 +78,8 @@ pub fn load_vector_data(
         .collect::<Vec<Vector>>();
 
     // iterate over input and embeddings
-    for i in 0..input.len() {
-        let content = &input[i];
+    for i in 0..input.input.len() {
+        let content = &input.input[i];
         let embedding = &pgv[i];
         debug!("Content: {}, Embedding: {:?}", content, embedding);
         transaction.execute(&query, &[&content, &embedding])?;

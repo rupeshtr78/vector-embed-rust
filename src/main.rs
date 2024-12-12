@@ -4,7 +4,8 @@ use crate::config::config::{
     VECTOR_DB_TABLE, VECTOR_DB_USER,
 };
 use log::{debug, error, info};
-use std::thread;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use tokio::task;
 
 mod config;
@@ -20,7 +21,7 @@ async fn main() {
     let model = EMBEDDING_MODEL;
 
     // let input = vec!["hello".to_string()];
-    let input: Vec<String> = vec![
+    let input = vec![
         "The dog is barking",
         "The cat is purring",
         "The bear is growling",
@@ -29,15 +30,19 @@ async fn main() {
     .map(|&s| s.to_string())
     .collect();
 
-    let data = EmbedRequest {
-        model: model.to_string(),
-        input: input,
-    };
+    let data = config::config::NewEmbedRequest(model.to_string(), input);
 
-    let input_clone = data.input.clone();
+    // Wrap data with Arc and Mutex for thread-safe sharing
+    let data_shared = Arc::new(Mutex::new(data));
+    // let input_clone = data.input.clone();
+
+    let embed_shared_data = Arc::clone(&data_shared);
 
     let embedding = task::spawn(async move {
-        match embedding::vector_embedding::create_embed_request(url, &data).await {
+        // Lock the shared data and perform operations
+        let data = &*embed_shared_data.lock().await;
+
+        match embedding::vector_embedding::create_embed_request(url, data).await {
             Ok(response) => response,
             Err(e) => {
                 error!("Error: {}", e);
@@ -92,8 +97,10 @@ async fn main() {
         VECTOR_DB_NAME,
     );
 
-    // create new thread to embed data
-    let embed_thread = thread::spawn(move || {
+    let vector_shared_data = Arc::clone(&data_shared);
+
+    let embed_thread = task::spawn(async move {
+        let data = vector_shared_data.lock().await;
         let mut client = match vectordb::pg_vector::pg_client(&db_config) {
             Ok(client) => client,
             Err(e) => {
@@ -114,12 +121,8 @@ async fn main() {
             }
         }
 
-        match vectordb::pg_vector::load_vector_data(
-            &mut client,
-            table,
-            &input_clone,
-            &response.embeddings,
-        ) {
+        match vectordb::pg_vector::load_vector_data(&mut client, table, &data, &response.embeddings)
+        {
             Ok(_) => {
                 info!("Load vector data successful");
             }
@@ -158,10 +161,14 @@ async fn main() {
         }
     });
 
-    if let Err(e) = embed_thread.join() {
-        error!("Error: {:?}", e);
-        return;
-    }
+    embed_thread.await.unwrap_or_else(|e| {
+        error!("Embed thread panicked: {:?}", e);
+    });
 
     info!("Done with main");
+}
+
+fn run_embedding() {
+    // Your embedding logic here
+    println!("Running embedding...");
 }
