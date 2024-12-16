@@ -5,8 +5,10 @@ use crate::config::config::{
 };
 
 use log::{debug, error, info};
-use std::thread;
-use tokio::task;
+use postgres::Client;
+use std::error::Error;
+use std::sync::{Arc, RwLock};
+use std::thread::{self};
 
 mod config;
 mod embedding;
@@ -25,13 +27,11 @@ fn main() {
         "The cat is purring",
         "The bear is growling",
     ];
-    // .iter()
-    // .map(|&s| s.to_string())
-    // .collect();
 
-    let embed_data = config::config::NewEmbedRequest(model, input);
+    // Arc (Atomic Reference Counted) pointer. It is a thread-safe reference-counting pointer.
+    let embed_request_arc = config::config::ArcEmbedRequest(model, input);
 
-    let embed_data_clone = embed_data.clone();
+    let embed_request_arc_clone = Arc::clone(&embed_request_arc);
 
     let rt = match tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -44,54 +44,13 @@ fn main() {
         }
     };
 
-    let response = rt.block_on(async move {
-        match embedding::vector_embedding::create_embed_request(url, &embed_data).await {
-            Ok(response) => response,
-            Err(e) => {
-                error!("Error: {}", e);
-                return EmbedResponse {
-                    model: "".to_string(),
-                    embeddings: vec![],
-                };
-            }
-        }
-    });
-
-    // let response = embedding.await.unwrap_or_else(|e| {
-    //     error!("Error: {:?}", e);
-    //     EmbedResponse {
-    //         model: "".to_string(),
-    //         embeddings: vec![],
-    //     }
-    // });
+    // Run embedding request
+    let embed_response = rt.block_on(run_embedding(&url, &embed_request_arc));
 
     // query the embeddings
-    let query_input = vec!["some animal is purring".to_string()];
-    let query_data = EmbedRequest {
-        model: model.to_string(),
-        input: query_input,
-    };
-
-    let query_response = rt.block_on(async move {
-        match embedding::vector_embedding::create_embed_request(url, &query_data).await {
-            Ok(response) => response,
-            Err(e) => {
-                error!("Error: {}", e);
-                return EmbedResponse {
-                    model: "".to_string(),
-                    embeddings: vec![],
-                };
-            }
-        }
-    });
-
-    // let query_response = query_embedding.await.unwrap_or_else(|e| {
-    //     error!("Error: {:?}", e);
-    //     EmbedResponse {
-    //         model: "".to_string(),
-    //         embeddings: vec![],
-    //     }
-    // });
+    let query_input = vec!["some animal is purring"];
+    let query_request_arc = config::config::ArcEmbedRequest(model, query_input);
+    let query_response = rt.block_on(run_embedding(&url, &query_request_arc));
 
     let db_config = config::config::NewVectorDbConfig(
         VECTOR_DB_HOST,
@@ -100,7 +59,47 @@ fn main() {
         VECTOR_DB_NAME,
     );
 
+    let table = VECTOR_DB_TABLE;
+    let dim = VECTOR_DB_DIM;
+
+    let db1 = db_config.clone();
+
     let embed_thread = thread::spawn(move || {
+        let mut client = match vectordb::pg_vector::pg_client(&db1) {
+            Ok(client) => client,
+            Err(e) => {
+                error!("Error: {}", e);
+                return;
+            }
+        };
+        let embed_data = embed_request_arc_clone.read().unwrap();
+
+        match run_load_data(
+            &mut client,
+            table,
+            dim,
+            &embed_data,
+            &embed_response.embeddings,
+        ) {
+            Ok(_) => {}
+            Err(e) => {
+                error!("Error: {}", e);
+            }
+        }
+
+        if let Err(e) = client.close() {
+            error!("Error: {}", e);
+            return;
+        }
+    });
+
+    // Wait for the embed thread to finish
+    if let Err(e) = embed_thread.join() {
+        error!("Error: {:?}", e);
+    }
+
+    // query the embeddings in a separate thread
+    let query_thread = thread::spawn(move || {
         let mut client = match vectordb::pg_vector::pg_client(&db_config) {
             Ok(client) => client,
             Err(e) => {
@@ -109,50 +108,11 @@ fn main() {
             }
         };
 
-        let table = VECTOR_DB_TABLE;
-        let dim = VECTOR_DB_DIM;
-        match vectordb::pg_vector::create_table(&mut client, table, dim) {
-            Ok(_) => {
-                info!("Create table successful");
-            }
-            Err(e) => {
-                error!("Error: {}", e);
-                return;
-            }
-        }
-
-        match vectordb::pg_vector::load_vector_data(
-            &mut client,
-            table,
-            &embed_data_clone,
-            &response.embeddings,
-        ) {
-            Ok(_) => {
-                info!("Load vector data successful");
-            }
-            Err(e) => {
-                error!("Error: {}", e);
-                return;
-            }
-        }
-
-        // match vectordb::pg_vector::select_embeddings(&mut client, &table) {
-        //     Ok(_) => {
-        //         info!("Select main successful");
-        //     }
-        //     Err(e) => {
-        //         error!("Error: {}", e);
-        //         return;
-        //     }
-        // };
-
         // query the embeddings
         let query =
-            vectordb::pg_vector::query_nearest(&mut client, table, &query_response.embeddings);
+            vectordb::pg_vector::query_nearest(&mut client, &table, &query_response.embeddings);
         match query {
-            Ok(_) => {
-                debug!("Query nearest vector successful");
-            }
+            Ok(_) => {}
             Err(e) => {
                 error!("Error: {}", e);
                 return;
@@ -165,14 +125,61 @@ fn main() {
         }
     });
 
-    embed_thread.join().unwrap_or_else(|e| {
+    if let Err(e) = query_thread.join() {
         error!("Error: {:?}", e);
-    });
+    }
 
-    info!("Done with main");
+    debug!("Done with main");
 }
 
-fn run_embedding() {
-    // Your embedding logic here
-    println!("Running embedding...");
+async fn run_embedding(url: &str, embed_data: &Arc<RwLock<EmbedRequest>>) -> EmbedResponse {
+    let embed_data = match embed_data.read() {
+        Ok(data) => data,
+        Err(e) => {
+            error!("Error: {}", e);
+            return EmbedResponse {
+                model: "".to_string(),
+                embeddings: vec![],
+            };
+        }
+    };
+
+    match embedding::vector_embedding::create_embed_request(url, &embed_data).await {
+        Ok(embed_response) => embed_response,
+        Err(e) => {
+            error!("Error: {}", e);
+            return EmbedResponse {
+                model: "".to_string(),
+                embeddings: vec![],
+            };
+        }
+    }
+}
+
+fn run_load_data(
+    pg_client: &mut Client,
+    table: &str,
+    dimension: i32,
+    embed_request: &EmbedRequest,
+    embeddings: &Vec<Vec<f32>>,
+) -> Result<(), Box<dyn Error>> {
+    match vectordb::pg_vector::create_table(pg_client, &table, dimension) {
+        Ok(_) => {
+            debug!("Create table successful");
+        }
+        Err(e) => {
+            error!("Error: {}", e);
+        }
+    }
+
+    match vectordb::pg_vector::load_vector_data(pg_client, &table, &embed_request, embeddings) {
+        Ok(_) => {
+            debug!("Load vector data successful");
+        }
+        Err(e) => {
+            error!("Error: {}", e);
+        }
+    }
+
+    Ok(())
 }

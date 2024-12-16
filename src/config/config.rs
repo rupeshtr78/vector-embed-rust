@@ -1,4 +1,5 @@
 // add configs here
+use std::sync::RwLock;
 
 #[derive(serde::Serialize, Debug, Clone)]
 
@@ -19,6 +20,15 @@ pub fn NewEmbedRequest(model: &str, input: Vec<&str>) -> EmbedRequest {
     let data = EmbedRequest { model, input };
 
     data
+}
+
+/// Create a new EmbedRequest with Arc and RwLock for thread safety
+pub fn ArcEmbedRequest(model: &str, input: Vec<&str>) -> std::sync::Arc<RwLock<EmbedRequest>> {
+    let input: Vec<String> = input.iter().map(|s| s.to_string()).collect();
+    let model = model.to_string();
+    let data = EmbedRequest { model, input };
+
+    std::sync::Arc::new(RwLock::new(data))
 }
 
 pub fn NewEmbedResponse(model: String, embeddings: Vec<Vec<f32>>) -> EmbedResponse {
@@ -101,25 +111,39 @@ pub const VECTOR_DB_USER: &str = "rupesh";
 pub const VECTOR_DB_NAME: &str = "vectordb";
 pub const VECTOR_DB_TABLE: &str = "from_rust";
 pub const VECTOR_DB_DIM: i32 = 768;
-pub struct VectorDbConfig<'a> {
-    pub host: &'a str,
+pub struct VectorDbConfig {
+    pub host: String,
     pub port: u16,
-    pub user: &'a str,
-    pub dbname: &'a str,
+    pub user: String,
+    pub dbname: String,
     pub timeout: u64,
 }
 
-pub fn NewVectorDbConfig<'a>(
-    host: &'a str,
-    port: u16,
-    user: &'a str,
-    dbname: &'a str,
-) -> VectorDbConfig<'a> {
+pub fn NewVectorDbConfig(host: &str, port: u16, user: &str, dbname: &str) -> VectorDbConfig {
     VectorDbConfig {
-        host,
+        host: host.to_string(),
         port,
-        user,
-        dbname,
+        user: user.to_string(),
+        dbname: dbname.to_string(),
         timeout: 5,
+    }
+}
+
+impl VectorDbConfig {
+    pub fn to_string(&self) -> String {
+        format!(
+            "host={} port={} user={} dbname={}",
+            self.host, self.port, self.user, self.dbname
+        )
+    }
+
+    pub fn clone(&self) -> VectorDbConfig {
+        VectorDbConfig {
+            host: self.host.clone(),
+            port: self.port,
+            user: self.user.clone(),
+            dbname: self.dbname.clone(),
+            timeout: self.timeout,
+        }
     }
 }

@@ -9,13 +9,13 @@ use std::{error::Error, time::Duration};
 /// - db_config: &VectorDbConfig
 /// Returns:
 /// - Result<Client, Box<dyn Error>>
-pub fn pg_client<'a>(db_config: &'a VectorDbConfig) -> Result<Client, Box<dyn Error>> {
+pub fn pg_client(db_config: &VectorDbConfig) -> Result<Client, Box<dyn Error>> {
     let mut config = Config::new();
     config
-        .host(db_config.host)
+        .host(db_config.host.as_str())
         .port(db_config.port)
-        .user(db_config.user)
-        .dbname(db_config.dbname)
+        .user(db_config.user.as_str())
+        .dbname(db_config.dbname.as_str())
         .connect_timeout(Duration::from_secs(db_config.timeout));
 
     let client = config.connect(NoTls)?;
@@ -122,6 +122,7 @@ pub fn query_nearest(
 }
 
 /// Select embeddings from the Postgres database
+#[allow(dead_code)]
 pub fn select_embeddings(client: &mut Client, table: &str) -> Result<(), Box<dyn Error>> {
     info!("Select method started");
 
