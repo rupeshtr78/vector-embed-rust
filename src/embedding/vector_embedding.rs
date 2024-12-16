@@ -4,7 +4,7 @@ use log::{debug, info};
 use std::error::Error;
 use std::str;
 
-use crate::config::config::{EmbedRequest, EmbedResponse};
+use crate::app::config::{EmbedRequest, EmbedResponse};
 
 /// Create an embedding request
 /// Arguments:

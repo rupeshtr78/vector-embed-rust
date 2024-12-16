@@ -1,4 +1,4 @@
-use crate::config::config::{EmbedRequest, VectorDbConfig};
+use crate::app::config::{EmbedRequest, VectorDbConfig};
 use log::{debug, error, info};
 use pgvector::Vector;
 use postgres::{Client, Config, NoTls};

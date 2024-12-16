@@ -1,22 +1,25 @@
-use crate::config::config::{EmbedRequest, EmbedResponse};
-use crate::config::config::{
+use crate::app::config::{ArcEmbedRequest, EmbedRequest, EmbedResponse, NewVectorDbConfig};
+use crate::app::constants::{
     EMBEDDING_MODEL, EMBEDDING_URL, VECTOR_DB_DIM, VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT,
     VECTOR_DB_TABLE, VECTOR_DB_USER,
 };
 
+use clap::Parser;
 use log::{debug, error, info};
 use postgres::Client;
 use std::error::Error;
 use std::sync::{Arc, RwLock};
 use std::thread::{self};
 
-mod config;
+mod app;
 mod embedding;
 mod vectordb;
 
 fn main() {
     colog::init();
     info!("Starting");
+
+    app::commands::build_args();
 
     let url = EMBEDDING_URL;
     let model = EMBEDDING_MODEL;
@@ -29,7 +32,7 @@ fn main() {
     ];
 
     // Arc (Atomic Reference Counted) pointer. It is a thread-safe reference-counting pointer.
-    let embed_request_arc = config::config::ArcEmbedRequest(model, input);
+    let embed_request_arc = ArcEmbedRequest(model, input);
 
     let embed_request_arc_clone = Arc::clone(&embed_request_arc);
 
@@ -47,12 +50,7 @@ fn main() {
     // Run embedding request
     let embed_response = rt.block_on(run_embedding(&url, &embed_request_arc));
 
-    // query the embeddings
-    let query_input = vec!["some animal is purring"];
-    let query_request_arc = config::config::ArcEmbedRequest(model, query_input);
-    let query_response = rt.block_on(run_embedding(&url, &query_request_arc));
-
-    let db_config = config::config::NewVectorDbConfig(
+    let db_config = NewVectorDbConfig(
         VECTOR_DB_HOST,
         VECTOR_DB_PORT,
         VECTOR_DB_USER,
@@ -72,7 +70,13 @@ fn main() {
                 return;
             }
         };
-        let embed_data = embed_request_arc_clone.read().unwrap();
+        let embed_data = match embed_request_arc_clone.read() {
+            Ok(data) => data,
+            Err(e) => {
+                error!("Error: {}", e);
+                return;
+            }
+        };
 
         match run_load_data(
             &mut client,
@@ -99,6 +103,12 @@ fn main() {
     }
 
     // query the embeddings in a separate thread
+
+    // query the embeddings
+    let query_input = vec!["some animal is purring"];
+    let query_request_arc = ArcEmbedRequest(model, query_input);
+    let query_response = rt.block_on(run_embedding(&url, &query_request_arc));
+
     let query_thread = thread::spawn(move || {
         let mut client = match vectordb::pg_vector::pg_client(&db_config) {
             Ok(client) => client,
