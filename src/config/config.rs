@@ -1,6 +1,7 @@
 // add configs here
 
-#[derive(serde::Serialize, Debug)]
+#[derive(serde::Serialize, Debug, Clone)]
+
 pub struct EmbedRequest {
     pub model: String,
     pub input: Vec<String>,
@@ -12,7 +13,9 @@ pub struct EmbedResponse {
     pub embeddings: Vec<Vec<f32>>,
 }
 
-pub fn NewEmbedRequest(model: String, input: Vec<String>) -> EmbedRequest {
+pub fn NewEmbedRequest(model: &str, input: Vec<&str>) -> EmbedRequest {
+    let input: Vec<String> = input.iter().map(|s| s.to_string()).collect();
+    let model = model.to_string();
     let data = EmbedRequest { model, input };
 
     data

@@ -3,17 +3,16 @@ use crate::config::config::{
     EMBEDDING_MODEL, EMBEDDING_URL, VECTOR_DB_DIM, VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT,
     VECTOR_DB_TABLE, VECTOR_DB_USER,
 };
+
 use log::{debug, error, info};
-use std::sync::Arc;
-use tokio::sync::Mutex;
+use std::thread;
 use tokio::task;
 
 mod config;
 mod embedding;
 mod vectordb;
 
-#[tokio::main]
-async fn main() {
+fn main() {
     colog::init();
     info!("Starting");
 
@@ -25,24 +24,28 @@ async fn main() {
         "The dog is barking",
         "The cat is purring",
         "The bear is growling",
-    ]
-    .iter()
-    .map(|&s| s.to_string())
-    .collect();
+    ];
+    // .iter()
+    // .map(|&s| s.to_string())
+    // .collect();
 
-    let data = config::config::NewEmbedRequest(model.to_string(), input);
+    let embed_data = config::config::NewEmbedRequest(model, input);
 
-    // Wrap data with Arc and Mutex for thread-safe sharing
-    let data_shared = Arc::new(Mutex::new(data));
-    // let input_clone = data.input.clone();
+    let embed_data_clone = embed_data.clone();
 
-    let embed_shared_data = Arc::clone(&data_shared);
+    let rt = match tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+    {
+        Ok(rt) => rt,
+        Err(e) => {
+            error!("Failed to build runtime: {}", e);
+            return;
+        }
+    };
 
-    let embedding = task::spawn(async move {
-        // Lock the shared data and perform operations
-        let data = &*embed_shared_data.lock().await;
-
-        match embedding::vector_embedding::create_embed_request(url, data).await {
+    let response = rt.block_on(async move {
+        match embedding::vector_embedding::create_embed_request(url, &embed_data).await {
             Ok(response) => response,
             Err(e) => {
                 error!("Error: {}", e);
@@ -54,13 +57,13 @@ async fn main() {
         }
     });
 
-    let response = embedding.await.unwrap_or_else(|e| {
-        error!("Error: {:?}", e);
-        EmbedResponse {
-            model: "".to_string(),
-            embeddings: vec![],
-        }
-    });
+    // let response = embedding.await.unwrap_or_else(|e| {
+    //     error!("Error: {:?}", e);
+    //     EmbedResponse {
+    //         model: "".to_string(),
+    //         embeddings: vec![],
+    //     }
+    // });
 
     // query the embeddings
     let query_input = vec!["some animal is purring".to_string()];
@@ -69,7 +72,7 @@ async fn main() {
         input: query_input,
     };
 
-    let query_embedding = task::spawn(async move {
+    let query_response = rt.block_on(async move {
         match embedding::vector_embedding::create_embed_request(url, &query_data).await {
             Ok(response) => response,
             Err(e) => {
@@ -82,13 +85,13 @@ async fn main() {
         }
     });
 
-    let query_response = query_embedding.await.unwrap_or_else(|e| {
-        error!("Error: {:?}", e);
-        EmbedResponse {
-            model: "".to_string(),
-            embeddings: vec![],
-        }
-    });
+    // let query_response = query_embedding.await.unwrap_or_else(|e| {
+    //     error!("Error: {:?}", e);
+    //     EmbedResponse {
+    //         model: "".to_string(),
+    //         embeddings: vec![],
+    //     }
+    // });
 
     let db_config = config::config::NewVectorDbConfig(
         VECTOR_DB_HOST,
@@ -97,10 +100,7 @@ async fn main() {
         VECTOR_DB_NAME,
     );
 
-    let vector_shared_data = Arc::clone(&data_shared);
-
-    let embed_thread = task::spawn(async move {
-        let data = vector_shared_data.lock().await;
+    let embed_thread = thread::spawn(move || {
         let mut client = match vectordb::pg_vector::pg_client(&db_config) {
             Ok(client) => client,
             Err(e) => {
@@ -121,8 +121,12 @@ async fn main() {
             }
         }
 
-        match vectordb::pg_vector::load_vector_data(&mut client, table, &data, &response.embeddings)
-        {
+        match vectordb::pg_vector::load_vector_data(
+            &mut client,
+            table,
+            &embed_data_clone,
+            &response.embeddings,
+        ) {
             Ok(_) => {
                 info!("Load vector data successful");
             }
@@ -161,8 +165,8 @@ async fn main() {
         }
     });
 
-    embed_thread.await.unwrap_or_else(|e| {
-        error!("Embed thread panicked: {:?}", e);
+    embed_thread.join().unwrap_or_else(|e| {
+        error!("Error: {:?}", e);
     });
 
     info!("Done with main");

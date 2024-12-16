@@ -1,6 +1,6 @@
 use hyper::{body, Client, Uri};
 use hyper::{Body, Request};
-use log::{debug, error, info};
+use log::{debug, info};
 use std::error::Error;
 use std::str;
 

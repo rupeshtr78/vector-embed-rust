@@ -1,9 +1,8 @@
+use crate::config::config::{EmbedRequest, VectorDbConfig};
 use log::{debug, error, info};
 use pgvector::Vector;
 use postgres::{Client, Config, NoTls};
 use std::{error::Error, time::Duration};
-
-use crate::config::config::{EmbedRequest, VectorDbConfig};
 
 /// Create a connection to the Postgres database
 /// Argumemts:
@@ -58,7 +57,7 @@ pub fn create_table(
 /// Arguments:
 /// - pg_client: &mut Client
 /// - table: &str
-/// - input: &Vec<String>
+/// - input: &EmbedRequest
 /// - embeddings: &Vec<Vec<f32>>
 /// Returns:
 /// - Result<(), Box<dyn Error>>
