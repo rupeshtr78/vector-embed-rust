@@ -1,14 +1,19 @@
 use super::pg_vector;
+use crate::app::config::NewArcEmbedRequest;
 use crate::app::config::VectorDbConfig;
-use crate::app::config::{NewArcEmbedRequest, NewVectorDbConfig};
 use crate::app::constants::EMBEDDING_URL;
 use crate::embedding;
-use log::LevelFilter;
 use log::{debug, error, info};
-use postgres::Client;
-use std::sync::RwLock;
 use std::thread;
 
+/// Run the query to get the nearest embeddings
+/// Arguments:
+/// - rt: &tokio::runtime::Runtime
+/// - embed_model: String
+/// - input_list: &Vec<String>
+/// - vector_table: String
+/// - db_config: VectorDbConfig
+/// Returns: ()
 pub fn run_query(
     rt: &tokio::runtime::Runtime,
     embed_model: String,
@@ -25,7 +30,7 @@ pub fn run_query(
     let url = EMBEDDING_URL;
 
     let query_request_arc = NewArcEmbedRequest(&embed_model, &input_list);
-    let query_response = rt.block_on(embedding::run_embedding::run_embedding(
+    let query_response = rt.block_on(embedding::run_embedding::fetch_embedding(
         &url,
         &query_request_arc,
     ));

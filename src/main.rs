@@ -1,11 +1,9 @@
 use crate::app::config::NewVectorDbConfig;
-use crate::app::constants::{
-    EMBEDDING_URL, VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER,
-};
+use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
 
 use app::commands::{build_args, Commands};
 use log::LevelFilter;
-use log::{debug, error, info};
+use log::{error, info};
 
 mod app;
 mod embedding;
@@ -21,7 +19,7 @@ fn main() {
 
     let commands = build_args();
 
-    let url = EMBEDDING_URL;
+    // let url = EMBEDDING_URL;
 
     let rt = match tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -59,7 +57,7 @@ fn main() {
             info!(" Table: {:?}", table);
             info!(" Dimension: {:?}", dim);
 
-            let embed_handler = embedding::run_embedding::load_embedding(
+            let embed_handler = embedding::run_embedding::run_embedding_load(
                 &rt,
                 embed_model,
                 input_list,

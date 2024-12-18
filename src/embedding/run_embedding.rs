@@ -9,7 +9,17 @@ use std::thread::{self, JoinHandle};
 
 use super::vector_embedding;
 
-pub fn load_embedding(
+/// Run the embedding request and load the embeddings into the database
+/// Arguments:
+/// - rt: &tokio::runtime::Runtime
+/// - embed_model: String
+/// - input_list: &Vec<String>
+/// - vector_table: String
+/// - dimension: String
+/// - db_config: VectorDbConfig
+/// Returns:
+/// - Result<JoinHandle<()>, Box<dyn Error>>
+pub fn run_embedding_load(
     rt: &tokio::runtime::Runtime,
     embed_model: String,
     input_list: &Vec<String>,
@@ -17,29 +27,15 @@ pub fn load_embedding(
     dimension: String,
     db_config: VectorDbConfig,
 ) -> Result<JoinHandle<()>, Box<dyn Error>> {
-    // colog::init();
-
-    // let commands = build_args();
-
+    debug!("Starting Loading Embeddings");
     let url = EMBEDDING_URL;
-    // let mut embed_model = String::new();
-    // let mut input_list: &Vec<String> = &Vec::new();
-    // let mut vector_table = String::new();
-    // let mut dimension = String::new();
-
-    // let db_config = NewVectorDbConfig(
-    //     VECTOR_DB_HOST,
-    //     VECTOR_DB_PORT,
-    //     VECTOR_DB_USER,
-    //     VECTOR_DB_NAME,
-    // );
 
     // Arc (Atomic Reference Counted) pointer. It is a thread-safe reference-counting pointer.
     let embed_request_arc = NewArcEmbedRequest(&embed_model, input_list);
     let embed_request_arc_clone = Arc::clone(&embed_request_arc);
 
     // Run embedding request in a separate thread
-    let embed_response = rt.block_on(run_embedding(&url, &embed_request_arc));
+    let embed_response = rt.block_on(fetch_embedding(&url, &embed_request_arc));
 
     let dim = dimension.parse::<i32>().unwrap_or_else(|_| {
         error!("Failed to parse dimension");
@@ -65,7 +61,7 @@ pub fn load_embedding(
             }
         };
 
-        match run_load_data(
+        match persist_embedding_data(
             &mut client,
             &vector_table,
             dim,
@@ -88,7 +84,13 @@ pub fn load_embedding(
     Ok(run_embed_thread?)
 }
 
-pub async fn run_embedding(url: &str, embed_data: &Arc<RwLock<EmbedRequest>>) -> EmbedResponse {
+/// Fetch the embedding from the embedding service
+/// Arguments:
+/// - url: &str
+/// - embed_data: &Arc<RwLock<EmbedRequest>>
+/// Returns:
+/// - EmbedResponse
+pub async fn fetch_embedding(url: &str, embed_data: &Arc<RwLock<EmbedRequest>>) -> EmbedResponse {
     debug!("Running Embedding");
     let embed_data = match embed_data.read() {
         Ok(data) => data,
@@ -116,7 +118,16 @@ pub async fn run_embedding(url: &str, embed_data: &Arc<RwLock<EmbedRequest>>) ->
     response
 }
 
-pub fn run_load_data(
+/// Persist the embedding data into the database
+/// Arguments:
+/// - pg_client: &mut Client
+/// - table: &String
+/// - dimension: i32
+/// - embed_request: &EmbedRequest
+/// - embeddings: &Vec<Vec<f32>>
+/// Returns:
+/// - Result<(), Box<dyn Error>>
+pub fn persist_embedding_data(
     pg_client: &mut Client,
     table: &String,
     dimension: i32,
