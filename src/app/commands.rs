@@ -22,7 +22,7 @@ pub enum Commands {
         /// Provide the model to use default is "nomic-embed-text"
         #[clap(default_value = &EMBEDDING_MODEL)]
         #[clap(short, long)]
-        embed_model: String,
+        model: String,
         /// Provide the table to use default is "from_rust"
         #[clap(default_value = VECTOR_DB_TABLE)]
         #[clap(short, long)]
@@ -107,7 +107,7 @@ pub fn dbg_cmd() {
     // cargo run -- write --help
     // cargo run -- write --input "hello" "world"
     // cargo run -- write --input "hello","world" --model "nomic-embed-text1" --table "from_rust2" --dim 7681
-
+    // cargo run -- write --input "dog sound is called bark" --input "cat sounds is called purr" --model "nomic-embed-text"
     let args = Args::parse();
     let commands = match args.cmd {
         Some(command) => command,
@@ -120,7 +120,7 @@ pub fn dbg_cmd() {
     match &commands {
         Commands::Write {
             input,
-            embed_model,
+            model: embed_model,
             table,
             dim,
         } => {
@@ -152,7 +152,7 @@ pub fn dbg_cmd() {
     if commands.is_write() {
         if let Some(Commands::Write {
             input,
-            embed_model,
+            model: embed_model,
             table,
             dim,
         }) = commands.write()

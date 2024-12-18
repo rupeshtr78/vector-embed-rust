@@ -10,6 +10,7 @@ pub const VECTOR_DB_TABLE: &str = "from_rust";
 pub const VECTOR_DB_DIM: i32 = 768;
 pub const VECTOR_DB_DIM_STR: &str = "768";
 pub const VERSION: &str = "1.0.0";
+pub const QUERY_LIMIT: i64 = 1;
 
 pub fn get_dimension(dim: String) -> i32 {
     match dim.parse::<i32>() {

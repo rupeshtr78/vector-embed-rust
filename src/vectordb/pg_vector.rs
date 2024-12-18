@@ -1,4 +1,5 @@
 use crate::app::config::{EmbedRequest, VectorDbConfig};
+use crate::app::constants::QUERY_LIMIT;
 use log::{debug, error, info};
 use pgvector::Vector;
 use postgres::{Client, Config, NoTls};
@@ -32,7 +33,7 @@ pub fn pg_client(db_config: &VectorDbConfig) -> Result<Client, Box<dyn Error>> {
 /// - Result<(), Box<dyn Error>>
 pub fn create_table(
     pg_client: &mut Client,
-    table: &str,
+    table: &String,
     dimension: i32,
 ) -> Result<(), Box<dyn Error>> {
     let mut transaction = pg_client.transaction()?;
@@ -76,6 +77,10 @@ pub fn load_vector_data(
         .map(|v| Vector::from(v.clone()))
         .collect::<Vec<Vector>>();
 
+    if input.get_input().len() != pgv.len() {
+        return Err("Input and Embeddings length mismatch".into());
+    }
+
     // iterate over input and embeddings
     for i in 0..input.input.len() {
         let content = &input.input[i];
@@ -98,7 +103,7 @@ pub fn load_vector_data(
 /// - Result<(), Box<dyn Error>>
 pub fn query_nearest(
     client: &mut Client,
-    table: &str,
+    table: &String,
     query_vec: &Vec<Vec<f32>>,
 ) -> Result<(), Box<dyn Error>> {
     // convert input to pg vector
@@ -107,9 +112,13 @@ pub fn query_nearest(
         .map(|v| Vector::from(v.clone()))
         .collect::<Vec<Vector>>();
 
+    if query_vec.len() != 1 {
+        return Err("Failed to fetch query embedding Query vector length should be 1".into());
+    }
+
     let query = format!(
-        "SELECT content FROM {} ORDER BY embedding <-> $1 LIMIT 1",
-        table
+        "SELECT content FROM {} ORDER BY embedding <-> $1 LIMIT {}",
+        table, QUERY_LIMIT
     );
     let row = client.query(&query, &[&pgv[0]])?;
 
