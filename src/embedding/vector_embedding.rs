@@ -1,32 +1,29 @@
 use hyper::{body, Client, Uri};
 use hyper::{Body, Request};
-use log::{error, info};
+use log::{debug, info};
 use std::error::Error;
 use std::str;
 
-#[derive(serde::Serialize)]
-pub struct EmbedRequest {
-    pub model: String,
-    pub input: Vec<String>,
-}
+use crate::app::config::{EmbedRequest, EmbedResponse};
 
-#[derive(serde::Deserialize, Debug)]
-pub struct EmbedResponse {
-    pub model: String,
-    pub embeddings: Vec<Vec<f32>>,
-}
-
+/// Create an embedding request
+/// Arguments:
+/// - url: &str
+/// - req: &EmbedRequest
+/// Returns:
+/// - Result<EmbedResponse, Box<dyn Error + Send + Sync>>
 pub async fn create_embed_request(
     url: &str,
     req: &EmbedRequest,
 ) -> Result<EmbedResponse, Box<dyn Error + Send + Sync>> {
+    debug!("Creating Embed Request");
     // Create an HTTP connector.
     let client = Client::new();
     // Construct a URI.
     let url = url.parse::<Uri>()?;
 
     // Serialize the data to a JSON string, handling potential errors
-    let json_data = serde_json::to_string(&req)?;
+    let json_data = req.to_json()?;
     let data_body = Body::from(json_data);
 
     // Build the HTTP GET request using the http crate.
@@ -39,7 +36,7 @@ pub async fn create_embed_request(
     // Send the request and await the response.
     let response_body = client.request(request).await?;
 
-    info!("Response status: {}", response_body.status());
+    info!("Embedding Response status: {}", response_body.status());
     // let body = hyper::body::to_bytes(response.into_body()).await?;
 
     let response_body = response_body.into_body();
@@ -47,8 +44,8 @@ pub async fn create_embed_request(
     let body = str::from_utf8(&body_bytes)?;
     let response: EmbedResponse = serde_json::from_str(body)?;
 
-    info!("Response: {:?}", response.model);
-    info!("Response Length: {:?}", response.embeddings[0].len());
+    debug!("Response: {:?}", response.model);
+    debug!("Response Length: {:?}", response.embeddings[0].len());
 
     Ok(response)
 }

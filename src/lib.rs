@@ -1,5 +1,6 @@
 #[allow(unused)]
-pub mod config;
+#[allow(dead_code)]
+pub mod app;
 #[allow(unused)]
 pub mod embedding;
 #[allow(unused)]

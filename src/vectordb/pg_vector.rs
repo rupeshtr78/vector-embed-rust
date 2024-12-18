@@ -1,32 +1,46 @@
+use crate::app::config::{EmbedRequest, VectorDbConfig};
+use crate::app::constants::QUERY_LIMIT;
 use log::{debug, error, info};
 use pgvector::Vector;
-use postgres::{config, Client, Config, NoTls};
+use postgres::{Client, Config, NoTls};
 use std::{error::Error, time::Duration};
 
-pub fn pg_client() -> Result<Client, Box<dyn Error>> {
+/// Create a connection to the Postgres database
+/// Argumemts:
+/// - db_config: &VectorDbConfig
+/// Returns:
+/// - Result<Client, Box<dyn Error>>
+pub fn pg_client(db_config: &VectorDbConfig) -> Result<Client, Box<dyn Error>> {
     let mut config = Config::new();
     config
-        .host("10.0.0.213")
-        .port(5555)
-        .user("rupesh")
-        .dbname("vectordb")
-        .connect_timeout(Duration::from_secs(5));
+        .host(db_config.host.as_str())
+        .port(db_config.port)
+        .user(db_config.user.as_str())
+        .dbname(db_config.dbname.as_str())
+        .connect_timeout(Duration::from_secs(db_config.timeout));
 
     let client = config.connect(NoTls)?;
 
     Ok(client)
 }
 
+/// Create a table in the Postgres database
+/// Arguments:
+/// - pg_client: &mut Client
+/// - table: &str
+/// - dimension: i32 (dimension of the vector)
+/// Returns:
+/// - Result<(), Box<dyn Error>>
 pub fn create_table(
     pg_client: &mut Client,
-    table: &str,
+    table: &String,
     dimension: i32,
 ) -> Result<(), Box<dyn Error>> {
     let mut transaction = pg_client.transaction()?;
 
     let drop_query = format!("DROP TABLE IF EXISTS {}", table);
     transaction.execute(&drop_query, &[])?;
-    info!("Table dropped: {}", table);
+    debug!("Table dropped: {}", table);
 
     let query = format!(
         "CREATE TABLE {} (id bigserial PRIMARY KEY, content text, embedding vector({}))",
@@ -34,17 +48,24 @@ pub fn create_table(
     );
     transaction.execute(&query, &[])?;
 
-    info!("Table created: {}", table);
+    info!("Vector Table created: {}", table);
     transaction.commit()?;
 
     return Ok(());
 }
 
-// input []string, embeddings [][]float32, conn *pgx.Conn
+///  Load vector data into the Postgres database
+/// Arguments:
+/// - pg_client: &mut Client
+/// - table: &str
+/// - input: &EmbedRequest
+/// - embeddings: &Vec<Vec<f32>>
+/// Returns:
+/// - Result<(), Box<dyn Error>>
 pub fn load_vector_data(
     pg_client: &mut Client,
     table: &str,
-    input: &Vec<String>,
+    input: &EmbedRequest,
     embeddings: &Vec<Vec<f32>>,
 ) -> Result<(), Box<dyn Error>> {
     let mut transaction = pg_client.transaction()?;
@@ -56,22 +77,33 @@ pub fn load_vector_data(
         .map(|v| Vector::from(v.clone()))
         .collect::<Vec<Vector>>();
 
+    if input.get_input().len() != pgv.len() {
+        return Err("Input and Embeddings length mismatch".into());
+    }
+
     // iterate over input and embeddings
-    for i in 0..input.len() {
-        let content = &input[i];
+    for i in 0..input.input.len() {
+        let content = &input.input[i];
         let embedding = &pgv[i];
         debug!("Content: {}, Embedding: {:?}", content, embedding);
         transaction.execute(&query, &[&content, &embedding])?;
     }
 
-    info!("Data inserted");
+    info!("Embedding Data inserted to vector db table: {}", table);
     transaction.commit()?;
     Ok(())
 }
 
+/// Query the nearest vector in the Postgres database
+/// Arguments:
+/// - client: &mut Client
+/// - table: &str
+/// - query_vec: &Vec<Vec<f32>>
+/// Returns:
+/// - Result<(), Box<dyn Error>>
 pub fn query_nearest(
     client: &mut Client,
-    table: &str,
+    table: &String,
     query_vec: &Vec<Vec<f32>>,
 ) -> Result<(), Box<dyn Error>> {
     // convert input to pg vector
@@ -80,9 +112,13 @@ pub fn query_nearest(
         .map(|v| Vector::from(v.clone()))
         .collect::<Vec<Vector>>();
 
+    if query_vec.len() != 1 {
+        return Err("Failed to fetch query embedding Query vector length should be 1".into());
+    }
+
     let query = format!(
-        "SELECT content FROM {} ORDER BY embedding <-> $1 LIMIT 1",
-        table
+        "SELECT content FROM {} ORDER BY embedding <-> $1 LIMIT {}",
+        table, QUERY_LIMIT
     );
     let row = client.query(&query, &[&pgv[0]])?;
 
@@ -94,6 +130,8 @@ pub fn query_nearest(
     Ok(())
 }
 
+/// Select embeddings from the Postgres database
+#[allow(dead_code)]
 pub fn select_embeddings(client: &mut Client, table: &str) -> Result<(), Box<dyn Error>> {
     info!("Select method started");
 
