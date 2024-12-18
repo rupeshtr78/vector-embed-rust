@@ -8,8 +8,8 @@ services:
     restart: always
     environment:
       - POSTGRES_DB=vectordb
-      - POSTGRES_USER=rupesh
-      - POSTGRES_PASSWORD=rupesh
+      - POSTGRES_USER=test_user
+      - POSTGRES_PASSWORD=test_db
       - POSTGRES_HOST_AUTH_METHOD=trust
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
