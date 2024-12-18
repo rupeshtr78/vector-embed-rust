@@ -16,6 +16,7 @@ pub async fn create_embed_request(
     url: &str,
     req: &EmbedRequest,
 ) -> Result<EmbedResponse, Box<dyn Error + Send + Sync>> {
+    debug!("Creating Embed Request");
     // Create an HTTP connector.
     let client = Client::new();
     // Construct a URI.

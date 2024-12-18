@@ -18,8 +18,7 @@ pub enum Commands {
         /// provide the input string to use
         #[clap(short, long)]
         input: Vec<String>,
-        /// Provide the model to use default is "nomic-embed-text"
-        /// Provide the model to use default is "nomic-embed-text"
+        /// Provide the model to use
         #[clap(default_value = &EMBEDDING_MODEL)]
         #[clap(short, long)]
         model: String,
@@ -33,15 +32,17 @@ pub enum Commands {
         dim: String,
     },
 
-    /// Query the Vector Database
+    /// Query the Vector Database   
     Query {
         /// The query string to use
         #[clap(short, long)]
-        query: Vec<String>,
-        /// Provide the model to use default is "nomic-embed-text"
+        input: Vec<String>,
+        /// Provide the model to use for query embedding
+        #[clap(short, long)]
         #[clap(default_value = EMBEDDING_MODEL)]
         model: String,
-        /// Provide the table to use default is "from_rust"
+        /// Provide the table to use to query
+        #[clap(short, long)]
         #[clap(default_value = VECTOR_DB_TABLE)]
         table: String,
     },
@@ -108,6 +109,8 @@ pub fn dbg_cmd() {
     // cargo run -- write --input "hello" "world"
     // cargo run -- write --input "hello","world" --model "nomic-embed-text1" --table "from_rust2" --dim 7681
     // cargo run -- write --input "dog sound is called bark" --input "cat sounds is called purr" --model "nomic-embed-text"
+    // cargo run -- write --input "dog sound is called bark" --input "cat sounds is called purr" --model "nomic-embed-text" --table "from_rust2" --dim 768
+    // cargo run -- query --query "who is barking" --model "nomic-embed-text" --table "from_rust2"
     let args = Args::parse();
     let commands = match args.cmd {
         Some(command) => command,
@@ -131,12 +134,12 @@ pub fn dbg_cmd() {
             println!("Dimension: {:?}", dim);
         }
         Commands::Query {
-            query,
+            input,
             model,
             table,
         } => {
             println!("Query command");
-            println!("Query: {:?}", query);
+            println!("Query: {:?}", input);
             println!("Model: {:?}", model);
             println!("Table: {:?}", table);
         }
@@ -146,23 +149,6 @@ pub fn dbg_cmd() {
         }
         Commands::Empty => {
             println!("Empty command");
-        }
-    }
-
-    if commands.is_write() {
-        if let Some(Commands::Write {
-            input,
-            model: embed_model,
-            table,
-            dim,
-        }) = commands.write()
-        {
-            println!("Write command");
-            println!("Input: {:?}", input);
-            println!("Model: {:?}", embed_model);
-            println!("Table: {:?}", table);
-            println!("Dimension: {:?}", dim);
-            // println!("Dimension: {:?}", dim); // ensure this statement is consistent with your original code requirements
         }
     }
 }
