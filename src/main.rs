@@ -4,9 +4,11 @@ use crate::app::constants::{
     VECTOR_DB_TABLE, VECTOR_DB_USER,
 };
 
-use clap::Parser;
+use app::commands::{build_args, Args, Commands};
+use app::config::NewArcEmbedRequest;
 use log::{debug, error, info};
 use postgres::Client;
+use std::borrow::Borrow;
 use std::error::Error;
 use std::sync::{Arc, RwLock};
 use std::thread::{self};
@@ -19,20 +21,37 @@ fn main() {
     colog::init();
     info!("Starting");
 
-    app::commands::build_args();
+    let commands = build_args();
 
     let url = EMBEDDING_URL;
-    let model = EMBEDDING_MODEL;
+    let mut model = EMBEDDING_MODEL.to_string();
 
     // let input = vec!["hello".to_string()];
-    let input = vec![
-        "The dog is barking",
-        "The cat is purring",
-        "The bear is growling",
-    ];
+    let iput_str = "The dog is barking".to_string();
+    let mut input_list = &vec![iput_str];
+
+    if commands.is_write() {
+        if let Some(Commands::Write {
+            input,
+            embed_model,
+            table,
+            dim,
+        }) = commands.write()
+        {
+            println!("Write command");
+            println!("Input: {:?}", input);
+            input_list = input;
+
+            model = embed_model.to_string();
+            println!("Model: {:?}", model);
+            println!("Table: {:?}", table);
+            println!("Dimension: {:?}", dim);
+            // println!("Dimension: {:?}", dim); // ensure this statement is consistent with your original code requirements
+        }
+    }
 
     // Arc (Atomic Reference Counted) pointer. It is a thread-safe reference-counting pointer.
-    let embed_request_arc = ArcEmbedRequest(model, input);
+    let embed_request_arc = NewArcEmbedRequest(&model, input_list);
 
     let embed_request_arc_clone = Arc::clone(&embed_request_arc);
 
@@ -103,10 +122,10 @@ fn main() {
     }
 
     // query the embeddings in a separate thread
+    let query = "who is barking".to_string();
+    let query_input = vec![&query];
 
-    // query the embeddings
-    let query_input = vec!["some animal is purring"];
-    let query_request_arc = ArcEmbedRequest(model, query_input);
+    let query_request_arc = NewArcEmbedRequest(&model, query_input);
     let query_response = rt.block_on(run_embedding(&url, &query_request_arc));
 
     let query_thread = thread::spawn(move || {

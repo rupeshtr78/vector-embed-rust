@@ -31,6 +31,17 @@ pub fn ArcEmbedRequest(model: &str, input: Vec<&str>) -> std::sync::Arc<RwLock<E
     std::sync::Arc::new(RwLock::new(data))
 }
 
+pub fn NewArcEmbedRequest(
+    model: &String,
+    input: Vec<&String>,
+) -> std::sync::Arc<RwLock<EmbedRequest>> {
+    let input: Vec<String> = input.iter().map(|s| s.to_string()).collect();
+    let model = model.to_string();
+    let data = EmbedRequest { model, input };
+
+    std::sync::Arc::new(RwLock::new(data))
+}
+
 pub fn NewEmbedResponse(model: String, embeddings: Vec<Vec<f32>>) -> EmbedResponse {
     EmbedResponse { model, embeddings }
 }
