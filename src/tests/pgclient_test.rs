@@ -165,7 +165,7 @@ mod pg_client_tests {
 mod load_vector_data_tests {
     use super::*;
     use crate::app::config::{EmbedRequest, VectorDbConfig};
-    use crate::embedding::vector_embedding;
+    use crate::embedding::{self, vector_embedding};
     use crate::vectordb::pg_vector;
     use crate::vectordb::pg_vector::pg_client;
     use postgres::Client;
@@ -179,10 +179,8 @@ mod load_vector_data_tests {
         Ok(pg_client)
     }
 
-    #[test]
-    fn test_load_vector_data_success() {
+    fn fetch_embedding(embed_data: &EmbedRequest, table: String) -> Vec<Vec<f32>> {
         let mut client = setup_db().expect("Failed to set up database");
-        let table = "test_table".to_string();
         let dimension = 768;
         let url = EMBEDDING_URL;
         let input = vec!["item1".to_string(), "item2".to_string()];
@@ -191,15 +189,27 @@ mod load_vector_data_tests {
         let result = pg_vector::create_table(&mut client, &table, dimension);
         assert!(result.is_ok());
 
-        let embed_data = EmbedRequest {
-            model: EMBEDDING_MODEL.to_string(),
-            input: vec!["item1".to_string(), "item2".to_string()],
-        };
         let rt = Runtime::new().unwrap();
 
         let response = rt.block_on(vector_embedding::create_embed_request(url, &embed_data));
         assert!(response.is_ok());
-        let embeddings = response.unwrap().embeddings;
+        response.unwrap().embeddings
+    }
+
+    #[test]
+    fn test_load_vector_data_success() {
+        let mut client = setup_db().expect("Failed to set up database");
+        let table = "test_table_success".to_string();
+        let dimension = 768;
+        let url = EMBEDDING_URL;
+        let input = vec!["item1".to_string(), "item2".to_string()];
+
+        // Arrange
+        let embed_data = EmbedRequest {
+            model: EMBEDDING_MODEL.to_string(),
+            input: input.clone(),
+        };
+        let embeddings = fetch_embedding(&embed_data, table.clone());
 
         // Act
         let result = pg_vector::load_vector_data(&mut client, &table, &embed_data, &embeddings);
@@ -208,198 +218,189 @@ mod load_vector_data_tests {
         assert!(result.is_ok());
 
         // Check the data insertion
-        // let rows: Vec<(String, Vec<f32>)> = client
-        //     .query("SELECT content, embedding FROM test_table", &[])
-        //     .expect("Failed to query table")
-        //     .iter()
-        //     .map(|row| {
-        //         let content: String = row.get(0);
-        //         let embedding: Vec<f32> = row.get(1);
-        //         (content, embedding)
-        //     })
-        //     .collect();
+        let query = format!("SELECT id, content FROM {}", table);
+        let rows = client.query(&query, &[]);
+        assert!(rows.is_ok());
+        match rows {
+            Ok(rows) => {
+                assert_eq!(rows.len(), 2);
+                assert_eq!(rows[0].get::<_, String>(1), "item1");
+                assert_eq!(rows[1].get::<_, String>(1), "item2");
+            }
+            Err(e) => {
+                println!("Error: {:?}", e);
+            }
+        }
 
-        // assert_eq!(rows.len(), 2);
-        // assert_eq!(rows[0].0, "item1");
-        // assert_eq!(rows[1].0, "item2");
+        // Teardown
+        let _ = teardown_db(&mut client, table);
     }
 
-    // #[test]
-    // fn test_load_vector_data_length_mismatch() {
-    //     // Arrange
-    //     let mut client = setup_db().expect("Failed to set up database");
-    //     client
-    //         .execute(
-    //             "CREATE TABLE test_table (content TEXT, embedding VECTOR(768))",
-    //             &[],
-    //         )
-    //         .expect("Failed to create table");
+    #[test]
+    fn test_load_vector_data_length_mismatch() {
+        // Arrange
+        let mut client = setup_db().expect("Failed to set up database");
+        let table = "test_table_length_bad".to_string();
+        let dimension = 768;
+        let url = EMBEDDING_URL;
+        let input = vec!["item1".to_string(), "item2".to_string()];
 
-    //     let input = EmbedRequest {
-    //         input: vec!["item1".to_string(), "item2".to_string()],
-    //     };
-    //     let embeddings = vec![vec![0.1; 768]]; // One less than input
+        // Arrange
+        let embed_data = EmbedRequest {
+            model: EMBEDDING_MODEL.to_string(),
+            input: input.clone(),
+        };
+        let embeddings = fetch_embedding(&embed_data, table.clone());
 
-    //     // Act
-    //     let result = load_vector_data(&mut client, "test_table", &input, &embeddings);
+        // Add an extra item to the input
+        let embed_data_wrong = EmbedRequest {
+            model: EMBEDDING_MODEL.to_string(),
+            input: vec![
+                "item1".to_string(),
+                "item2".to_string(),
+                "item3".to_string(),
+            ],
+        };
+        // Act
+        let result =
+            pg_vector::load_vector_data(&mut client, &table, &embed_data_wrong, &embeddings);
 
-    //     // Assert
-    //     assert!(result.is_err());
-    //     assert_eq!(
-    //         result.unwrap_err().to_string(),
-    //         "Input and Embeddings length mismatch"
-    //     );
-    // }
+        // Assert
+        assert!(result.is_err());
 
-    // #[test]
-    // fn test_load_vector_data_empty_input() {
-    //     // Arrange
-    //     let mut client = setup_db().expect("Failed to set up database");
-    //     client
-    //         .execute(
-    //             "CREATE TABLE test_table (content TEXT, embedding VECTOR(768))",
-    //             &[],
-    //         )
-    //         .expect("Failed to create table");
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Invalid Input and Embeddings length or mismatch"
+        );
+    }
 
-    //     let input = EmbedRequest { input: vec![] };
-    //     let embeddings: Vec<Vec<f32>> = vec![]; // No embeddings
+    #[test]
+    fn test_load_vector_data_empty_input() {
+        // Arrange
 
-    //     // Act
-    //     let result = load_vector_data(&mut client, "test_table", &input, &embeddings);
+        let mut client = setup_db().expect("Failed to set up database");
+        let table = "test_table_wrong_input".to_string();
+        let dimension = 768;
+        let url = EMBEDDING_URL;
+        let input = vec!["item1".to_string(), "item2".to_string()];
 
-    //     // Assert
-    //     assert!(result.is_ok()); // Should succeed, as no data to insert
-    // }
+        // Arrange
+        let embed_data = EmbedRequest {
+            model: EMBEDDING_MODEL.to_string(),
+            input: input.clone(),
+        };
+        let embeddings = fetch_embedding(&embed_data, table.clone());
 
-    // #[test]
-    // fn test_load_vector_data_invalid_embeddings() {
-    //     // Arrange
-    //     let mut client = setup_db().expect("Failed to set up database");
-    //     client
-    //         .execute(
-    //             "CREATE TABLE test_table (content TEXT, embedding VECTOR(768))",
-    //             &[],
-    //         )
-    //         .expect("Failed to create table");
+        // Add an extra item to the input
+        let embed_data_wrong = EmbedRequest {
+            model: EMBEDDING_MODEL.to_string(),
+            input: vec![],
+        };
 
-    //     let input = EmbedRequest {
-    //         input: vec!["item1".to_string()],
-    //     };
-    //     let embeddings = vec![vec![0.1; 1000]]; // Invalid size, assuming dimension is 768
+        // Act
+        let result =
+            pg_vector::load_vector_data(&mut client, &table, &embed_data_wrong, &embeddings);
 
-    //     // Act
-    //     let result = load_vector_data(&mut client, "test_table", &input, &embeddings);
+        // Assert
+        assert!(result.is_err());
 
-    //     // Assert
-    //     assert!(result.is_err());
-    //     // You would also want to validate that the error is of the expected type
-    // }
+        let wrong_embeddings: Vec<Vec<f32>> = vec![vec![]];
 
-    // #[test]
-    // fn test_load_vector_data_database_error_handling() {
-    //     // Here you can simulate potential database error scenarios, like invalid table names, etc.
-    //     // For simplicity, this example won't run an actual test due to its complexity.
-    // }
+        let result2 =
+            pg_vector::load_vector_data(&mut client, &table, &embed_data_wrong, &wrong_embeddings);
+
+        assert!(result2.is_err());
+
+        let wrong_embeddings2 = vec![vec![1.0, 768.123, 768.89]];
+
+        let result3 =
+            pg_vector::load_vector_data(&mut client, &table, &embed_data_wrong, &wrong_embeddings2);
+
+        assert!(result3.is_err());
+    }
+
+    #[test]
+    fn test_query_nearest_success() {
+        // Arrange
+        let mut client = setup_db().expect("Failed to set up database");
+
+        // Insert test data
+        client
+            .execute(
+                "CREATE TABLE IF NOT EXISTS test_table_2 (content TEXT, embedding VECTOR(768))",
+                &[],
+            )
+            .expect("Failed to create test_table");
+
+        let query_vec = vec![vec![0.1; 768]]; // Query a vector similar to item1
+
+        // Act
+        let result = pg_vector::query_nearest(&mut client, &"test_table_2".to_string(), &query_vec);
+
+        // Assert
+        assert!(result.is_ok());
+        // You may want to validate the output if you have access to capture it
+
+        // Teardown
+        let _ = teardown_db(&mut client, "test_table".to_string());
+    }
+
+    #[test]
+    fn test_query_nearest_invalid_vector_length() {
+        // Arrange
+        let mut client = setup_db().expect("Failed to set up database");
+
+        let query_vec = vec![vec![0.1; 768], vec![0.2; 768]]; // Invalid length
+
+        // Act
+        let result = pg_vector::query_nearest(&mut client, &"test_table_3".to_string(), &query_vec);
+
+        // Assert
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Failed to fetch query embedding Query vector length should be 1"
+        );
+
+        let _ = teardown_db(&mut client, "test_table".to_string());
+    }
+
+    #[test]
+    fn test_query_nearest_no_results() {
+        // Arrange
+        let mut client = setup_db().expect("Failed to set up database");
+        let query_vec = vec![vec![0.1; 768]]; // Query vector
+
+        // Insert test data
+        client
+            .execute(
+                "CREATE TABLE IF NOT EXISTS test_table_empty (content TEXT, embedding VECTOR(768))",
+                &[],
+            )
+            .expect("Failed to create test_table");
+
+        // Act
+        let result =
+            pg_vector::query_nearest(&mut client, &"test_table_empty".to_string(), &query_vec);
+
+        // Assert
+        assert!(result.is_ok()); // No errors expected
+
+        // Teardown
+        let _ = teardown_db(&mut client, "test_table_empty".to_string());
+    }
+
+    #[test]
+    fn test_query_nearest_invalid_table() {
+        // Arrange
+        let mut client = setup_db().expect("Failed to set up database");
+        let query_vec = vec![vec![0.1; 768]]; // Query vector
+
+        // Act
+        let result =
+            pg_vector::query_nearest(&mut client, &"table_not_exist".to_string(), &query_vec);
+
+        // Assert
+        assert!(result.is_ok()); // Should not error, but no results will be returned
+    }
 }
-
-// #[cfg(test)]
-// mod query_tests {
-//     use super::*;
-//     use crate::vectordb::pg_vector::pg_client;
-
-//     fn setup_db() -> Result<Client, Box<dyn Error>> {
-//         let db_config = VectorDbConfig {
-//             host: String::from(HOST),
-//             port: PORT,
-//             user: String::from(USER),
-//             dbname: String::from(DBNAME),
-//             timeout: 5,
-//         };
-//         let mut client = pg_client(&db_config)?;
-//         client.execute(
-//             "CREATE TABLE IF NOT EXISTS test_table (content TEXT, embedding VECTOR(768))",
-//             &[],
-//         )?;
-//         Ok(client)
-//     }
-
-//     fn teardown_db(client: &mut Client) -> Result<(), Box<dyn Error>> {
-//         client.execute("DROP TABLE IF EXISTS test_table", &[])?;
-//         Ok(())
-//     }
-
-//     #[test]
-//     fn test_query_nearest_success() {
-//         // Arrange
-//         let mut client = setup_db().expect("Failed to set up database");
-
-//         // Insert test data
-//         client
-//             .execute(
-//                 "INSERT INTO test_table (content, embedding) VALUES ($1, $2)",
-//                 &[&"item1", &vec![0.1; 768]],
-//             )
-//             .expect("Failed to insert item1");
-//         client
-//             .execute(
-//                 "INSERT INTO test_table (content, embedding) VALUES ($1, $2)",
-//                 &[&"item2", &vec![0.2; 768]],
-//             )
-//             .expect("Failed to insert item2");
-
-//         let query_vec = vec![vec![0.1; 768]]; // Query a vector similar to item1
-
-//         // Act
-//         let result = query_nearest(&mut client, &"test_table".to_string(), &query_vec);
-
-//         // Assert
-//         assert!(result.is_ok());
-//         // You may want to validate the output if you have access to capture it
-//     }
-
-//     #[test]
-//     fn test_query_nearest_invalid_vector_length() {
-//         // Arrange
-//         let mut client = setup_db().expect("Failed to set up database");
-
-//         let query_vec = vec![vec![0.1; 768], vec![0.2; 768]]; // Invalid length
-
-//         // Act
-//         let result = query_nearest(&mut client, &"test_table".to_string(), &query_vec);
-
-//         // Assert
-//         assert!(result.is_err());
-//         assert_eq!(
-//             result.unwrap_err().to_string(),
-//             "Failed to fetch query embedding Query vector length should be 1"
-//         );
-//     }
-
-//     #[test]
-//     fn test_query_nearest_no_results() {
-//         // Arrange
-//         let mut client = setup_db().expect("Failed to set up database");
-//         let query_vec = vec![vec![0.1; 768]]; // Query vector
-
-//         // Act
-//         let result = query_nearest(&mut client, &"test_table".to_string(), &query_vec);
-
-//         // Assert
-//         assert!(result.is_ok()); // No errors expected
-//                                  // Further checks can be conducted if required, maybe using mock or capturing logs
-//     }
-
-//     #[test]
-//     fn test_query_nearest_empty_table() {
-//         // Arrange
-//         let mut client = setup_db().expect("Failed to set up database");
-//         let query_vec = vec![vec![0.1; 768]]; // Query vector
-
-//         // Act
-//         let result = query_nearest(&mut client, &"test_table".to_string(), &query_vec);
-
-//         // Assert
-//         assert!(result.is_ok()); // Should not error, but no results will be returned
-//     }
-// }
