@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+    postgres:
+        image: rupeshtr/pg-vector:v01
+        container_name: pg-vector-test
+        environment:
+            POSTGRES_USER: test_user
+            POSTGRES_PASSWORD: test_password
+            POSTGRES_DB: test_db
+        ports:
+        - "5432:5432"
+        volumes:
+        - ./pg_data:/var/lib/postgresql/data
+volumes:
+    pg_data:
+        
