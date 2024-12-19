@@ -111,6 +111,7 @@ pub fn dbg_cmd() {
     // cargo run -- write --input "dog sound is called bark" --input "cat sounds is called purr" --model "nomic-embed-text"
     // cargo run -- write --input "dog sound is called bark" --input "cat sounds is called purr" --model "nomic-embed-text" --table "from_rust2" --dim 768
     // cargo run -- query --query "who is barking" --model "nomic-embed-text" --table "from_rust2"
+    // cargo test --package pg-vector-embed-rust --lib -- tests::pgclient_test::pg_client_tests --show-output
     let args = Args::parse();
     let commands = match args.cmd {
         Some(command) => command,
