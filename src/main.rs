@@ -1,9 +1,13 @@
+use std::sync::{Arc, Mutex};
+
 use crate::app::config::NewVectorDbConfig;
 use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
 
 use app::commands::{build_args, Commands};
 use log::LevelFilter;
 use log::{error, info};
+use postgres::Client;
+use vectordb::pg_vector;
 
 mod app;
 mod embedding;
@@ -39,6 +43,15 @@ fn main() {
         VECTOR_DB_NAME,
     );
 
+    // Initialize the client outside the thread and wrap it in Arc<Mutex>
+    let client: Arc<Mutex<Client>> = Arc::new(Mutex::new(match pg_vector::pg_client(&db_config) {
+        Ok(client) => client,
+        Err(e) => {
+            error!("Error: {}", e);
+            return;
+        }
+    }));
+
     if commands.is_write() {
         if let Some(Commands::Write {
             input,
@@ -63,7 +76,7 @@ fn main() {
                 input_list,
                 vector_table,
                 dimension,
-                db_config,
+                client,
             );
 
             match embed_handler {
@@ -91,13 +104,7 @@ fn main() {
             info!(" Model: {:?}", model);
             info!(" Table: {:?}", table);
 
-            vectordb::query_vector::run_query(
-                &rt,
-                embed_model,
-                input_list,
-                vector_table,
-                db_config,
-            );
+            vectordb::query_vector::run_query(&rt, embed_model, input_list, vector_table, client);
 
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }

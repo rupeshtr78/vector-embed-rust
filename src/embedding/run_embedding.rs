@@ -4,7 +4,7 @@ use crate::vectordb;
 use log::{debug, error, info};
 use postgres::Client;
 use std::error::Error;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
 use std::thread::{self, JoinHandle};
 
 use super::vector_embedding;
@@ -25,7 +25,7 @@ pub fn run_embedding_load(
     input_list: &Vec<String>,
     vector_table: String,
     dimension: String,
-    db_config: VectorDbConfig,
+    client: Arc<Mutex<Client>>,
 ) -> Result<JoinHandle<()>, Box<dyn Error>> {
     debug!("Starting Loading Embeddings");
     let url = EMBEDDING_URL;
@@ -46,13 +46,23 @@ pub fn run_embedding_load(
     let embed_thread = thread::Builder::new().name("embedding_thread".to_owned());
 
     let run_embed_thread = embed_thread.spawn(move || {
-        let mut client = match vectordb::pg_vector::pg_client(&db_config) {
+        // let mut client = match vectordb::pg_vector::pg_client(&db_config) {
+        //     Ok(client) => client,
+        //     Err(e) => {
+        //         error!("Error: {}", e);
+        //         return;
+        //     }
+        // };
+
+        let client_clone = Arc::clone(&client);
+        let mut client = match client_clone.lock() {
             Ok(client) => client,
-            Err(e) => {
-                error!("Error: {}", e);
+            Err(p) => {
+                error!("Error: {:?}", p);
                 return;
             }
         };
+
         let embed_data = match embed_request_arc_clone.read() {
             Ok(data) => data,
             Err(e) => {
@@ -74,10 +84,10 @@ pub fn run_embedding_load(
             }
         }
 
-        if let Err(e) = client.close() {
-            error!("Error: {}", e);
-            return;
-        }
+        // if let Err(e) = client.close() {
+        //     error!("Error: {}", e);
+        //     return;
+        // }
     });
 
     debug!("Finished Loading Embeddings");

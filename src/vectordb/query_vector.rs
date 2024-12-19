@@ -4,6 +4,9 @@ use crate::app::config::VectorDbConfig;
 use crate::app::constants::EMBEDDING_URL;
 use crate::embedding;
 use log::{debug, error, info};
+use postgres::Client;
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::thread;
 
 /// Run the query to get the nearest embeddings
@@ -19,7 +22,7 @@ pub fn run_query(
     embed_model: String,
     input_list: &Vec<String>,
     vector_table: String,
-    db_config: VectorDbConfig,
+    client: Arc<Mutex<Client>>,
 ) {
     // colog::init();
 
@@ -38,10 +41,11 @@ pub fn run_query(
     let query_thread = thread::Builder::new().name("query_thread".to_owned());
 
     let run_query_thread = query_thread.spawn(move || {
-        let mut client = match pg_vector::pg_client(&db_config) {
+        let client_clone = Arc::clone(&client);
+        let mut client = match client_clone.lock() {
             Ok(client) => client,
-            Err(e) => {
-                error!("Error: {}", e);
+            Err(p) => {
+                error!("Error: {:?}", p);
                 return;
             }
         };
@@ -55,11 +59,6 @@ pub fn run_query(
                 error!("Error: {}", e);
                 return;
             }
-        }
-
-        if let Err(e) = client.close() {
-            error!("Error: {}", e);
-            return;
         }
     });
 

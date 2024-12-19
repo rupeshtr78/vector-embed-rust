@@ -77,8 +77,8 @@ pub fn load_vector_data(
         .map(|v| Vector::from(v.clone()))
         .collect::<Vec<Vector>>();
 
-    if input.get_input().len() != pgv.len() {
-        return Err("Input and Embeddings length mismatch".into());
+    if input.get_input().len() != pgv.len() || input.get_input().len() == 0 || pgv.len() == 0 {
+        return Err("Invalid Input and Embeddings length or mismatch".into());
     }
 
     // iterate over input and embeddings
@@ -120,12 +120,28 @@ pub fn query_nearest(
         "SELECT content FROM {} ORDER BY embedding <-> $1 LIMIT {}",
         table, QUERY_LIMIT
     );
-    let row = client.query(&query, &[&pgv[0]])?;
 
-    for r in row {
-        let text: &str = r.get(0);
-        info!("Query Result: {}", text);
+    let row = client.query(&query, &[&pgv[0]]);
+    if row.is_err() {
+        error!("Error: {}", row.err().unwrap());
+        return Ok(());
     }
+
+    match row {
+        Ok(rows) => {
+            if rows.len() == 0 {
+                info!("No results found");
+                return Ok(());
+            }
+            for row in rows {
+                let text: &str = row.get(0);
+                info!("Query Result: {}", text);
+            }
+        }
+        Err(e) => {
+            error!("Error: {}", e);
+        }
+    };
 
     Ok(())
 }
