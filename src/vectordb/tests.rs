@@ -6,6 +6,11 @@ use crate::app::config::VectorDbConfig;
 use std::io::{self, Write};
 use std::process::Command;
 
+const PORT: u16 = 5555;
+const HOST: &str = "0.0.0.0";
+const USER: &str = "rupesh";
+const DBNAME: &str = "vectordb";
+
 #[test]
 fn test_setup_docker() -> io::Result<()> {
     // Create a docker-compose.yml string
@@ -58,10 +63,10 @@ volumes:
 fn test_pg_client_success() {
     // Arrange
     let db_config = VectorDbConfig {
-        host: String::from("0.0.0.0"),
-        port: 5432,
-        user: String::from("test_user"),
-        dbname: String::from("test_db"),
+        host: String::from(HOST),
+        port: PORT,
+        user: String::from(USER),
+        dbname: String::from(DBNAME),
         timeout: 5,
     };
 
@@ -77,9 +82,9 @@ fn test_pg_client_invalid_host() {
     // Arrange
     let db_config = VectorDbConfig {
         host: String::from("invalid_host"),
-        port: 5432,
-        user: String::from("test_user"),
-        dbname: String::from("test_db"),
+        port: PORT,
+        user: String::from("USER"),
+        dbname: String::from("DBNAME"),
         timeout: 5,
     };
 
