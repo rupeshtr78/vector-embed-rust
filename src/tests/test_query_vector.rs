@@ -7,7 +7,7 @@ mod tests {
     use crate::embedding::{self, vector_embedding};
     use crate::vectordb::pg_vector;
     use crate::vectordb::pg_vector::pg_client;
-    use postgres::Client;
+    use postgres::{Client, NoTls};
     use std::error::Error;
     use std::pin::Pin;
     use std::sync::{Arc, Mutex};
