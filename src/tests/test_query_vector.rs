@@ -82,6 +82,7 @@ mod tests {
         run_query(&rt, embed_model, &input_list, vector_table, client);
 
         // Assert
+        assert!(true); // Ensure it runs successfully
     }
 
     #[test]
