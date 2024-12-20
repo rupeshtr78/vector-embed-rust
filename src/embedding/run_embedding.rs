@@ -1,4 +1,4 @@
-use crate::app::config::{EmbedRequest, EmbedResponse, NewArcEmbedRequest, VectorDbConfig};
+use crate::app::config::{EmbedRequest, EmbedResponse, NewArcEmbedRequest};
 use crate::app::constants::EMBEDDING_URL;
 use crate::vectordb;
 use ::hyper::Client as HttpClient;
@@ -23,6 +23,7 @@ use super::vector_embedding;
 /// - Result<JoinHandle<()>, Box<dyn Error>>
 pub fn run_embedding_load(
     rt: &tokio::runtime::Runtime,
+    url: &str,
     embed_model: String,
     input_list: &Vec<String>,
     vector_table: String,
@@ -31,7 +32,6 @@ pub fn run_embedding_load(
     http_client: &HttpClient<HttpConnector>,
 ) -> Result<JoinHandle<()>, Box<dyn Error>> {
     debug!("Starting Loading Embeddings");
-    let url = EMBEDDING_URL;
 
     // Arc (Atomic Reference Counted) pointer. It is a thread-safe reference-counting pointer.
     let embed_request_arc = NewArcEmbedRequest(&embed_model, input_list);
@@ -49,14 +49,6 @@ pub fn run_embedding_load(
     let embed_thread = thread::Builder::new().name("embedding_thread".to_owned());
 
     let run_embed_thread = embed_thread.spawn(move || {
-        // let mut client = match vectordb::pg_vector::pg_client(&db_config) {
-        //     Ok(client) => client,
-        //     Err(e) => {
-        //         error!("Error: {}", e);
-        //         return;
-        //     }
-        // };
-
         let client_clone = Arc::clone(&client);
         let mut client = match client_clone.lock() {
             Ok(client) => client,

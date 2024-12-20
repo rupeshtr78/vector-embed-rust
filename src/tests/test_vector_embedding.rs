@@ -70,7 +70,7 @@ mod tests {
 
         let req = EmbedRequest {
             model: EMBEDDING_MODEL.to_string(),
-            input: vec!["".to_string()],
+            input: vec![], // Empty input
         };
 
         let result = create_embed_request(EMBEDDING_URL, &req, &http_client).await;
