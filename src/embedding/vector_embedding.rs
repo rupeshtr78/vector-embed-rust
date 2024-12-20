@@ -1,5 +1,7 @@
+use hyper::client::HttpConnector;
 use hyper::{body, Client, Uri};
 use hyper::{Body, Request};
+
 use log::{debug, info};
 use std::error::Error;
 use std::str;
@@ -15,10 +17,11 @@ use crate::app::config::{EmbedRequest, EmbedResponse};
 pub async fn create_embed_request(
     url: &str,
     req: &EmbedRequest,
+    http_client: &Client<HttpConnector>,
 ) -> Result<EmbedResponse, Box<dyn Error + Send + Sync>> {
     debug!("Creating Embed Request");
     // Create an HTTP connector.
-    let client = Client::new();
+    // let client = Client::new();
     // Construct a URI.
     let url = url.parse::<Uri>()?;
 
@@ -34,7 +37,7 @@ pub async fn create_embed_request(
         .body(data_body)?;
 
     // Send the request and await the response.
-    let response_body = client.request(request).await?;
+    let response_body = http_client.request(request).await?;
 
     info!("Embedding Response status: {}", response_body.status());
     // let body = hyper::body::to_bytes(response.into_body()).await?;

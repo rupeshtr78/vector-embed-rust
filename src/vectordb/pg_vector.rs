@@ -105,7 +105,7 @@ pub fn query_nearest(
     client: &mut Client,
     table: &String,
     query_vec: &Vec<Vec<f32>>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<Vec<String>, Box<dyn Error>> {
     // convert input to pg vector
     let pgv = query_vec
         .iter()
@@ -124,17 +124,19 @@ pub fn query_nearest(
     let row = client.query(&query, &[&pgv[0]]);
     if row.is_err() {
         error!("Error: {}", row.err().unwrap());
-        return Ok(());
+        return Err("Failed to fetch query embedding".into());
     }
 
+    let mut result: Vec<String> = Vec::new();
     match row {
         Ok(rows) => {
             if rows.len() == 0 {
                 info!("No results found");
-                return Ok(());
+                return Ok(result);
             }
             for row in rows {
                 let text: &str = row.get(0);
+                result.push(text.to_string());
                 info!("Query Result: {}", text);
             }
         }
@@ -143,7 +145,7 @@ pub fn query_nearest(
         }
     };
 
-    Ok(())
+    Ok(result)
 }
 
 /// Select embeddings from the Postgres database

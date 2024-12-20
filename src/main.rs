@@ -4,6 +4,7 @@ use crate::app::config::NewVectorDbConfig;
 use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
 
 use app::commands::{build_args, Commands};
+use hyper::Client as HttpClient;
 use log::LevelFilter;
 use log::{error, info};
 use postgres::Client;
@@ -52,6 +53,9 @@ fn main() {
         }
     }));
 
+    // Initialize the http client outside the thread // TODO wrap in Arc<Mutex>
+    let http_client = HttpClient::new();
+
     if commands.is_write() {
         if let Some(Commands::Write {
             input,
@@ -77,6 +81,7 @@ fn main() {
                 vector_table,
                 dimension,
                 client,
+                &http_client,
             );
 
             match embed_handler {
@@ -104,7 +109,14 @@ fn main() {
             info!(" Model: {:?}", model);
             info!(" Table: {:?}", table);
 
-            vectordb::query_vector::run_query(&rt, embed_model, input_list, vector_table, client);
+            vectordb::query_vector::run_query(
+                &rt,
+                embed_model,
+                input_list,
+                vector_table,
+                client,
+                &http_client,
+            );
 
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }

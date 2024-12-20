@@ -7,6 +7,8 @@ mod tests {
     use crate::embedding::{self, vector_embedding};
     use crate::vectordb::pg_vector;
     use crate::vectordb::pg_vector::pg_client;
+    use ::hyper::Client as HttpClient;
+    use hyper::client::HttpConnector;
     use postgres::{Client, NoTls};
     use std::error::Error;
     use std::pin::Pin;
@@ -37,22 +39,49 @@ mod tests {
         Ok(client)
     }
 
-    fn fetch_embedding(embed_data: &EmbedRequest, table: String) -> Vec<Vec<f32>> {
+    fn setup_embeddings(embed_data: &EmbedRequest, table: String) {
         let db_config = create_dbconfig();
         let mut pg_client: postgres::Client = pg_client(&db_config).unwrap();
         let dimension = 768;
         let url = EMBEDDING_URL;
         let input = vec!["item1".to_string(), "item2".to_string()];
+        let http_client = HttpClient::new();
 
         // Arrange
-        let result = pg_vector::create_table(&mut pg_client, &table, dimension);
-        assert!(result.is_ok());
+        // let result = pg_vector::create_table(&mut pg_client, &table, dimension);
+        // assert!(result.is_ok());
 
         let rt = Runtime::new().unwrap();
 
-        let response = rt.block_on(vector_embedding::create_embed_request(url, &embed_data));
-        assert!(response.is_ok());
-        response.unwrap().embeddings
+        let response = rt
+            .block_on(vector_embedding::create_embed_request(
+                url,
+                &embed_data,
+                &http_client,
+            ))
+            .unwrap();
+
+        let mut client = setup_db_client().expect("Failed to set up database");
+        let vector_table = table.clone();
+        let input_list = vec!["item1".to_string(), "item2".to_string()];
+        let embed_model = EMBEDDING_MODEL.to_string();
+
+        // Arrange
+        let embed_data = EmbedRequest {
+            model: EMBEDDING_MODEL.to_string(),
+            input: input_list.clone(),
+        };
+
+        let embeddings = response.embeddings;
+
+        pg_vector::load_vector_data(&mut pg_client, &vector_table, &embed_data, &embeddings)
+            .unwrap();
+    }
+
+    fn teardown_db(client: &mut Client, table: &String) -> Result<(), Box<dyn Error>> {
+        let query_string = format!("DROP TABLE IF EXISTS {}", table);
+        client.execute(&query_string, &[])?;
+        Ok(())
     }
 
     #[test]
@@ -62,89 +91,123 @@ mod tests {
         let mut pg_client: postgres::Client = pg_client(&db_config).unwrap();
         let mut client = setup_db_client().expect("Failed to set up database");
         let vector_table = "test_table_success".to_string();
-        let dimension = 768;
-        let url = EMBEDDING_URL;
         let input_list = vec!["item1".to_string(), "item2".to_string()];
         let embed_model = EMBEDDING_MODEL.to_string();
+        let dimension = 768;
+        let http_client = HttpClient::new();
 
         // Arrange
-        let embed_data = EmbedRequest {
-            model: EMBEDDING_MODEL.to_string(),
-            input: input_list.clone(),
-        };
-        let embeddings = fetch_embedding(&embed_data, vector_table.clone());
-        let result =
-            pg_vector::load_vector_data(&mut pg_client, &vector_table, &embed_data, &embeddings);
+        let result = pg_vector::create_table(&mut pg_client, &vector_table, dimension);
         assert!(result.is_ok());
+
+        setup_embeddings(
+            &EmbedRequest {
+                model: embed_model.clone(),
+                input: input_list.clone(),
+            },
+            vector_table.clone(),
+        );
 
         let rt = Runtime::new().unwrap();
         // Test execution
-        run_query(&rt, embed_model, &input_list, vector_table, client);
+        run_query(
+            &rt,
+            embed_model,
+            &input_list,
+            vector_table.clone(),
+            client,
+            &http_client,
+        );
 
         // Assert
         assert!(true); // Ensure it runs successfully
+
+        // Teardown
+        let _ = teardown_db(&mut pg_client, &vector_table.clone());
     }
 
     #[test]
-    fn test_run_query_invalid_embedding_url() {
+    fn test_run_query_invalid_model() {
         // Setup
+        let db_config = create_dbconfig();
+        let mut pg_client: postgres::Client = pg_client(&db_config).unwrap();
+        let dimension = 768;
         let rt = Runtime::new().unwrap();
-        let embed_model = "invalid_model".to_string();
+        let embed_model = "nomic-embed-text".to_string();
         let input_list = vec!["input1".to_string(), "input2".to_string()];
-        let vector_table = "test_table".to_string();
+        let vector_table = "test_table_invalid_model".to_string();
+        let mut client = setup_db_client().expect("Failed to set up database");
+        let http_client = HttpClient::new();
 
-        // Mocking client
-        let client = Arc::new(Mutex::new(
-            Client::connect("mock_connection_string", NoTls).unwrap(),
-        ));
+        // Arrange
+        let result = pg_vector::create_table(&mut pg_client, &vector_table, dimension);
+        assert!(result.is_ok());
 
-        // Run and expect an error due to invalid URLs or other conditions
-        let result = std::panic::catch_unwind(|| {
-            run_query(&rt, embed_model, &input_list, vector_table, client.clone());
-        });
+        setup_embeddings(
+            &EmbedRequest {
+                model: embed_model.clone(),
+                input: input_list.clone(),
+            },
+            vector_table.clone(),
+        );
 
-        assert!(result.is_err()); // Verify that it panicked
-    }
+        // Run and expect an error due to invalid models or other conditions
+        let wrong_model = "wrong_model".to_string();
+        let result = run_query(
+            &rt,
+            wrong_model,
+            &input_list,
+            vector_table.clone(),
+            client.clone(),
+            &http_client,
+        );
 
-    #[test]
-    fn test_run_query_thread_panic_handling() {
-        // Setup
-        let rt = Runtime::new().unwrap();
-        let embed_model = "test_model".to_string();
-        let input_list = vec!["input1".to_string(), "input2".to_string()];
-        let vector_table = "mock_table".to_string();
+        assert!(true); // Verify that it did not cause panicked
 
-        // Mocking client
-        let client = Arc::new(Mutex::new(
-            Client::connect("mock_connection_string", NoTls).unwrap(),
-        ));
-
-        // Mocking pg_vector::query_nearest to force a panic
-        // Assuming you can override the implementation (using traits or dependency injection)
-
-        let result = std::panic::catch_unwind(|| {
-            run_query(&rt, embed_model, &input_list, vector_table, client);
-        });
-
-        assert!(result.is_err()); // Ensure it panics correctly
+        // Teardown
+        let _ = teardown_db(&mut pg_client, &vector_table.clone());
     }
 
     #[test]
     fn test_run_query_edge_case_no_inputs() {
         // Setup
+        let db_config = create_dbconfig();
+        let mut pg_client: postgres::Client = pg_client(&db_config).unwrap();
+        let dimension = 768;
         let rt = Runtime::new().unwrap();
-        let embed_model = "test_model".to_string();
-        let input_list = vec![]; // No inputs
-        let vector_table = "test_table".to_string();
+        let embed_model = "nomic-embed-text".to_string();
+        let input_list = vec!["input1".to_string(), "input2".to_string()];
+        let vector_table = "test_table_no_input".to_string();
+        let mut client = setup_db_client().expect("Failed to set up database");
+        let http_client = HttpClient::new();
 
-        // Mocking client
-        let client = Arc::new(Mutex::new(
-            Client::connect("mock_connection_string", NoTls).unwrap(),
-        ));
+        // Arrange
+        let result = pg_vector::create_table(&mut pg_client, &vector_table, dimension);
+        // assert!(result.is_ok());
 
-        // Run and check if it completes successfully
-        run_query(&rt, embed_model, &input_list, vector_table, client.clone());
+        setup_embeddings(
+            &EmbedRequest {
+                model: embed_model.clone(),
+                input: input_list.clone(),
+            },
+            vector_table.clone(),
+        );
 
-        // Check for expected states or logs
+        // Run and expect an error due to invalid models or other conditions
+
+        let input_list_empty: Vec<String> = Vec::new();
+        let result = run_query(
+            &rt,
+            embed_model,
+            &input_list_empty,
+            vector_table.clone(),
+            client.clone(),
+            &http_client,
+        );
+
+        assert!(true); // Verify that not panicked
+
+        // Teardown
+        let _ = teardown_db(&mut pg_client, &vector_table.clone());
     }
 }

@@ -1,6 +1,8 @@
 use crate::app::config::{EmbedRequest, EmbedResponse, NewArcEmbedRequest, VectorDbConfig};
 use crate::app::constants::EMBEDDING_URL;
 use crate::vectordb;
+use ::hyper::Client as HttpClient;
+use hyper::client::HttpConnector;
 use log::{debug, error, info};
 use postgres::Client;
 use std::error::Error;
@@ -26,6 +28,7 @@ pub fn run_embedding_load(
     vector_table: String,
     dimension: String,
     client: Arc<Mutex<Client>>,
+    http_client: &HttpClient<HttpConnector>,
 ) -> Result<JoinHandle<()>, Box<dyn Error>> {
     debug!("Starting Loading Embeddings");
     let url = EMBEDDING_URL;
@@ -35,7 +38,7 @@ pub fn run_embedding_load(
     let embed_request_arc_clone = Arc::clone(&embed_request_arc);
 
     // Run embedding request in a separate thread
-    let embed_response = rt.block_on(fetch_embedding(&url, &embed_request_arc));
+    let embed_response = rt.block_on(fetch_embedding(&url, &embed_request_arc, http_client));
 
     let dim = dimension.parse::<i32>().unwrap_or_else(|_| {
         error!("Failed to parse dimension");
@@ -100,7 +103,11 @@ pub fn run_embedding_load(
 /// - embed_data: &Arc<RwLock<EmbedRequest>>
 /// Returns:
 /// - EmbedResponse
-pub async fn fetch_embedding(url: &str, embed_data: &Arc<RwLock<EmbedRequest>>) -> EmbedResponse {
+pub async fn fetch_embedding(
+    url: &str,
+    embed_data: &Arc<RwLock<EmbedRequest>>,
+    http_client: &HttpClient<HttpConnector>,
+) -> EmbedResponse {
     debug!("Running Embedding");
     let embed_data = match embed_data.read() {
         Ok(data) => data,
@@ -113,7 +120,8 @@ pub async fn fetch_embedding(url: &str, embed_data: &Arc<RwLock<EmbedRequest>>) 
         }
     };
 
-    let response = match vector_embedding::create_embed_request(url, &embed_data).await {
+    let response = match vector_embedding::create_embed_request(url, &embed_data, http_client).await
+    {
         Ok(embed_response) => embed_response,
         Err(e) => {
             error!("Error: {}", e);
