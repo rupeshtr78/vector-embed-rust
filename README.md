@@ -90,13 +90,13 @@ src/
 
 ### Running the Application
 
-1. Start the PostgreSQL database (if not already running).
+1. Start the PostgreSQL vector database (if not already running).
+2. Ollama service should be running with the specified model.
 
-2. Run the application:
+3. Run the application:
    ```sh
    cargo run
-   cargo run -- write --input "dog sound is called bark" --input "cat sounds is called purr" --model "nomic-embed-text" --table "from_rust2" --dim 768 --log-level "debug"
-   cargo run -- query --input "who is barking" --model "nomic-embed-text" --table "from_rust2"        
+      
 
    ```
 
@@ -107,7 +107,9 @@ src/
 The application supports various commands and subcommands. Use the `--help` flag to see available options:
 
 ```sh
-cargo run -- --help
+   cargo run -- --help
+   cargo run -- write --input "dog sound is called bark" --input "cat sounds is called purr" --model "nomic-embed-text" --table "from_rust2" --dim 768 --log-level "debug"
+   cargo run -- query --input "who is barking" --model "nomic-embed-text" --table "from_rust2"  
 ```
 
 ### Configuration
