@@ -90,7 +90,7 @@ mod tests {
         let db_config = create_dbconfig();
         let mut pg_client: postgres::Client = pg_client(&db_config).unwrap();
         let mut client = setup_db_client().expect("Failed to set up database");
-        let vector_table = "test_table_success".to_string();
+        let vector_table = "test_table_query_success".to_string();
         let input_list = vec!["item1".to_string(), "item2".to_string()];
         let embed_model = EMBEDDING_MODEL.to_string();
         let dimension = 768;
