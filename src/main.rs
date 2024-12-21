@@ -4,8 +4,9 @@ use crate::app::config::NewVectorDbConfig;
 use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
 
 use app::commands::{build_args, Commands};
-use log::LevelFilter;
-use log::{error, info};
+use app::constants::EMBEDDING_URL;
+use hyper::Client as HttpClient;
+use log::{error, info, warn};
 use postgres::Client;
 use vectordb::pg_vector;
 
@@ -14,16 +15,10 @@ mod embedding;
 mod vectordb;
 
 fn main() {
-    // colog::init();
-    colog::basic_builder()
-        .filter_level(LevelFilter::Info)
-        .init();
-
     info!("Starting");
-
     let commands = build_args();
 
-    // let url = EMBEDDING_URL;
+    let url = EMBEDDING_URL;
 
     let rt = match tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -52,6 +47,9 @@ fn main() {
         }
     }));
 
+    // Initialize the http client outside the thread // TODO wrap in Arc<Mutex>
+    let http_client = HttpClient::new();
+
     if commands.is_write() {
         if let Some(Commands::Write {
             input,
@@ -65,18 +63,20 @@ fn main() {
             let vector_table = table.to_string();
             let dimension = dim.to_string();
             info!("Using the Write arguments below:");
-            info!(" Input: {:?}", input);
+            info!(" Input Length: {:?}", input.len());
             info!(" Model: {:?}", model);
             info!(" Table: {:?}", table);
             info!(" Dimension: {:?}", dim);
 
             let embed_handler = embedding::run_embedding::run_embedding_load(
                 &rt,
+                url,
                 embed_model,
                 input_list,
                 vector_table,
                 dimension,
                 client,
+                &http_client,
             );
 
             match embed_handler {
@@ -104,11 +104,18 @@ fn main() {
             info!(" Model: {:?}", model);
             info!(" Table: {:?}", table);
 
-            vectordb::query_vector::run_query(&rt, embed_model, input_list, vector_table, client);
+            vectordb::query_vector::run_query(
+                &rt,
+                embed_model,
+                input_list,
+                vector_table,
+                client,
+                &http_client,
+            );
 
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }
     } else {
-        error!("No command provided");
+        warn!("No embedding command provided");
     }
 }

@@ -1,13 +1,16 @@
-use clap::{Parser, Subcommand};
-use log::info;
-
 use super::constants::{EMBEDDING_MODEL, VECTOR_DB_DIM_STR, VECTOR_DB_TABLE, VERSION};
+use clap::{Parser, Subcommand, ValueEnum};
+use log::info;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
+#[clap(name = "pg-vector-embed-rust")]
+#[clap(about = "A CLI application for embedding and querying a vector database", long_about = None)]
 pub struct Args {
     #[clap(subcommand)]
     cmd: Option<Commands>,
+    #[clap(short, long, global = true)]
+    log_level: Option<LogLevel>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -46,7 +49,6 @@ pub enum Commands {
         #[clap(default_value = VECTOR_DB_TABLE)]
         table: String,
     },
-
     /// Get the version of the application
     Version {
         /// The version of the application
@@ -55,6 +57,14 @@ pub enum Commands {
         version: String,
     },
     Empty,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, ValueEnum)]
+pub enum LogLevel {
+    Debug,
+    Info,
+    Warn,
+    Error,
 }
 
 impl Commands {
@@ -85,15 +95,69 @@ impl Commands {
             None
         }
     }
+
+    /// Checks if the command is a `Version` command.
+    pub fn is_version(&self) -> bool {
+        matches!(self, Commands::Version { .. })
+    }
+
+    /// Returns an `Option` of `&Commands` if the command is a `Version` command.
+    pub fn version(&self) -> Option<&Commands> {
+        if let Commands::Version { .. } = self {
+            Some(self)
+        } else {
+            None
+        }
+    }
+}
+
+impl LogLevel {
+    // map loglevel to log::LevelFilter
+    pub fn get_log_level_filter(&self) -> log::LevelFilter {
+        match self {
+            LogLevel::Debug => log::LevelFilter::Debug,
+            LogLevel::Info => log::LevelFilter::Info,
+            LogLevel::Warn => log::LevelFilter::Warn,
+            LogLevel::Error => log::LevelFilter::Error,
+        }
+    }
+}
+
+fn colog_init(log_level: LogLevel) {
+    // colog::basic_builder()
+    //     .filter_level(log_level.get_log_level_filter())
+    //     .format_module_path(true)
+    //     .init();
+
+    // Initialize env_logger with module path formatting
+    let mut builder = env_logger::Builder::new();
+    builder
+        .filter_level(log_level.get_log_level_filter())
+        .format_module_path(true)
+        .init();
+
+    println!("Log level set to: {:?}", log_level);
 }
 
 pub fn build_args() -> Commands {
     let args = Args::parse();
+
+    // Handle log level (if provided)
+    if let Some(log_level) = args.log_level {
+        match log_level {
+            LogLevel::Error => colog_init(LogLevel::Error),
+            LogLevel::Warn => colog_init(LogLevel::Warn),
+            LogLevel::Info => colog_init(LogLevel::Info),
+            LogLevel::Debug => colog_init(LogLevel::Debug),
+        }
+    } else {
+        colog_init(LogLevel::Info);
+    }
+
     let commands = match args.cmd {
         Some(command) => command,
         None => {
             info!("No subcommand provided. Use --help for more information.");
-            // return None;
             return Commands::Empty;
         }
     };
@@ -113,6 +177,7 @@ pub fn dbg_cmd() {
     // cargo run -- query --query "who is barking" --model "nomic-embed-text" --table "from_rust2"
     // cargo test --package pg-vector-embed-rust --lib -- tests::pgclient_test::pg_client_tests --show-output
     let args = Args::parse();
+    println!("Parsed args: {:?}", args);
     let commands = match args.cmd {
         Some(command) => command,
         None => {
