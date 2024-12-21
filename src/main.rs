@@ -6,8 +6,7 @@ use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECT
 use app::commands::{build_args, Commands};
 use app::constants::EMBEDDING_URL;
 use hyper::Client as HttpClient;
-use log::LevelFilter;
-use log::{error, info};
+use log::{error, info, warn};
 use postgres::Client;
 use vectordb::pg_vector;
 
@@ -16,13 +15,7 @@ mod embedding;
 mod vectordb;
 
 fn main() {
-    // colog::init();
-    colog::basic_builder()
-        .filter_level(LevelFilter::Info)
-        .init();
-
     info!("Starting");
-
     let commands = build_args();
 
     let url = EMBEDDING_URL;
@@ -123,6 +116,6 @@ fn main() {
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }
     } else {
-        error!("No command provided");
+        warn!("No embedding command provided");
     }
 }

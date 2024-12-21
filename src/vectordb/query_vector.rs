@@ -1,6 +1,5 @@
 use super::pg_vector;
 use crate::app::config::NewArcEmbedRequest;
-use crate::app::config::VectorDbConfig;
 use crate::app::constants::EMBEDDING_URL;
 use crate::embedding;
 use ::hyper::Client as HttpClient;

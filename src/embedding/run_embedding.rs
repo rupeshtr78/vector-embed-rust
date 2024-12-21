@@ -1,5 +1,4 @@
 use crate::app::config::{EmbedRequest, EmbedResponse, NewArcEmbedRequest};
-use crate::app::constants::EMBEDDING_URL;
 use crate::vectordb;
 use ::hyper::Client as HttpClient;
 use hyper::client::HttpConnector;
