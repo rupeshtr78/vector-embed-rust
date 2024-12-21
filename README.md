@@ -1,6 +1,6 @@
 # PG Vector Embedding and Query Rust
 
-This repository contains a Rust-based system for managing vector embeddings and querying them using a PostgreSQL-backed vector database. The system is designed to handle embedding generation, storage, and querying, with support for various edge cases and error handling.
+This repository contains a Rust-based system for managing vector embeddings and querying them using a PostgreSQL-backed vector database. The system is designed to handle embedding generation, storage, and querying.
 
 ## Table of Contents
 
