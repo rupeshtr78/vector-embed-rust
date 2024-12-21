@@ -95,7 +95,7 @@ src/
 2. Run the application:
    ```sh
    cargo run
-   cargo run -- write --input "dog sound is called bark" --input "cat sounds is called purr" --model "nomic-embed-text" --table "from_rust2" --dim 768
+   cargo run -- write --input "dog sound is called bark" --input "cat sounds is called purr" --model "nomic-embed-text" --table "from_rust2" --dim 768 --log-level "debug"
    cargo run -- query --input "who is barking" --model "nomic-embed-text" --table "from_rust2"        
 
    ```
