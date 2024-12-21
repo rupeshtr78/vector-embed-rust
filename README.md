@@ -28,15 +28,12 @@ The system is composed of several modules that handle different aspects of the e
 - **Constants**: Provides constant values used throughout the application.
 - **Embedding**: Contains logic for generating embeddings and persisting them to the database.
 - **VectorDB**: Handles interactions with the PostgreSQL database for storing and querying vector embeddings.
-- **Tests**: Includes unit and integration tests to ensure the system functions correctly.
 
 ## Features
 
 - **Embedding Generation**: Generate vector embeddings from input data.
 - **Database Persistence**: Store embeddings in a PostgreSQL database.
 - **Querying**: Query the database to find nearest neighbors based on vector embeddings.
-- **Error Handling**: Comprehensive error handling for various edge cases.
-- **Testing**: Extensive unit and integration tests to ensure reliability.
 
 ## Directory Structure
 
