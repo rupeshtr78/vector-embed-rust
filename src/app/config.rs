@@ -23,21 +23,6 @@ pub fn NewEmbedResponseFromJson(json: &str) -> Result<EmbedResponse, serde_json:
     serde_json::from_str(json)
 }
 
-pub fn EmptyEmbedResponse() -> EmbedResponse {
-    EmbedResponse {
-        model: "".to_string(),
-        embeddings: vec![],
-    }
-}
-
-pub fn EmptyEmbedRequest() -> EmbedRequest {
-    EmbedRequest {
-        model: "".to_string(),
-        input: vec![],
-        metadata: None,
-    }
-}
-
 impl<'a> EmbedRequest {
     pub fn to_json(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(self)
@@ -86,6 +71,14 @@ impl<'a> EmbedRequest {
             metadata: None,
         }
     }
+
+    pub fn EmptyEmbedRequest() -> EmbedRequest {
+        EmbedRequest {
+            model: "".to_string(),
+            input: vec![],
+            metadata: None,
+        }
+    }
 }
 
 impl EmbedResponse {
@@ -112,6 +105,13 @@ impl EmbedResponse {
     pub fn get_model(&self) -> String {
         self.model.clone()
     }
+
+    pub fn EmptyEmbedResponse() -> EmbedResponse {
+        EmbedResponse {
+            model: "".to_string(),
+            embeddings: vec![],
+        }
+    }
 }
 
 pub struct VectorDbConfig {
@@ -120,16 +120,6 @@ pub struct VectorDbConfig {
     pub user: String,
     pub dbname: String,
     pub timeout: u64,
-}
-
-pub fn NewVectorDbConfig(host: &str, port: u16, user: &str, dbname: &str) -> VectorDbConfig {
-    VectorDbConfig {
-        host: host.to_string(),
-        port,
-        user: user.to_string(),
-        dbname: dbname.to_string(),
-        timeout: 5,
-    }
 }
 
 impl VectorDbConfig {
@@ -147,6 +137,17 @@ impl VectorDbConfig {
             user: self.user.clone(),
             dbname: self.dbname.clone(),
             timeout: self.timeout,
+        }
+    }
+
+    /// constructor
+    pub fn NewVectorDbConfig(host: &str, port: u16, user: &str, dbname: &str) -> VectorDbConfig {
+        VectorDbConfig {
+            host: host.to_string(),
+            port,
+            user: user.to_string(),
+            dbname: dbname.to_string(),
+            timeout: 5,
         }
     }
 }

@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use crate::app::config::NewVectorDbConfig;
+use crate::app::config::VectorDbConfig;
 use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
 
 use app::commands::{build_args, Commands};
@@ -31,7 +31,7 @@ fn main() {
         }
     };
 
-    let db_config = NewVectorDbConfig(
+    let db_config = VectorDbConfig::NewVectorDbConfig(
         VECTOR_DB_HOST,
         VECTOR_DB_PORT,
         VECTOR_DB_USER,
