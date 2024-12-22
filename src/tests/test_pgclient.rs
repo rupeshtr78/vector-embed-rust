@@ -214,6 +214,7 @@ mod load_vector_data_tests {
         let embed_data = EmbedRequest {
             model: EMBEDDING_MODEL.to_string(),
             input: input.clone(),
+            metadata: None,
         };
         let embeddings = fetch_embedding(&embed_data, table.clone());
 
@@ -255,6 +256,7 @@ mod load_vector_data_tests {
         let embed_data = EmbedRequest {
             model: EMBEDDING_MODEL.to_string(),
             input: input.clone(),
+            metadata: None,
         };
         let embeddings = fetch_embedding(&embed_data, table.clone());
 
@@ -266,6 +268,7 @@ mod load_vector_data_tests {
                 "item2".to_string(),
                 "item3".to_string(),
             ],
+            metadata: None,
         };
         // Act
         let result =
@@ -294,6 +297,7 @@ mod load_vector_data_tests {
         let embed_data = EmbedRequest {
             model: EMBEDDING_MODEL.to_string(),
             input: input.clone(),
+            metadata: None,
         };
         let embeddings = fetch_embedding(&embed_data, table.clone());
 
@@ -301,6 +305,7 @@ mod load_vector_data_tests {
         let embed_data_wrong = EmbedRequest {
             model: EMBEDDING_MODEL.to_string(),
             input: vec![],
+            metadata: None,
         };
 
         // Act

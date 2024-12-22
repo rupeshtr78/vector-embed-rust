@@ -38,15 +38,24 @@ pub fn create_table(
 ) -> Result<(), Box<dyn Error>> {
     let mut transaction = pg_client.transaction()?;
 
+    // drop table if exists
     let drop_query = format!("DROP TABLE IF EXISTS {}", table);
     transaction.execute(&drop_query, &[])?;
     debug!("Table dropped: {}", table);
 
+    // create table with id, content and embedding columns
     let query = format!(
-        "CREATE TABLE {} (id bigserial PRIMARY KEY, content text, embedding vector({}))",
+        "CREATE TABLE {} (id bigserial PRIMARY KEY, content text, metadata text, embedding vector({}))",
         table, dimension
     );
     transaction.execute(&query, &[])?;
+
+    // create index on embedding column
+    let index_query = format!(
+        "CREATE INDEX ON {} USING hnsw (embedding vector_cosine_ops)",
+        table
+    );
+    transaction.execute(&index_query, &[])?;
 
     info!("Vector Table created: {}", table);
     transaction.commit()?;
@@ -58,8 +67,8 @@ pub fn create_table(
 /// Arguments:
 /// - pg_client: &mut Client
 /// - table: &str
-/// - input: &EmbedRequest
-/// - embeddings: &Vec<Vec<f32>>
+/// - input: &EmbedRequest get input data from the request
+/// - embeddings: &Vec<Vec<f32>> get embeddings from the response
 /// Returns:
 /// - Result<(), Box<dyn Error>>
 pub fn load_vector_data(

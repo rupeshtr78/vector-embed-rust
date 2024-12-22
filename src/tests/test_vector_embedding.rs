@@ -26,6 +26,7 @@ mod tests {
         let req = EmbedRequest {
             model: EMBEDDING_MODEL.to_string(),
             input: vec!["test_input".to_string()],
+            metadata: None,
         };
 
         let result = create_embed_request(EMBEDDING_URL, &req, &http_client).await;
@@ -43,6 +44,7 @@ mod tests {
         let req = EmbedRequest {
             model: EMBEDDING_MODEL.to_string(),
             input: vec!["test_input".to_string()],
+            metadata: None,
         };
 
         let result = create_embed_request("http://invalid/aapi/embed", &req, &http_client).await;
@@ -57,6 +59,7 @@ mod tests {
         let req = EmbedRequest {
             model: "WRONG_EMBEDDING_MODEL".to_string(),
             input: vec!["test_input".to_string()],
+            metadata: None,
         };
 
         let result = create_embed_request(EMBEDDING_URL, &req, &http_client).await;
@@ -71,6 +74,7 @@ mod tests {
         let req = EmbedRequest {
             model: EMBEDDING_MODEL.to_string(),
             input: vec![], // Empty input
+            metadata: None,
         };
 
         let result = create_embed_request(EMBEDDING_URL, &req, &http_client).await;

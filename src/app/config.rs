@@ -6,6 +6,7 @@ use std::sync::RwLock;
 pub struct EmbedRequest {
     pub model: String,
     pub input: Vec<String>,
+    pub metadata: Option<String>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
@@ -17,16 +18,26 @@ pub struct EmbedResponse {
 pub fn NewEmbedRequest(model: &str, input: Vec<&str>) -> EmbedRequest {
     let input: Vec<String> = input.iter().map(|s| s.to_string()).collect();
     let model = model.to_string();
-    let data = EmbedRequest { model, input };
-
-    data
+    EmbedRequest {
+        model,
+        input,
+        metadata: None,
+    }
 }
 
 /// Create a new EmbedRequest with Arc and RwLock for thread safety
-pub fn ArcEmbedRequest(model: &str, input: Vec<&str>) -> std::sync::Arc<RwLock<EmbedRequest>> {
+pub fn ArcEmbedRequest(
+    model: &str,
+    input: Vec<&str>,
+    metadata: &str,
+) -> std::sync::Arc<RwLock<EmbedRequest>> {
     let input: Vec<String> = input.iter().map(|s| s.to_string()).collect();
     let model = model.to_string();
-    let data = EmbedRequest { model, input };
+    let data = EmbedRequest {
+        model,
+        input,
+        metadata: Some(metadata.to_string()),
+    };
 
     std::sync::Arc::new(RwLock::new(data))
 }
@@ -34,10 +45,15 @@ pub fn ArcEmbedRequest(model: &str, input: Vec<&str>) -> std::sync::Arc<RwLock<E
 pub fn NewArcEmbedRequest(
     model: &String,
     input: &Vec<String>,
+    metadata: &String,
 ) -> std::sync::Arc<RwLock<EmbedRequest>> {
     let input: Vec<String> = input.iter().map(|s| s.to_string()).collect();
     let model = model.to_string();
-    let data = EmbedRequest { model, input };
+    let data = EmbedRequest {
+        model,
+        input,
+        metadata: Some(metadata.to_string()),
+    };
 
     std::sync::Arc::new(RwLock::new(data))
 }
@@ -61,6 +77,7 @@ pub fn EmptyEmbedRequest() -> EmbedRequest {
     EmbedRequest {
         model: "".to_string(),
         input: vec![],
+        metadata: None,
     }
 }
 

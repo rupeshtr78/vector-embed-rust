@@ -70,6 +70,7 @@ mod tests {
         let embed_data = EmbedRequest {
             model: EMBEDDING_MODEL.to_string(),
             input: input_list.clone(),
+            metadata: None,
         };
 
         let embeddings = response.embeddings;
@@ -104,6 +105,7 @@ mod tests {
             &EmbedRequest {
                 model: embed_model.clone(),
                 input: input_list.clone(),
+                metadata: None,
             },
             vector_table.clone(),
         );
@@ -147,6 +149,7 @@ mod tests {
             &EmbedRequest {
                 model: embed_model.clone(),
                 input: input_list.clone(),
+                metadata: None,
             },
             vector_table.clone(),
         );
@@ -189,6 +192,7 @@ mod tests {
             &EmbedRequest {
                 model: embed_model.clone(),
                 input: input_list.clone(),
+                metadata: None,
             },
             vector_table.clone(),
         );

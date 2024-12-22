@@ -18,6 +18,7 @@ mod test_fetch_embedding {
         let embed_data = Arc::new(RwLock::new(EmbedRequest {
             model: EMBEDDING_MODEL.to_string(),
             input: vec!["test_input".to_string()],
+            metadata: None,
         }));
         let http_client = Client::new();
 
@@ -44,6 +45,7 @@ mod test_fetch_embedding {
         let embed_data = Arc::new(RwLock::new(EmbedRequest {
             model: EMBEDDING_MODEL.to_string(),
             input: vec!["test_input".to_string()],
+            metadata: None,
         }));
         let http_client = Client::new();
 
@@ -68,6 +70,7 @@ mod test_fetch_embedding {
         let embed_data = Arc::new(RwLock::new(EmbedRequest {
             model: EMBEDDING_MODEL.to_string(),
             input: vec![], // Empty input
+            metadata: None,
         }));
         let http_client = Client::new();
 

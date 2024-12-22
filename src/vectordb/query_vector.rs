@@ -40,7 +40,7 @@ pub fn run_query(
 
     let url = EMBEDDING_URL;
 
-    let query_request_arc = NewArcEmbedRequest(&embed_model, &input_list);
+    let query_request_arc = NewArcEmbedRequest(&embed_model, &input_list, &"".to_string());
     let query_response = rt.block_on(embedding::run_embedding::fetch_embedding(
         &url,
         &query_request_arc,

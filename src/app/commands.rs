@@ -174,7 +174,7 @@ pub fn dbg_cmd() {
     // cargo run -- write --input "hello","world" --model "nomic-embed-text1" --table "from_rust2" --dim 7681
     // cargo run -- write --input "dog sound is called bark" --input "cat sounds is called purr" --model "nomic-embed-text"
     // cargo run -- write --input "dog sound is called bark" --input "cat sounds is called purr" --model "nomic-embed-text" --table "from_rust2" --dim 768
-    // cargo run -- query --query "who is barking" --model "nomic-embed-text" --table "from_rust2"
+    // cargo run -- query --input "who is barking" --model "nomic-embed-text" --table "from_rust2"
     // cargo test --package pg-vector-embed-rust --lib -- tests::pgclient_test::pg_client_tests --show-output
     let args = Args::parse();
     println!("Parsed args: {:?}", args);

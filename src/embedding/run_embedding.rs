@@ -2,7 +2,7 @@ use crate::app::config::{EmbedRequest, EmbedResponse, NewArcEmbedRequest};
 use crate::vectordb;
 use ::hyper::Client as HttpClient;
 use hyper::client::HttpConnector;
-use log::{debug, error, info};
+use log::{debug, error};
 use postgres::Client;
 use std::error::Error;
 use std::sync::{Arc, Mutex, RwLock};
@@ -33,7 +33,7 @@ pub fn run_embedding_load(
     debug!("Starting Loading Embeddings");
 
     // Arc (Atomic Reference Counted) pointer. It is a thread-safe reference-counting pointer.
-    let embed_request_arc = NewArcEmbedRequest(&embed_model, input_list);
+    let embed_request_arc = NewArcEmbedRequest(&embed_model, input_list, &"".to_string());
     let embed_request_arc_clone = Arc::clone(&embed_request_arc);
 
     // Run embedding request in a separate thread
@@ -143,7 +143,7 @@ pub fn persist_embedding_data(
     embed_request: &EmbedRequest,
     embeddings: &Vec<Vec<f32>>,
 ) -> Result<(), Box<dyn Error>> {
-    info!("Loading data into table");
+    debug!("Loading data into table");
     match vectordb::pg_vector::create_table(pg_client, &table, dimension) {
         Ok(_) => {
             debug!("Create table successful");
