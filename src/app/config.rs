@@ -6,7 +6,7 @@ use std::sync::RwLock;
 pub struct EmbedRequest {
     pub model: String,
     pub input: Vec<String>,
-    pub metadata: Option<String>, // TODO - add metadata
+    pub metadata: Option<String>, // TODO - add metadata hashmap column JSONB
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
