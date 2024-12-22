@@ -15,14 +15,6 @@ pub struct EmbedResponse {
     pub embeddings: Vec<Vec<f32>>,
 }
 
-pub fn NewEmbedResponse(model: String, embeddings: Vec<Vec<f32>>) -> EmbedResponse {
-    EmbedResponse { model, embeddings }
-}
-
-pub fn NewEmbedResponseFromJson(json: &str) -> Result<EmbedResponse, serde_json::Error> {
-    serde_json::from_str(json)
-}
-
 impl<'a> EmbedRequest {
     pub fn to_json(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(self)
@@ -111,6 +103,14 @@ impl EmbedResponse {
             model: "".to_string(),
             embeddings: vec![],
         }
+    }
+
+    pub fn NewEmbedResponse(model: String, embeddings: Vec<Vec<f32>>) -> EmbedResponse {
+        EmbedResponse { model, embeddings }
+    }
+
+    pub fn NewEmbedResponseFromJson(json: &str) -> Result<EmbedResponse, serde_json::Error> {
+        serde_json::from_str(json)
     }
 }
 
