@@ -15,49 +15,6 @@ pub struct EmbedResponse {
     pub embeddings: Vec<Vec<f32>>,
 }
 
-pub fn NewEmbedRequest(model: &str, input: Vec<&str>) -> EmbedRequest {
-    let input: Vec<String> = input.iter().map(|s| s.to_string()).collect();
-    let model = model.to_string();
-    EmbedRequest {
-        model,
-        input,
-        metadata: None,
-    }
-}
-
-/// Create a new EmbedRequest with Arc and RwLock for thread safety
-pub fn ArcEmbedRequest(
-    model: &str,
-    input: Vec<&str>,
-    metadata: &str,
-) -> std::sync::Arc<RwLock<EmbedRequest>> {
-    let input: Vec<String> = input.iter().map(|s| s.to_string()).collect();
-    let model = model.to_string();
-    let data = EmbedRequest {
-        model,
-        input,
-        metadata: Some(metadata.to_string()),
-    };
-
-    std::sync::Arc::new(RwLock::new(data))
-}
-
-pub fn NewArcEmbedRequest(
-    model: &String,
-    input: &Vec<String>,
-    metadata: &String,
-) -> std::sync::Arc<RwLock<EmbedRequest>> {
-    let input: Vec<String> = input.iter().map(|s| s.to_string()).collect();
-    let model = model.to_string();
-    let data = EmbedRequest {
-        model,
-        input,
-        metadata: Some(metadata.to_string()),
-    };
-
-    std::sync::Arc::new(RwLock::new(data))
-}
-
 pub fn NewEmbedResponse(model: String, embeddings: Vec<Vec<f32>>) -> EmbedResponse {
     EmbedResponse { model, embeddings }
 }
@@ -100,6 +57,34 @@ impl<'a> EmbedRequest {
 
     pub fn get_model(&self) -> String {
         self.model.clone()
+    }
+
+    /// Create a new EmbedRequest thread safe Arc
+    pub fn NewArcEmbedRequest(
+        model: &String,
+        input: &Vec<String>,
+        metadata: &String,
+    ) -> std::sync::Arc<RwLock<EmbedRequest>> {
+        let input: Vec<String> = input.iter().map(|s| s.to_string()).collect();
+        let model = model.to_string();
+        let data = EmbedRequest {
+            model,
+            input,
+            metadata: Some(metadata.to_string()),
+        };
+
+        std::sync::Arc::new(RwLock::new(data))
+    }
+
+    /// Create a new EmbedRequest not thread safe
+    pub fn NewEmbedRequest(model: &str, input: Vec<&str>) -> EmbedRequest {
+        let input: Vec<String> = input.iter().map(|s| s.to_string()).collect();
+        let model = model.to_string();
+        EmbedRequest {
+            model,
+            input,
+            metadata: None,
+        }
     }
 }
 

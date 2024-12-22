@@ -1,4 +1,4 @@
-use crate::app::config::{EmbedRequest, EmbedResponse, NewArcEmbedRequest};
+use crate::app::config::{EmbedRequest, EmbedResponse};
 use crate::vectordb;
 use ::hyper::Client as HttpClient;
 use hyper::client::HttpConnector;
@@ -33,7 +33,8 @@ pub fn run_embedding_load(
     debug!("Starting Loading Embeddings");
 
     // Arc (Atomic Reference Counted) pointer. It is a thread-safe reference-counting pointer.
-    let embed_request_arc = NewArcEmbedRequest(&embed_model, input_list, &"".to_string());
+    let embed_request_arc =
+        EmbedRequest::NewArcEmbedRequest(&embed_model, input_list, &"".to_string());
     let embed_request_arc_clone = Arc::clone(&embed_request_arc);
 
     // Run embedding request in a separate thread
