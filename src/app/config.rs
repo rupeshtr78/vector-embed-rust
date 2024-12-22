@@ -6,7 +6,7 @@ use std::sync::RwLock;
 pub struct EmbedRequest {
     pub model: String,
     pub input: Vec<String>,
-    pub metadata: Option<String>,
+    pub metadata: Option<String>, // TODO - add metadata
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
