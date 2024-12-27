@@ -120,7 +120,7 @@ Configuration settings for embedding requests and database connections are manag
 
 ## Testing
 
-The repository includes a comprehensive suite of tests to ensure the system functions correctly. To run the tests:
+The test suite requires postgres vectordb and ollama with embedding model to be running in the correct configuration.
 
 ```sh
 cargo test
