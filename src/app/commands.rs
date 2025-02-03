@@ -56,6 +56,18 @@ pub enum Commands {
         #[clap(default_value = VERSION)]
         version: String,
     },
+
+    /// Load a directory of files into the database
+    Load {
+        /// The path to the directory to load
+        #[clap(short, long)]
+        path: String,
+        // chunk size
+        #[clap(short, long)]
+        #[clap(default_value = "1024")]
+        chunk_size: usize,
+    },
+
     Empty,
 }
 
@@ -104,6 +116,20 @@ impl Commands {
     /// Returns an `Option` of `&Commands` if the command is a `Version` command.
     pub fn version(&self) -> Option<&Commands> {
         if let Commands::Version { .. } = self {
+            Some(self)
+        } else {
+            None
+        }
+    }
+
+    /// Checks if the command is a `Load` command.
+    pub fn is_load(&self) -> bool {
+        matches!(self, Commands::Load { .. })
+    }
+
+    /// Returns an `Option` of `&Commands` if the command is a `Load` command.
+    pub fn load(&self) -> Option<&Commands> {
+        if let Commands::Load { .. } = self {
             Some(self)
         } else {
             None
@@ -212,6 +238,11 @@ pub fn dbg_cmd() {
         Commands::Version { version } => {
             println!("Version command");
             println!("Version: {:?}", version);
+        }
+        Commands::Load { path, chunk_size } => {
+            println!("Load command");
+            println!("Path: {:?}", path);
+            println!("Chunk size: {:?}", chunk_size);
         }
         Commands::Empty => {
             println!("Empty command");

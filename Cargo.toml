@@ -1,5 +1,5 @@
 [package]
-name = "pg-vector-embed-rust"
+name = "vector-embed-rust"
 version = "0.1.0"
 edition = "2021"
 
@@ -42,3 +42,4 @@ text-splitter = { version = "0.22.0", features = [
     "tiktoken-rs",
     "tokenizers",
 ] }
+anyhow = "1.0.95"

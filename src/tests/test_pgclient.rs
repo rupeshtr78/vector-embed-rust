@@ -165,7 +165,7 @@ mod pg_client_tests {
 mod load_vector_data_tests {
     use super::*;
     use crate::app::config::{EmbedRequest, VectorDbConfig};
-    use crate::embedding::{self, vector_embedding};
+    use crate::embedder::{self, vector_embedding};
     use crate::pgvectordb::pg_vector;
     use crate::pgvectordb::pg_vector::pg_client;
     use hyper::Client as HttpClient;

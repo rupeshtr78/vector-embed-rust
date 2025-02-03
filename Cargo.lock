@@ -4302,45 +4302,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pg-vector-embed-rust"
-version = "0.1.0"
-dependencies = [
- "arrow 54.1.0",
- "arrow-array 54.1.0",
- "bytes",
- "clap",
- "colog",
- "env_logger",
- "futures",
- "http 1.2.0",
- "hyper 0.14.31",
- "lancedb",
- "log",
- "mockall",
- "object_store 0.11.2",
- "pgvector",
- "postgres",
- "postgres-types",
- "rand",
- "reqwest",
- "serde",
- "serde_json",
- "text-splitter",
- "tokio",
- "tokio-postgres",
- "tree-sitter-c",
- "tree-sitter-cpp",
- "tree-sitter-go",
- "tree-sitter-java",
- "tree-sitter-javascript",
- "tree-sitter-language",
- "tree-sitter-python",
- "tree-sitter-rust",
- "tree-sitter-scala",
- "tree-sitter-typescript",
-]
-
-[[package]]
 name = "pgvector"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6423,6 +6384,46 @@ name = "vcpkg"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
+
+[[package]]
+name = "vector-embed-rust"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "arrow 54.1.0",
+ "arrow-array 54.1.0",
+ "bytes",
+ "clap",
+ "colog",
+ "env_logger",
+ "futures",
+ "http 1.2.0",
+ "hyper 0.14.31",
+ "lancedb",
+ "log",
+ "mockall",
+ "object_store 0.11.2",
+ "pgvector",
+ "postgres",
+ "postgres-types",
+ "rand",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "text-splitter",
+ "tokio",
+ "tokio-postgres",
+ "tree-sitter-c",
+ "tree-sitter-cpp",
+ "tree-sitter-go",
+ "tree-sitter-java",
+ "tree-sitter-javascript",
+ "tree-sitter-language",
+ "tree-sitter-python",
+ "tree-sitter-rust",
+ "tree-sitter-scala",
+ "tree-sitter-typescript",
+]
 
 [[package]]
 name = "version_check"
