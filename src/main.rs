@@ -7,12 +7,12 @@ use app::commands::{build_args, Commands};
 use app::constants::EMBEDDING_URL;
 use hyper::Client as HttpClient;
 use log::{error, info, warn};
+use pgvectordb::pg_vector;
 use postgres::Client;
-use vectordb::pg_vector;
 
 mod app;
 mod embedding;
-mod vectordb;
+mod pgvectordb;
 
 fn main() {
     info!("Starting");
@@ -104,7 +104,7 @@ fn main() {
             info!(" Model: {:?}", model);
             info!(" Table: {:?}", table);
 
-            vectordb::query_vector::run_query(
+            pgvectordb::query_vector::run_query(
                 &rt,
                 embed_model,
                 input_list,

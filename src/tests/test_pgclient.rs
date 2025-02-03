@@ -31,7 +31,7 @@ mod pg_client_tests {
 
     use super::*;
     use crate::app::config::VectorDbConfig;
-    use crate::vectordb::pg_vector;
+    use crate::pgvectordb::pg_vector;
     #[cfg(test)]
     #[test]
     fn test_pg_client_success() {
@@ -166,8 +166,8 @@ mod load_vector_data_tests {
     use super::*;
     use crate::app::config::{EmbedRequest, VectorDbConfig};
     use crate::embedding::{self, vector_embedding};
-    use crate::vectordb::pg_vector;
-    use crate::vectordb::pg_vector::pg_client;
+    use crate::pgvectordb::pg_vector;
+    use crate::pgvectordb::pg_vector::pg_client;
     use hyper::Client as HttpClient;
     use postgres::Client;
     use std::error::Error;
