@@ -1,14 +1,61 @@
+use crate::app::config::EmbedRequest;
+use crate::app::constants::EMBEDDING_MODEL;
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
+use log::{debug, info};
+use std::cmp::PartialEq;
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::Path;
 use std::path::PathBuf;
 use text_splitter::{ChunkConfig, CodeSplitter, CodeSplitterError};
 use tree_sitter_language::LanguageFn;
-use crate::app::config::EmbedRequest;
-use crate::app::constants::EMBEDDING_MODEL;
+
+#[derive(Debug, PartialEq)]
+enum Language {
+    Rust,
+    Python,
+    Cpp,
+    Java,
+    JavaScript,
+    TypeScript,
+    Tsx,
+    C,
+    Header,
+    Go,
+    Scala,
+    Text,
+    UNKNOWN,
+}
+
+impl Language {
+    fn from_str(s: &str) -> Self {
+        match s {
+            "rs" => Language::Rust,
+            "py" => Language::Python,
+            "cpp" => Language::Cpp,
+            "java" => Language::Java,
+            "js" => Language::JavaScript,
+            "ts" => Language::TypeScript,
+            "tsx" => Language::Tsx,
+            "c" => Language::C,
+            "h" => Language::Header,
+            "go" => Language::Go,
+            "scala" => Language::Scala,
+            "txt" => Language::Text,
+            // "sh" => Language::Text,
+            "unknown" => Language::UNKNOWN,
+            _ => Language::UNKNOWN,
+        }
+    }
+}
+
+// impl PartialEq for Language {
+//     fn eq(&self, other: &Self) -> bool {
+//         self == other
+//     }
+// }
 
 pub struct FileChunk {
     content: Vec<String>,
@@ -31,8 +78,8 @@ impl FileChunk {
         self.content.join("\n")
     }
 
-    pub fn get_file_path(&self) -> PathBuf {
-        self.file_path.clone()
+    pub fn get_file_path(&self) -> &PathBuf {
+        &self.file_path
     }
 
     pub fn get_chunk_number(&self) -> usize {
@@ -59,7 +106,14 @@ impl FileChunk {
         EmbedRequest {
             model: EMBEDDING_MODEL.to_string(),
             input: self.content.clone(),
-            metadata: Some(self.file_path.file_name().unwrap().to_str().unwrap().to_string()),
+            metadata: Some(
+                self.file_path
+                    .file_name()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_string(),
+            ),
         }
     }
 
@@ -108,6 +162,7 @@ async fn process_directory(path: &PathBuf, max_chunk_size: usize) -> Result<Vec<
 
         while let Some(entry) = entries.next_entry().await? {
             let file_path = entry.path();
+            debug!("File Path: {:?}", file_path);
             let file_type = entry.file_type().await?;
             if file_type.is_file() {
                 let chunk = split_file_into_chunks(&file_path, max_chunk_size).await?;
@@ -138,12 +193,20 @@ async fn split_file_into_chunks(
         .with_overlap(256)
         .context("Failed to create chunk config")?;
 
-    let is_code = is_code_file(file_path);
+    let is_supported_file = is_supported_file(file_path);
 
-    log::info!("File: {:?} Extension {:}", is_code.0, is_code.1);
+    log::info!(
+        "File Extension: {:?} Is Supported File {:}",
+        is_supported_file.0,
+        is_supported_file.1
+    );
+
+    if is_supported_file.1 == false {
+        debug!("Unsupported file extension");
+    }
 
     // let mut chunks: Vec<FileChunk> = Vec::new();
-    if is_code.1 == false && is_code.0 == Some("txt") {
+    if is_supported_file.1 == true && is_supported_file.0 == Language::Text {
         // user tree_sitter_markdown
         let splitter = text_splitter::TextSplitter::new(chunk_config);
         let chunks = splitter
@@ -155,12 +218,13 @@ async fn split_file_into_chunks(
         return Ok(chunks);
     }
 
-    if is_code.1 == true {
+    if is_supported_file.1 == true && is_supported_file.0 != Language::Text {
         let splitter = CodeSplitter::new(
-            get_language_from_file_extension(is_code.0).context("Unsupported file extension")?,
+            get_language_from_file_extension(is_supported_file.0)
+                .context("Unsupported file extension")?,
             chunk_config,
         )
-            .context("Failed to create code splitter")?;
+        .context("Failed to create code splitter")?;
 
         let code_chunks = splitter.chunks(&content);
 
@@ -176,34 +240,34 @@ async fn split_file_into_chunks(
 }
 
 /// Check if a file is a code file based on its extension.
-fn is_code_file(file_path: &Path) -> (Option<&str>, bool) {
+fn is_supported_file(file_path: &Path) -> (Language, bool) {
     // Add your own logic to determine if the file is a code file
     let ext = file_path.extension().and_then(|e| e.to_str());
+    info!("File Extension: {:?}", ext);
 
-    let is_code = match ext {
-        Some("rs" | "py" | "cpp" | "java" | "js" | "ts" | "tsx" | "c" | "h" | "go" | "scala") => {
-            true
-        }
-        _ => false,
-    };
+    let res = Language::from_str(ext.unwrap_or("unknown"));
+    debug!("Language: {:?}", res);
 
-    (ext, is_code)
+    if res == Language::UNKNOWN || ext.is_none() {
+        (res, false)
+    } else {
+        (res, true)
+    }
 }
 
-fn get_language_from_file_extension(ext: Option<&str>) -> Result<LanguageFn> {
-    // let ext: Option<&str> = file_path.extension().and_then(|e| e.to_str());
-    let language = match ext {
-        Some("rs") => tree_sitter_rust::LANGUAGE,
-        Some("py") => tree_sitter_python::LANGUAGE,
-        Some("cpp") => tree_sitter_cpp::LANGUAGE,
-        Some("java") => tree_sitter_java::LANGUAGE,
-        Some("js") => tree_sitter_javascript::LANGUAGE,
-        Some("ts") => tree_sitter_typescript::LANGUAGE_TYPESCRIPT,
-        Some("tsx") => tree_sitter_typescript::LANGUAGE_TSX,
-        Some("c") => tree_sitter_c::LANGUAGE,
-        Some("h") => tree_sitter_c::LANGUAGE,
-        Some("go") => tree_sitter_go::LANGUAGE,
-        Some("scala") => tree_sitter_scala::LANGUAGE,
+fn get_language_from_file_extension(language: Language) -> Result<LanguageFn> {
+    let language = match language {
+        Language::Rust => tree_sitter_rust::LANGUAGE,
+        Language::Python => tree_sitter_python::LANGUAGE,
+        Language::Cpp => tree_sitter_cpp::LANGUAGE,
+        Language::Java => tree_sitter_java::LANGUAGE,
+        Language::JavaScript => tree_sitter_javascript::LANGUAGE,
+        Language::TypeScript => tree_sitter_typescript::LANGUAGE_TYPESCRIPT,
+        Language::Tsx => tree_sitter_typescript::LANGUAGE_TSX,
+        Language::C => tree_sitter_c::LANGUAGE,
+        Language::Go => tree_sitter_go::LANGUAGE,
+        Language::Scala => tree_sitter_scala::LANGUAGE,
+        Language::UNKNOWN => return Err(anyhow!("Unsupported file extension")),
         _ => return Err(anyhow!("Unsupported file extension")),
     };
 
