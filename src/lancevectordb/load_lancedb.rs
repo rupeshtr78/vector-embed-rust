@@ -1,12 +1,36 @@
-use std::sync::Arc;
-// use arrow::{ArrayRef, FixedSizeListArray, Float32Array, RecordBatch, StringArray};
 use arrow::array::{FixedSizeListArray, Float32Array, StringArray};
-use arrow_array::{Int32Array, RecordBatch, RecordBatchIterator};
 use arrow_array::types::Float32Type;
+use arrow_array::{Int32Array, RecordBatch, RecordBatchIterator};
 use arrow_schema::{DataType, Field, Schema};
-use lancedb::Connection;
 use lancedb::connect;
 use lancedb::index::Index;
+use lancedb::Connection;
+use std::sync::Arc;
+
+pub struct TableSchema {
+    pub id: Field,
+    pub content: Field,
+    pub metadata: Field,
+    pub embedding: Field,
+}
+
+impl TableSchema {
+    pub fn new(id: i32, content: String, metadata: String, embedding: Vec<Vec<f32>>) -> Self {
+        TableSchema {
+            id: Field::new("id", DataType::Int32, false),
+            content: Field::new("content", DataType::Utf8, false),
+            metadata: Field::new("metadata", DataType::Utf8, false),
+            embedding: Field::new(
+                "embedding",
+                DataType::FixedSizeList(
+                    Arc::new(Field::new("item", DataType::Float32, true)),
+                    1536,
+                ),
+                true,
+            ),
+        }
+    }
+}
 
 /// A struct that represents a chunk of text with its corresponding embeddings.
 async fn create_lance_table(
@@ -16,6 +40,8 @@ async fn create_lance_table(
     // Define the schema of the table.
     let schema = Arc::new(Schema::new(vec![
         Field::new("id", DataType::Int32, false),
+        Field::new("content", DataType::Utf8, false),
+        Field::new("metadata", DataType::Utf8, false),
         Field::new(
             "vector",
             DataType::FixedSizeList(Arc::new(Field::new("item", DataType::Float32, true)), 128),
@@ -26,7 +52,7 @@ async fn create_lance_table(
     // Create a RecordBatch stream.
     let batches = RecordBatchIterator::new(
         vec![RecordBatch::try_new(
-            schema. clone(),
+            schema.clone(),
             vec![
                 Arc::new(Int32Array::from_iter_values(0..256)),
                 Arc::new(
@@ -37,12 +63,11 @@ async fn create_lance_table(
                 ),
             ],
         )
-            .unwrap()]
-            .into_iter()
-            .map(Ok),
-        schema. clone(),
+        .unwrap()]
+        .into_iter()
+        .map(Ok),
+        schema.clone(),
     );
-
 
     db.create_table(table_name, Box::pin(std::iter::once(Ok(batches))))?
         .execute()
@@ -101,7 +126,6 @@ async fn create_lance_table(
 //     Ok(())
 // }
 
-
 fn query_lance_db(
     db: &mut Connection,
     table_name: &str,
@@ -125,11 +149,13 @@ fn query_lance_db(
     let mut results = Vec::new();
     for batch in batches {
         let batch = batch?;
-        let content = batch.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        let content = batch
+            .column(0)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
         results.extend(content.iter().map(|s| s.to_string()));
     }
-
-
 
     Ok(results)
 }

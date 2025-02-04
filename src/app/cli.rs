@@ -1,14 +1,15 @@
-use std::sync::{Arc, Mutex};
 use crate::app::commands::Commands;
+use crate::app::config::EmbedRequest;
+use crate::app::config::EmbedResponse;
+use crate::app::config::VectorDbConfig;
+use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
+use crate::docsplitter::code_loader;
 use crate::embedder::run_embedding::{fetch_embedding, run_embedding_load};
 use crate::pgvectordb::{pg_vector, query_vector};
 use hyper::Client as HttpClient;
 use log::{debug, error, info, warn};
 use postgres::Client;
-use crate::app::config::EmbedRequest;
-use crate::app::config::VectorDbConfig;
-use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
-use crate::docsplitter::code_loader;
+use std::sync::{Arc, Mutex};
 
 pub fn cli(
     commands: Commands,
@@ -87,11 +88,7 @@ pub fn cli(
     }
 }
 
-pub fn cliV2(
-    commands: Commands,
-    rt: tokio::runtime::Runtime,
-    url: &str,
-) -> () {
+pub fn cliV2(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> () {
     match commands {
         Commands::Write {
             input,
@@ -117,13 +114,14 @@ pub fn cliV2(
             );
 
             // Initialize the client outside the thread and wrap it in Arc<Mutex>
-            let client: Arc<Mutex<Client>> = Arc::new(Mutex::new(match pg_vector::pg_client(&db_config) {
-                Ok(client) => client,
-                Err(e) => {
-                    error!("Error: {}", e);
-                    return;
-                }
-            }));
+            let client: Arc<Mutex<Client>> =
+                Arc::new(Mutex::new(match pg_vector::pg_client(&db_config) {
+                    Ok(client) => client,
+                    Err(e) => {
+                        error!("Error: {}", e);
+                        return;
+                    }
+                }));
 
             // Initialize the http client outside the thread // TODO wrap in Arc<Mutex>
             let http_client = HttpClient::new();
@@ -168,13 +166,14 @@ pub fn cliV2(
             );
 
             // Initialize the client outside the thread and wrap it in Arc<Mutex>
-            let client: Arc<Mutex<Client>> = Arc::new(Mutex::new(match pg_vector::pg_client(&db_config) {
-                Ok(client) => client,
-                Err(e) => {
-                    error!("Error: {}", e);
-                    return;
-                }
-            }));
+            let client: Arc<Mutex<Client>> =
+                Arc::new(Mutex::new(match pg_vector::pg_client(&db_config) {
+                    Ok(client) => client,
+                    Err(e) => {
+                        error!("Error: {}", e);
+                        return;
+                    }
+                }));
 
             // Initialize the http client outside the thread // TODO wrap in Arc<Mutex>
             let http_client = HttpClient::new();
@@ -206,7 +205,10 @@ pub fn cliV2(
             };
 
             // Extract the embed requests from the chunks
-            let embed_requests = chunks.iter().map(|chunk| chunk.embed_request_arc()).collect::<Vec<_>>();
+            let embed_requests: Vec<Arc<std::sync::RwLock<EmbedRequest>>> = chunks
+                .iter()
+                .map(|chunk| chunk.embed_request_arc())
+                .collect::<Vec<_>>();
 
             // Print the chunks
             for chunk in chunks {
@@ -216,16 +218,16 @@ pub fn cliV2(
             // Initialize the http client outside the thread // TODO wrap in Arc<Mutex>
             let http_client = HttpClient::new();
             for embed_request in embed_requests {
-                let embed_response = rt.block_on(fetch_embedding(&url, &embed_request, &http_client));
+                let embed_response: EmbedResponse =
+                    rt.block_on(fetch_embedding(&url, &embed_request, &http_client));
                 info!("Embedding Response: {:?}", embed_response);
             }
 
-           // shutdown the runtime after the embedding is done
+            // shutdown the runtime after the embedding is done
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }
         _ => {
             warn!("No embedding command provided");
         }
     }
-
 }
