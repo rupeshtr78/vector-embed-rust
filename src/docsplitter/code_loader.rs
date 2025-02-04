@@ -7,6 +7,8 @@ use std::path::Path;
 use std::path::PathBuf;
 use text_splitter::{ChunkConfig, CodeSplitter, CodeSplitterError};
 use tree_sitter_language::LanguageFn;
+use crate::app::config::EmbedRequest;
+use crate::app::constants::EMBEDDING_MODEL;
 
 pub struct FileChunk {
     content: Vec<String>,
@@ -52,6 +54,18 @@ impl FileChunk {
             |s| s.to_str().unwrap_or("None").to_string(),
         )
     }
+
+    pub fn embed_request(&self) -> EmbedRequest {
+        EmbedRequest {
+            model: EMBEDDING_MODEL.to_string(),
+            input: self.content.clone(),
+            metadata: Some(self.file_path.file_name().unwrap().to_str().unwrap().to_string()),
+        }
+    }
+
+    pub fn embed_request_arc(&self) -> std::sync::Arc<std::sync::RwLock<EmbedRequest>> {
+        std::sync::Arc::new(std::sync::RwLock::new(self.embed_request()))
+    }
 }
 
 /// Load a codebase into chunks of text.
@@ -60,7 +74,23 @@ pub async fn load_codebase_into_chunks(
     max_chunk_size: usize,
 ) -> Result<Vec<FileChunk>> {
     let root_path = PathBuf::from(root_dir);
-    process_directory(&root_path, max_chunk_size).await
+
+    if root_path.is_file() {
+        let chunk = split_file_into_chunks(&root_path, max_chunk_size)
+            .await
+            .context("Failed to split file into chunks")?;
+        return Ok(chunk);
+    }
+
+    if root_path.is_dir() {
+        return process_directory(&root_path, max_chunk_size)
+            .await
+            .context("Failed to process directory");
+    }
+
+    Err(anyhow!(
+        "The path provided is neither a file nor a directory"
+    ))
 }
 
 /// process_directory recursively processes a directory and its subdirectories to extract code chunks.
@@ -74,10 +104,12 @@ async fn process_directory(path: &PathBuf, max_chunk_size: usize) -> Result<Vec<
             .await
             .context(format!("Failed to read directory {}", path.display()))?;
 
+        // let is_code = is_code_file(path);
+
         while let Some(entry) = entries.next_entry().await? {
             let file_path = entry.path();
             let file_type = entry.file_type().await?;
-            if file_type.is_file() && is_code_file(&file_path) {
+            if file_type.is_file() {
                 let chunk = split_file_into_chunks(&file_path, max_chunk_size).await?;
                 chunks.extend(chunk);
             } else if file_type.is_dir() {
@@ -106,35 +138,60 @@ async fn split_file_into_chunks(
         .with_overlap(256)
         .context("Failed to create chunk config")?;
 
-    // Split the content into chunks based on language-specific rules
-    let splitter = CodeSplitter::new(
-        get_language_from_file_extension(file_path).context("Unsupported file extension")?,
-        chunk_config,
-    )
-    .context("Failed to create code splitter")?;
+    let is_code = is_code_file(file_path);
 
-    let chunks = splitter.chunks(&content);
+    log::info!("File: {:?} Extension {:}", is_code.0, is_code.1);
 
-    let chunks = chunks
-        .enumerate()
-        .map(|(i, chunk)| Ok(FileChunk::new(chunk.to_string(), file_path.clone(), i)))
-        .collect::<Result<Vec<FileChunk>, CodeSplitterError>>()?;
+    // let mut chunks: Vec<FileChunk> = Vec::new();
+    if is_code.1 == false && is_code.0 == Some("txt") {
+        // user tree_sitter_markdown
+        let splitter = text_splitter::TextSplitter::new(chunk_config);
+        let chunks = splitter
+            .chunks(&content)
+            .enumerate()
+            .map(|(i, chunk)| Ok(FileChunk::new(chunk.to_string(), file_path.clone(), i)))
+            .collect::<Result<Vec<FileChunk>, CodeSplitterError>>()?;
 
-    Ok(chunks)
+        return Ok(chunks);
+    }
+
+    if is_code.1 == true {
+        let splitter = CodeSplitter::new(
+            get_language_from_file_extension(is_code.0).context("Unsupported file extension")?,
+            chunk_config,
+        )
+            .context("Failed to create code splitter")?;
+
+        let code_chunks = splitter.chunks(&content);
+
+        let chunks: Vec<FileChunk> = code_chunks
+            .enumerate()
+            .map(|(i, chunk)| Ok(FileChunk::new(chunk.to_string(), file_path.clone(), i)))
+            .collect::<Result<Vec<FileChunk>, CodeSplitterError>>()?;
+
+        return Ok(chunks);
+    }
+
+    Ok(vec![])
 }
 
 /// Check if a file is a code file based on its extension.
-fn is_code_file(file_path: &Path) -> bool {
+fn is_code_file(file_path: &Path) -> (Option<&str>, bool) {
     // Add your own logic to determine if the file is a code file
     let ext = file_path.extension().and_then(|e| e.to_str());
-    matches!(
-        ext,
-        Some("rs" | "py" | "cpp" | "java" | "js" | "ts" | "c" | "h" | "go" | "scala")
-    )
+
+    let is_code = match ext {
+        Some("rs" | "py" | "cpp" | "java" | "js" | "ts" | "tsx" | "c" | "h" | "go" | "scala") => {
+            true
+        }
+        _ => false,
+    };
+
+    (ext, is_code)
 }
 
-fn get_language_from_file_extension(file_path: &PathBuf) -> Result<LanguageFn> {
-    let ext = file_path.extension().and_then(|e| e.to_str());
+fn get_language_from_file_extension(ext: Option<&str>) -> Result<LanguageFn> {
+    // let ext: Option<&str> = file_path.extension().and_then(|e| e.to_str());
     let language = match ext {
         Some("rs") => tree_sitter_rust::LANGUAGE,
         Some("py") => tree_sitter_python::LANGUAGE,

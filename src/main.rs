@@ -1,21 +1,12 @@
-use std::sync::{Arc, Mutex};
-
-use crate::app::config::VectorDbConfig;
-use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
-
 use app::cli;
-use app::commands::{build_args, Commands};
+use app::commands::build_args;
 use app::constants::EMBEDDING_URL;
-use hyper::Client as HttpClient;
-use log::{error, info, warn};
-use pgvectordb::pg_vector;
-use postgres::Client;
-use crate::app::commands::dbg_cmd;
+use log::{error, info};
 
 mod app;
 mod embedder;
 mod pgvectordb;
-mod loader;
+mod docsplitter;
 
  fn main() {
     info!("Starting");

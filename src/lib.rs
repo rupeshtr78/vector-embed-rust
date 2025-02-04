@@ -10,4 +10,6 @@ pub mod pgvectordb;
 pub mod tests;
 #[allow(unused)]
 #[allow(dead_code)]
-pub mod loader;
+pub mod docsplitter;
+// #[allow(unused)]
+// pub mod lancevectordb;

@@ -6392,6 +6392,7 @@ dependencies = [
  "anyhow",
  "arrow 54.1.0",
  "arrow-array 54.1.0",
+ "arrow-schema 54.1.0",
  "bytes",
  "clap",
  "colog",

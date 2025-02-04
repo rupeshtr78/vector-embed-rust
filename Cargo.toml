@@ -43,3 +43,4 @@ text-splitter = { version = "0.22.0", features = [
     "tokenizers",
 ] }
 anyhow = "1.0.95"
+arrow-schema = "54.1.0"

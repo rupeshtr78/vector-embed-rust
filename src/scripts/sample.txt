@@ -1,0 +1,7 @@
+The system is composed of several modules that handle different aspects of the embedding and querying process:
+
+Commands: Handles command-line arguments and subcommands.
+Config: Manages configuration settings for embedding requests and database connections.
+Constants: Provides constant values used throughout the application.
+Embedding: Contains logic for generating embeddings and persisting them to the database.
+VectorDB: Handles interactions with the PostgreSQL database for storing and querying vector embeddings.

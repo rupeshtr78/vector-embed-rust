@@ -177,7 +177,7 @@ pub fn build_args() -> Commands {
             LogLevel::Debug => colog_init(LogLevel::Debug),
         }
     } else {
-        colog_init(LogLevel::Info);
+        colog_init(LogLevel::Debug);
     }
 
     let commands = match args.cmd {

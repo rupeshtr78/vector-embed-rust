@@ -1,12 +1,52 @@
 use hyper::client::HttpConnector;
 use hyper::{body, Client, Uri};
 use hyper::{Body, Request};
-
-use log::{debug, info};
+use ::hyper::Client as HttpClient;
+use log::{debug, error, info};
 use std::error::Error;
 use std::str;
-
+use std::sync::{Arc, RwLock};
 use crate::app::config::{EmbedRequest, EmbedResponse};
+use crate::embedder::vector_embedding;
+
+/// Fetch the embedding from the embedding service
+/// Arguments:
+/// - url: &str
+/// - embed_data: &Arc<RwLock<EmbedRequest>>
+/// Returns:
+/// - EmbedResponse
+pub async fn fetch_embedding(
+    url: &str,
+    embed_data: &Arc<RwLock<EmbedRequest>>,
+    http_client: &HttpClient<HttpConnector>,
+) -> EmbedResponse {
+    debug!("Running Embedding");
+    let embed_data = match embed_data.read() {
+        Ok(data) => data,
+        Err(e) => {
+            error!("Error: {}", e);
+            return EmbedResponse {
+                model: "".to_string(),
+                embeddings: vec![],
+            };
+        }
+    };
+
+    let response = match create_embed_request(url, &embed_data, http_client).await
+    {
+        Ok(embed_response) => embed_response,
+        Err(e) => {
+            error!("Error: {}", e);
+            return EmbedResponse {
+                model: "".to_string(),
+                embeddings: vec![],
+            };
+        }
+    };
+
+    debug!("Finished Running Embedding");
+    response
+}
 
 /// Create an embedding request
 /// Arguments:
