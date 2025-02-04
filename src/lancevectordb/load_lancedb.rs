@@ -1,6 +1,7 @@
 use arrow::array::{FixedSizeListArray, Float32Array, StringArray};
 use arrow_array::types::Float32Type;
 use arrow_array::{Int32Array, RecordBatch, RecordBatchIterator};
+use arrow_schema::TimeUnit;
 use arrow_schema::{DataType, Field, Schema};
 use lancedb::connect;
 use lancedb::index::Index;
@@ -12,6 +13,7 @@ pub struct TableSchema {
     pub content: Field,
     pub metadata: Field,
     pub embedding: Field,
+    pub created_at: Field,
 }
 
 impl TableSchema {
@@ -27,6 +29,11 @@ impl TableSchema {
                     1536,
                 ),
                 true,
+            ),
+            created_at: Field::new(
+                "created_at",
+                DataType::Timestamp(TimeUnit::Second, None),
+                false,
             ),
         }
     }
