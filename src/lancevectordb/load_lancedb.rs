@@ -1,6 +1,6 @@
 use anyhow::Context;
 use anyhow::Result;
-use arrow::array::{FixedSizeListArray, Float32Array, StringArray};
+use arrow::array::{FixedSizeListArray, Float32Array, StringArray, TimestampSecondArray};
 use arrow_array::types::Float32Type;
 use arrow_array::{Int32Array, RecordBatch, RecordBatchIterator, RecordBatchReader};
 use arrow_schema::Schema as ArrowSchema;
@@ -25,13 +25,7 @@ pub struct TableSchema {
 }
 
 impl TableSchema {
-    pub fn new(
-        table_name: String,
-        id: i32,
-        content: String,
-        metadata: String,
-        embedding: Vec<Vec<f32>>,
-    ) -> Self {
+    pub fn new(table_name: String) -> Self {
         TableSchema {
             name: table_name,
             id: Arc::new(Field::new("id", DataType::Int32, false)),
@@ -76,14 +70,12 @@ impl TableSchema {
                 Arc::new(StringArray::from_iter_values((0..256).map(|_| ""))),
                 Arc::new(
                     FixedSizeListArray::from_iter_primitive::<Float32Type, _, _>(
-                        (0..256).map(|_| Some(vec![Some(1.0); 128])),
-                        128,
+                        (0..256).map(|_| Some(vec![Some(1.0); 1536])),
+                        1536,
                     ),
                 ),
-                Arc::new(Int32Array::from_iter_values(
-                    (0..256)
-                        .map(|_| chrono::Utc::now().timestamp() as i32)
-                        .collect::<Vec<i32>>(),
+                Arc::new(TimestampSecondArray::from_iter_values(
+                    (0..256).map(|_| chrono::Utc::now().timestamp()),
                 )),
             ],
         )
@@ -96,7 +88,9 @@ pub async fn create_lance_table(db: &mut Connection, table_schema: TableSchema) 
     let table_name = table_schema.get_table_name();
     let all_tables = db.table_names().execute().await?;
     if all_tables.contains(&table_name.to_string()) {
-        db.drop_table(table_name);
+        db.drop_table(table_name)
+            .await
+            .context("Failed to drop a table")?;
     }
 
     // Define the schema of the table.
@@ -109,6 +103,10 @@ pub async fn create_lance_table(db: &mut Connection, table_schema: TableSchema) 
     // );
 
     let arrow_schema = Arc::new(table_schema.create_schema());
+    db.create_empty_table(table_name, arrow_schema.clone())
+        .execute()
+        .await
+        .context("Failed to create a table")?;
 
     // insert into table
     let table = db.open_table(table_name).execute().await?;
