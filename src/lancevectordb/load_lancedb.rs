@@ -93,31 +93,42 @@ impl TableSchema {
 
 /// A struct that represents a chunk of text with its corresponding embeddings.
 pub async fn create_lance_table(db: &mut Connection, table_schema: TableSchema) -> Result<()> {
-    // Define the schema of the table.
-    let table_schema = TableSchema::new(
-        "table_name".to_string(),
-        1,
-        "content".to_string(),
-        "metadata".to_string(),
-        vec![vec![1.0; 128]],
-    );
-
-    // Create a Arrow schema from the table schema.
-    let arrow_schema: SchemaRef = Arc::new(table_schema.create_schema());
-
     let table_name = table_schema.get_table_name();
+    let all_tables = db.table_names().execute().await?;
+    if all_tables.contains(&table_name.to_string()) {
+        db.drop_table(table_name);
+    }
 
-    // Create a table with the schema.
-    db.create_empty_table(table_name, arrow_schema)
-        .execute()
-        .await?;
+    // Define the schema of the table.
+    // let table_schema = TableSchema::new(
+    //     "table_name".to_string(),
+    //     1,
+    //     "content".to_string(),
+    //     "metadata".to_string(),
+    //     vec![vec![1.0; 128]],
+    // );
 
-    // Create an index on the embedding column.
+    let arrow_schema = Arc::new(table_schema.create_schema());
+
+    // insert into table
     let table = db.open_table(table_name).execute().await?;
-    table
-        .create_index(&["embedding"], Index::Auto)
-        .execute()
-        .await?;
+    let mut writer = table.merge_insert(&["id", "content"]);
+    writer.when_not_matched_insert_all();
+    writer.when_matched_update_all(None);
+
+    // add rows to the writer
+    for _ in 0..10 {
+        let batch = table_schema.empty_batch()?;
+        let record_batch =
+            RecordBatchIterator::new(vec![batch].into_iter().map(Ok), arrow_schema.clone());
+
+        // Pass the record batch to the writer.
+        writer
+            .clone()
+            .execute(Box::new(record_batch))
+            .await
+            .context("Failed to execute a writer")?;
+    }
 
     // read the table
 
@@ -132,6 +143,13 @@ pub async fn create_lance_table(db: &mut Connection, table_schema: TableSchema) 
     //     .try_collect::<Vec<_>>()
     //     .await
     //     .context("Failed to collect a query stream")?;
+
+    // Create an index on the embedding column.
+    let table = db.open_table(table_name).execute().await?;
+    table
+        .create_index(&["embedding"], Index::Auto)
+        .execute()
+        .await?;
 
     Ok(())
 }
