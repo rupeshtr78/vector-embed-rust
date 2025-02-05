@@ -128,26 +128,29 @@ pub async fn create_lance_table(db: &mut Connection, table_schema: TableSchema) 
             .context("Failed to execute a writer")?;
     }
 
-    // read the table
-
-    // let options = QueryExecutionOptions::default();
-    // let query_stream = table
-    //     .query()
-    //     .execute_with_options(options)
-    //     .await
-    //     .context("Failed to execute a query")?;
-
-    // let result_batch = query_stream
-    //     .try_collect::<Vec<_>>()
-    //     .await
-    //     .context("Failed to collect a query stream")?;
-
     // Create an index on the embedding column.
     let table = db.open_table(table_name).execute().await?;
     table
         .create_index(&["embedding"], Index::Auto)
         .execute()
         .await?;
+
+    // read the table
+
+    let results = table
+        .query()
+        .nearest_to(&[1.0; 128])
+        .unwrap()
+        .execute()
+        .await
+        .unwrap()
+        .try_collect::<Vec<_>>()
+        .await
+        .context("Failed to collect results")?;
+
+    for result in results {
+        println!("{:?}", result);
+    }
 
     Ok(())
 }
