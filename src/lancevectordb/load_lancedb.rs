@@ -15,6 +15,7 @@ use lancedb::index::Index;
 use lancedb::query::IntoQueryVector;
 use lancedb::query::{ExecutableQuery, QueryBase};
 use lancedb::Connection;
+use log::debug;
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
@@ -168,7 +169,9 @@ pub fn create_record_batch(
         .read()
         .map_err(|e| anyhow::Error::msg(format!("Error: {}", e)))?;
 
-    let len = response.embeddings.len();
+    let num_embeddings = response.embeddings.len();
+    let len = num_embeddings.min(VECTOR_DB_DIM_SIZE as usize);
+
     let id_array = Arc::new(Int32Array::from_iter_values(
         response.embeddings.len() as i32..(response.embeddings.len() + len) as i32,
     ));
@@ -176,7 +179,11 @@ pub fn create_record_batch(
         request.input.iter().take(len).map(|s| s.to_string()),
     ));
     let metadata_array = Arc::new(StringArray::from_iter_values(
-        request.metadata.iter().take(len).map(|s| s.to_string()),
+        request.metadata.iter().map(|s| s.to_string()).chain(
+            std::iter::repeat(String::from(""))
+                .take(len - 1)
+                .map(|s| s.to_string()),
+        ),
     ));
     let model_array = Arc::new(StringArray::from_iter_values(
         (0..len).map(|_| request.model.to_string()),
@@ -201,6 +208,28 @@ pub fn create_record_batch(
     let created_at_array = Arc::new(TimestampSecondArray::from_iter_values(
         (0..len).map(|_| chrono::Utc::now().timestamp()),
     ));
+
+    debug!("Len of id_array: {}", &id_array.len());
+    debug!(
+        "Len of content_array: {}",
+        arrow_array::Array::len(&*content_array)
+    );
+    debug!(
+        "Len of metadata_array: {}",
+        arrow_array::Array::len(&*metadata_array)
+    );
+    debug!(
+        "Len of embedding_array: {}",
+        arrow_array::Array::len(&*embedding_array)
+    );
+    debug!(
+        "Len of model_array: {}",
+        arrow_array::Array::len(&*model_array)
+    );
+    debug!(
+        "Len of created_at_array: {}",
+        arrow_array::Array::len(&*created_at_array)
+    );
 
     let record_batch = RecordBatch::try_new(
         Arc::new(table_schema.create_schema()),

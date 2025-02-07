@@ -2,9 +2,11 @@ use crate::app::commands::Commands;
 use crate::app::config::EmbedRequest;
 use crate::app::config::EmbedResponse;
 use crate::app::config::VectorDbConfig;
+use crate::app::constants;
 use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
 use crate::docsplitter::code_loader;
 use crate::embedder::run_embedding::{fetch_embedding, run_embedding_load};
+use crate::lancevectordb;
 use crate::lancevectordb::load_lancedb;
 use crate::lancevectordb::load_lancedb::TableSchema;
 use crate::pgvectordb::{pg_vector, query_vector};
@@ -251,6 +253,18 @@ pub fn cliV2(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> () {
                 ))
                 .unwrap();
             }
+
+            // query the table
+            let input_list = vec!["what is mirostat".to_string()];
+            let embed_model = constants::EMBEDDING_MODEL.to_string();
+            let vector_table = "codebase_table".to_string();
+            rt.block_on(lancevectordb::query::run_query(
+                &mut db,
+                embed_model,
+                &input_list,
+                vector_table,
+                &http_client,
+            ));
 
             // shutdown the runtime after the embedding is done
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
