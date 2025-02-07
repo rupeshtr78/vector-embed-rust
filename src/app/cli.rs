@@ -5,7 +5,6 @@ use crate::app::config::VectorDbConfig;
 use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
 use crate::docsplitter::code_loader;
 use crate::embedder::run_embedding::{fetch_embedding, run_embedding_load};
-use crate::lancevectordb;
 use crate::lancevectordb::load_lancedb;
 use crate::lancevectordb::load_lancedb::TableSchema;
 use crate::pgvectordb::{pg_vector, query_vector};

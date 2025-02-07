@@ -1,84 +1,91 @@
-// use super::pg_vector;
-// use crate::app::config::EmbedRequest;
-// use crate::app::constants::EMBEDDING_URL;
-// use crate::embedder;
-// use ::hyper::Client as HttpClient;
-// use hyper::client::HttpConnector;
-// use log::{debug, error, info};
-// use postgres::Client;
-// use std::sync::Arc;
-// use std::sync::Mutex;
-// use std::thread;
+use crate::app::config::EmbedRequest;
+use crate::app::constants::EMBEDDING_URL;
+use crate::embedder;
+use ::hyper::Client as HttpClient;
+use anyhow::{Context, Result};
+use arrow::record_batch::RecordBatch;
+use futures::StreamExt;
+use hyper::client::HttpConnector;
+use lancedb::query::ExecutableQuery;
+use lancedb::query::IntoQueryVector;
+use lancedb::Connection;
+use lancedb::Table;
+use log::{debug, error, info};
+use postgres::Client;
+use std::sync::Arc;
+use std::sync::Mutex;
+use std::thread;
 
-// /// Run the query to get the nearest embeddings
-// /// Arguments:
-// /// - rt: &tokio::runtime::Runtime
-// /// - embed_model: String
-// /// - input_list: &Vec<String>
-// /// - vector_table: String
-// /// - db_config: VectorDbConfig
-// /// Returns: ()
-// pub fn run_query(
-//     rt: &tokio::runtime::Runtime,
-//     embed_model: String,
-//     input_list: &Vec<String>,
-//     vector_table: String,
-//     client: Arc<Mutex<Client>>,
-//     http_client: &HttpClient<HttpConnector>,
-// ) {
-//     // colog::init();
+/// Run the query to get the nearest embeddings
+/// Arguments:
+/// - rt: &tokio::runtime::Runtime
+/// - embed_model: String
+/// - input_list: &Vec<String>
+/// - vector_table: String
+/// - db_config: VectorDbConfig
+/// Returns: ()
+pub async fn run_query(
+    db: &mut Connection,
+    embed_model: String,
+    input_list: &Vec<String>,
+    vector_table: String,
+    client: Arc<Mutex<Client>>,
+    http_client: &HttpClient<HttpConnector>,
+) {
+    // colog::init();
 
-//     info!("Starting query");
+    info!("Starting query");
 
-//     // let commands = build_args();
-//     info!("Length of input list: {}", input_list[0].len());
-//     // check if list is length one String is length one
-//     if input_list.len() == 1 && input_list[0].len() == 0 {
-//         error!("Query Input is empty");
-//         return;
-//     }
+    // let commands = build_args();
+    info!("Length of input list: {}", input_list[0].len());
+    // check if list is length one String is length one
+    if input_list.len() == 1 && input_list[0].len() == 0 {
+        error!("Query Input is empty");
+        return;
+    }
 
-//     let url = EMBEDDING_URL;
+    let url = EMBEDDING_URL;
 
-//     let query_request_arc =
-//         EmbedRequest::NewArcEmbedRequest(&embed_model, &input_list, &"".to_string());
-//     let query_response = rt.block_on(embedder::run_embedding::fetch_embedding(
-//         &url,
-//         &query_request_arc,
-//         http_client,
-//     ));
+    let query_request_arc =
+        EmbedRequest::NewArcEmbedRequest(&embed_model, &input_list, &"".to_string());
+    let query_response =
+        embedder::run_embedding::fetch_embedding(&url, &query_request_arc, http_client).await;
 
-//     let query_thread = thread::Builder::new().name("query_thread".to_owned());
+    let query_vector = query_response.embeddings[0].clone();
+    query_table(db, vector_table.as_str(), query_vector)
+        .await
+        .unwrap();
 
-//     let run_query_thread = query_thread.spawn(move || {
-//         let client_clone = Arc::clone(&client);
-//         let mut client = match client_clone.lock() {
-//             Ok(client) => client,
-//             Err(p) => {
-//                 error!("Error: {:?}", p);
-//                 return;
-//             }
-//         };
+    debug!("Finishes running query");
+}
 
-//         // query the embeddings from the vector table TODO - handle the query response
-//         let query =
-//             pg_vector::query_nearest(&mut client, &vector_table, &query_response.embeddings);
-//         match query {
-//             Ok(_) => {} // TODO - handle the query response
-//             Err(e) => {
-//                 error!("Error: {}", e);
-//                 return;
-//             }
-//         }
-//     });
+pub async fn query_table(
+    db: &mut Connection,
+    table_name: &str,
+    query_vector: impl IntoQueryVector,
+) -> Result<()> {
+    let table = db
+        .open_table(table_name)
+        .execute()
+        .await
+        .context("Failed to open a table")?;
 
-//     match run_query_thread {
-//         Ok(handle) => match handle.join() {
-//             Ok(_) => info!("Finished running query thread!"),
-//             Err(_) => eprintln!("Thread panicked!"),
-//         },
-//         Err(_) => error!("Failed to spawn thread!"),
-//     }
+    let stream = table
+        .query()
+        .nearest_to(query_vector)
+        .unwrap()
+        .refine_factor(5)
+        .nprobes(10)
+        .execute()
+        .await
+        .unwrap();
 
-//     debug!("Done with main");
-// }
+    let batches = stream.collect::<Vec<_>>().await;
+
+    for result in batches {
+        let batch = result.unwrap();
+        println!("Batch: {:?}", batch);
+    }
+
+    Ok(())
+}
