@@ -60,12 +60,12 @@ impl Language {
 pub struct FileChunk {
     content: Vec<String>,
     file_path: PathBuf,
-    chunk_number: usize,
+    chunk_number: i32,
 }
 
 /// A struct that represents a codebase.
 impl FileChunk {
-    fn new(content: String, file_path: PathBuf, chunk_number: usize) -> Self {
+    fn new(content: String, file_path: PathBuf, chunk_number: i32) -> Self {
         let content_lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
         Self {
             content: content_lines,
@@ -82,7 +82,7 @@ impl FileChunk {
         &self.file_path
     }
 
-    pub fn get_chunk_number(&self) -> usize {
+    pub fn get_chunk_number(&self) -> i32 {
         self.chunk_number
     }
 
@@ -212,7 +212,13 @@ async fn split_file_into_chunks(
         let chunks = splitter
             .chunks(&content)
             .enumerate()
-            .map(|(i, chunk)| Ok(FileChunk::new(chunk.to_string(), file_path.clone(), i)))
+            .map(|(i, chunk)| {
+                Ok(FileChunk::new(
+                    chunk.to_string(),
+                    file_path.clone(),
+                    i as i32,
+                ))
+            })
             .collect::<Result<Vec<FileChunk>, CodeSplitterError>>()?;
 
         return Ok(chunks);
@@ -230,7 +236,13 @@ async fn split_file_into_chunks(
 
         let chunks: Vec<FileChunk> = code_chunks
             .enumerate()
-            .map(|(i, chunk)| Ok(FileChunk::new(chunk.to_string(), file_path.clone(), i)))
+            .map(|(i, chunk)| {
+                Ok(FileChunk::new(
+                    chunk.to_string(),
+                    file_path.clone(),
+                    i as i32,
+                ))
+            })
             .collect::<Result<Vec<FileChunk>, CodeSplitterError>>()?;
 
         return Ok(chunks);

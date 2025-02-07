@@ -5,6 +5,9 @@ use crate::app::config::VectorDbConfig;
 use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
 use crate::docsplitter::code_loader;
 use crate::embedder::run_embedding::{fetch_embedding, run_embedding_load};
+use crate::lancevectordb;
+use crate::lancevectordb::load_lancedb;
+use crate::lancevectordb::load_lancedb::TableSchema;
 use crate::pgvectordb::{pg_vector, query_vector};
 use hyper::Client as HttpClient;
 use log::{debug, error, info, warn};
@@ -207,7 +210,7 @@ pub fn cliV2(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> () {
             // Extract the embed requests from the chunks
             let embed_requests: Vec<Arc<std::sync::RwLock<EmbedRequest>>> = chunks
                 .iter()
-                .map(|chunk| chunk.embed_request_arc())
+                .map(|chunk: &code_loader::FileChunk| chunk.embed_request_arc())
                 .collect::<Vec<_>>();
 
             // Print the chunks
@@ -217,10 +220,37 @@ pub fn cliV2(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> () {
 
             // Initialize the http client outside the thread // TODO wrap in Arc<Mutex>
             let http_client = HttpClient::new();
+
+            // @TODO: Properly initialize the db connection with anyhow
+            let mut db = rt
+                .block_on(lancedb::connect("codebase_db/").execute())
+                .unwrap();
+
+            // create table
+            // let path =
+            let table_schema = TableSchema::new("codebase_table".to_string());
+
+            rt.block_on(load_lancedb::create_lance_table(&mut db, &table_schema))
+                .unwrap();
+
             for embed_request in embed_requests {
                 let embed_response: EmbedResponse =
                     rt.block_on(fetch_embedding(&url, &embed_request, &http_client));
-                info!("Embedding Response: {:?}", embed_response);
+                info!("Embedding Response: {:?}", embed_response.embeddings.len());
+
+                let request: Arc<std::sync::RwLock<EmbedRequest>> = Arc::clone(&embed_request);
+                // create record batch
+                let record_batch =
+                    load_lancedb::create_record_batch(request, embed_response, &table_schema)
+                        .unwrap();
+
+                // insert records
+                rt.block_on(load_lancedb::insert_embeddings(
+                    &mut db,
+                    &table_schema,
+                    record_batch,
+                ))
+                .unwrap();
             }
 
             // shutdown the runtime after the embedding is done

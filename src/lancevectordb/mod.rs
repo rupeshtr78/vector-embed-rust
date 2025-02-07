@@ -1,1 +1,1 @@
-mod load_lancedb;
+pub mod load_lancedb;

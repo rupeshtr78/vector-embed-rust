@@ -4,11 +4,12 @@ use app::constants::EMBEDDING_URL;
 use log::{error, info};
 
 mod app;
-mod embedder;
-mod pgvectordb;
 mod docsplitter;
+mod embedder;
+mod lancevectordb;
+mod pgvectordb;
 
- fn main() {
+fn main() {
     info!("Starting");
 
     let commands = build_args();
@@ -25,7 +26,6 @@ mod docsplitter;
             return;
         }
     };
-
 
     cli::cliV2(commands, rt, url);
 
