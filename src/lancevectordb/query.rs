@@ -76,9 +76,17 @@ pub async fn query_table(
 
     let batches = stream.collect::<Vec<_>>().await;
 
-    for result in batches {
-        let batch = result.unwrap();
+    for batch in batches {
+        let batch: arrow_array::RecordBatch = batch.unwrap();
         println!("Batch: {:?}", batch);
+
+        let schema = batch.schema(); // Bind schema to a variable
+        for i in 0..batch.num_columns() {
+            let column = batch.column(i);
+            let column_name = schema.field(i).name(); // Now this is safe
+
+            println!("Column {:?}: {:?}", column_name, column);
+        }
     }
 
     Ok(())
