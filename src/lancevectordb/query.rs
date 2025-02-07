@@ -3,18 +3,12 @@ use crate::app::constants::EMBEDDING_URL;
 use crate::embedder;
 use ::hyper::Client as HttpClient;
 use anyhow::{Context, Result};
-use arrow::record_batch::RecordBatch;
 use futures::StreamExt;
 use hyper::client::HttpConnector;
 use lancedb::query::ExecutableQuery;
 use lancedb::query::IntoQueryVector;
 use lancedb::Connection;
-use lancedb::Table;
 use log::{debug, error, info};
-use postgres::Client;
-use std::sync::Arc;
-use std::sync::Mutex;
-use std::thread;
 
 /// Run the query to get the nearest embeddings
 /// Arguments:
@@ -29,7 +23,6 @@ pub async fn run_query(
     embed_model: String,
     input_list: &Vec<String>,
     vector_table: String,
-    client: Arc<Mutex<Client>>,
     http_client: &HttpClient<HttpConnector>,
 ) {
     // colog::init();
@@ -52,6 +45,7 @@ pub async fn run_query(
         embedder::run_embedding::fetch_embedding(&url, &query_request_arc, http_client).await;
 
     let query_vector = query_response.embeddings[0].clone();
+
     query_table(db, vector_table.as_str(), query_vector)
         .await
         .unwrap();
