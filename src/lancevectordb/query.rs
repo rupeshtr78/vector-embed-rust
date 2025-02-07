@@ -7,6 +7,7 @@ use futures::StreamExt;
 use hyper::client::HttpConnector;
 use lancedb::query::ExecutableQuery;
 use lancedb::query::IntoQueryVector;
+use lancedb::query::QueryBase;
 use lancedb::Connection;
 use log::{debug, error, info};
 
@@ -66,7 +67,8 @@ pub async fn query_table(
 
     let stream = table
         .query()
-        .nearest_to(query_vector)
+        .select(lancedb::query::Select::All) // Select all columns
+        .nearest_to(query_vector) // Find the nearest vectors to the query vector
         .unwrap()
         .refine_factor(5)
         .nprobes(10)

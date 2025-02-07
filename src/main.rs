@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Context, Result};
 use app::cli;
 use app::commands::build_args;
 use app::constants::EMBEDDING_URL;
@@ -9,7 +10,7 @@ mod embedder;
 mod lancevectordb;
 mod pgvectordb;
 
-fn main() {
+fn main() -> Result<()> {
     info!("Starting");
 
     let commands = build_args();
@@ -23,11 +24,13 @@ fn main() {
         Ok(rt) => rt,
         Err(e) => {
             error!("Failed to build runtime: {}", e);
-            return;
+            return Err(anyhow!("Failed to build runtime: {}", e));
         }
     };
 
-    cli::cliV2(commands, rt, url);
+    cli::cli(commands, rt, url).context("Failed to run Command")?;
 
     info!("Finished");
+
+    Ok(())
 }

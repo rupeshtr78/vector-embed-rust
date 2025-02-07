@@ -5,6 +5,7 @@ use anyhow::Context;
 use anyhow::Result;
 use log::{debug, info};
 use std::cmp::PartialEq;
+use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::Path;
@@ -109,9 +110,9 @@ impl FileChunk {
             metadata: Some(
                 self.file_path
                     .file_name()
-                    .unwrap()
+                    .unwrap_or(OsStr::new("None"))
                     .to_str()
-                    .unwrap()
+                    .unwrap_or("None")
                     .to_string(),
             ),
         }
