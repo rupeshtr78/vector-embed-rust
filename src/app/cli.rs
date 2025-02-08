@@ -212,6 +212,43 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             // shutdown the runtime after the embedding is done
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }
+        Commands::LanceQuery {
+            input,
+            model,
+            table,
+            database,
+        } => {
+            let input_list = input;
+            let embed_model = model.to_string();
+            let vector_table = table.to_string();
+            let db_uri = database.to_string();
+
+            info!("Query command is run with below arguments:");
+            info!(" Query: {:?}", input_list);
+            info!(" Model: {:?}", model);
+            info!(" Table: {:?}", table);
+
+            // Initialize the http client outside the thread // TODO wrap in Arc<Mutex>
+            let http_client = HttpClient::new();
+
+            let mut db = rt
+                .block_on(lancedb::connect(&db_uri).execute())
+                .context("Failed to connect to the database")?;
+
+            rt.block_on(lancevectordb::query::run_query(
+                &mut db,
+                embed_model,
+                &input_list,
+                &vector_table,
+                &http_client,
+            ))
+            .context("Failed to run query")?;
+
+            rt.shutdown_timeout(std::time::Duration::from_secs(1));
+        }
+        Commands::Version { version } => {
+            info!("Version: {}", version);
+        }
         _ => {
             warn!("No embedding command provided");
         }

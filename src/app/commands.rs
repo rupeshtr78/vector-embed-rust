@@ -35,7 +35,7 @@ pub enum Commands {
         dim: String,
     },
 
-    /// Query the Vector Database   
+    /// Query the PG Vector Database   
     Query {
         /// The query string to use
         #[clap(short, long)]
@@ -66,6 +66,22 @@ pub enum Commands {
         #[clap(short, long)]
         #[clap(default_value = "1024")]
         chunk_size: usize,
+    },
+    /// Query the PG Vector Database   
+    LanceQuery {
+        /// The query string to use
+        #[clap(short, long)]
+        input: Vec<String>,
+        /// Provide the model to use for query embedding
+        #[clap(short, long)]
+        #[clap(default_value = EMBEDDING_MODEL)]
+        model: String,
+        /// Provide the table to use to query
+        #[clap(short, long)]
+        table: String,
+        /// Provide the database to use
+        #[clap(short, long)]
+        database: String,
     },
 
     Empty,
@@ -243,6 +259,18 @@ pub fn dbg_cmd() {
             println!("Load command");
             println!("Path: {:?}", path);
             println!("Chunk size: {:?}", chunk_size);
+        }
+        Commands::LanceQuery {
+            input,
+            model,
+            table,
+            database,
+        } => {
+            println!("Lance Query command");
+            println!("Query: {:?}", input);
+            println!("Model: {:?}", model);
+            println!("Table: {:?}", table);
+            println!("Database: {:?}", database);
         }
         Commands::Empty => {
             println!("Empty command");
