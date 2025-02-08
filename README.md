@@ -90,7 +90,9 @@ The application supports various commands and subcommands. Use the `--help` flag
 ```sh
    cargo run -- --help
    cargo run -- write --input "dog sound is called bark" --input "cat sounds is called purr" --model "nomic-embed-text" --table "from_rust2" --dim 768 --log-level "debug"
-   cargo run -- query --input "who is barking" --model "nomic-embed-text" --table "from_rust2"
+
+   cargo run -- load -p /home/rupesh/aqrtr/gits/vector-embed-rust/src/scripts
+   cargo run -- lance-query -d scripts_db -t scripts_table -i "what is mirostat" --log-level "info"
 ```
 
 ### Configuration
