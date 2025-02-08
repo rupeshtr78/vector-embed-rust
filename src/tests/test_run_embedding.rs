@@ -3,7 +3,7 @@ mod test_fetch_embedding {
     use crate::app::config::{EmbedRequest, EmbedResponse};
     use crate::app::constants::EMBEDDING_MODEL;
     use crate::app::constants::EMBEDDING_URL;
-    use crate::embedding::run_embedding::fetch_embedding;
+    use crate::embedder::run_embedding::fetch_embedding;
     use hyper::client::HttpConnector;
     use hyper::Client;
     use log::{debug, error};

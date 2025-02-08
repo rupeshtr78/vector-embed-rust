@@ -1,5 +1,5 @@
 use crate::app::config::{EmbedRequest, EmbedResponse};
-use crate::vectordb;
+use crate::pgvectordb;
 use ::hyper::Client as HttpClient;
 use hyper::client::HttpConnector;
 use log::{debug, error};
@@ -145,7 +145,7 @@ pub fn persist_embedding_data(
     embeddings: &Vec<Vec<f32>>,
 ) -> Result<(), Box<dyn Error>> {
     debug!("Loading data into table");
-    match vectordb::pg_vector::create_table(pg_client, &table, dimension) {
+    match pgvectordb::pg_vector::create_table(pg_client, &table, dimension) {
         Ok(_) => {
             debug!("Create table successful");
         }
@@ -154,7 +154,7 @@ pub fn persist_embedding_data(
         }
     }
 
-    match vectordb::pg_vector::load_vector_data(pg_client, &table, &embed_request, embeddings) {
+    match pgvectordb::pg_vector::load_vector_data(pg_client, &table, &embed_request, embeddings) {
         Ok(_) => {
             debug!("Load vector data successful");
         }

@@ -2,7 +2,7 @@
 mod tests {
     use crate::app::config::EmbedRequest;
     use crate::app::constants::{EMBEDDING_MODEL, EMBEDDING_URL};
-    use crate::embedding::vector_embedding::create_embed_request;
+    use crate::embedder::vector_embedding::create_embed_request;
 
     use super::*;
     use hyper::{Body, Client, Request, Response, StatusCode};

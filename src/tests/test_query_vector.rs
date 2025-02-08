@@ -1,12 +1,12 @@
 #[cfg(test)]
 mod tests {
-    use crate::vectordb::query_vector::run_query;
+    use crate::pgvectordb::query_vector::run_query;
 
     use super::*;
     use crate::app::config::{EmbedRequest, VectorDbConfig};
-    use crate::embedding::{self, vector_embedding};
-    use crate::vectordb::pg_vector;
-    use crate::vectordb::pg_vector::pg_client;
+    use crate::embedder::{self, vector_embedding};
+    use crate::pgvectordb::pg_vector;
+    use crate::pgvectordb::pg_vector::pg_client;
     use ::hyper::Client as HttpClient;
     use hyper::client::HttpConnector;
     use postgres::{Client, NoTls};

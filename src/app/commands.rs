@@ -35,7 +35,7 @@ pub enum Commands {
         dim: String,
     },
 
-    /// Query the Vector Database   
+    /// Query the PG Vector Database   
     Query {
         /// The query string to use
         #[clap(short, long)]
@@ -56,6 +56,34 @@ pub enum Commands {
         #[clap(default_value = VERSION)]
         version: String,
     },
+
+    /// Load a directory of files into the database
+    Load {
+        /// The path to the directory to load
+        #[clap(short, long)]
+        path: String,
+        // chunk size
+        #[clap(short, long)]
+        #[clap(default_value = "1024")]
+        chunk_size: usize,
+    },
+    /// Query the Lancedb Vector Database   
+    LanceQuery {
+        /// The query string to use
+        #[clap(short, long)]
+        input: Vec<String>,
+        /// Provide the model to use for query embedding
+        #[clap(short, long)]
+        #[clap(default_value = EMBEDDING_MODEL)]
+        model: String,
+        /// Provide the table to use to query
+        #[clap(short, long)]
+        table: String,
+        /// Provide the database to use
+        #[clap(short, long)]
+        database: String,
+    },
+
     Empty,
 }
 
@@ -109,6 +137,20 @@ impl Commands {
             None
         }
     }
+
+    /// Checks if the command is a `Load` command.
+    pub fn is_load(&self) -> bool {
+        matches!(self, Commands::Load { .. })
+    }
+
+    /// Returns an `Option` of `&Commands` if the command is a `Load` command.
+    pub fn load(&self) -> Option<&Commands> {
+        if let Commands::Load { .. } = self {
+            Some(self)
+        } else {
+            None
+        }
+    }
 }
 
 impl LogLevel {
@@ -151,7 +193,7 @@ pub fn build_args() -> Commands {
             LogLevel::Debug => colog_init(LogLevel::Debug),
         }
     } else {
-        colog_init(LogLevel::Info);
+        colog_init(LogLevel::Debug);
     }
 
     let commands = match args.cmd {
@@ -212,6 +254,23 @@ pub fn dbg_cmd() {
         Commands::Version { version } => {
             println!("Version command");
             println!("Version: {:?}", version);
+        }
+        Commands::Load { path, chunk_size } => {
+            println!("Load command");
+            println!("Path: {:?}", path);
+            println!("Chunk size: {:?}", chunk_size);
+        }
+        Commands::LanceQuery {
+            input,
+            model,
+            table,
+            database,
+        } => {
+            println!("Lance Query command");
+            println!("Query: {:?}", input);
+            println!("Model: {:?}", model);
+            println!("Table: {:?}", table);
+            println!("Database: {:?}", database);
         }
         Commands::Empty => {
             println!("Empty command");

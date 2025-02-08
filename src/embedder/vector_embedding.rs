@@ -1,12 +1,10 @@
+use crate::app::config::{EmbedRequest, EmbedResponse};
 use hyper::client::HttpConnector;
 use hyper::{body, Client, Uri};
 use hyper::{Body, Request};
-
 use log::{debug, info};
 use std::error::Error;
 use std::str;
-
-use crate::app::config::{EmbedRequest, EmbedResponse};
 
 /// Create an embedding request
 /// Arguments:

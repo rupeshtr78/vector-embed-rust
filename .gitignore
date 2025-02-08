@@ -1,2 +1,6 @@
 /target
 /pg_data
+.idea/
+*.iml
+.idea/*
+.idea
