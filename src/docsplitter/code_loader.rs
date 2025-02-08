@@ -3,7 +3,7 @@ use crate::app::constants::EMBEDDING_MODEL;
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
-use log::{debug, info};
+use log::debug;
 use std::cmp::PartialEq;
 use std::ffi::OsStr;
 use std::fs::File;

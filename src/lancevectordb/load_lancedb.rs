@@ -4,18 +4,12 @@ use anyhow::Context;
 use anyhow::Result;
 use arrow::array::{FixedSizeListArray, StringArray, TimestampSecondArray};
 use arrow_array::types::Float32Type;
-use arrow_array::types::Int32Type;
 use arrow_array::{Int32Array, RecordBatch, RecordBatchIterator};
 use arrow_schema::Schema as ArrowSchema;
 use arrow_schema::TimeUnit;
 use arrow_schema::{DataType, Field};
-use colog::format;
-use futures::TryStreamExt;
 use lancedb::index::Index;
-use lancedb::query::IntoQueryVector;
-use lancedb::query::{ExecutableQuery, QueryBase};
 use lancedb::Connection;
-use log::debug;
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
@@ -25,7 +19,7 @@ pub struct TableSchema {
     pub content: Arc<Field>,
     pub metadata: Arc<Field>,
     pub model: Arc<Field>,
-    pub embedding: Arc<Field>,
+    pub vector: Arc<Field>,
     pub created_at: Arc<Field>,
 }
 
@@ -36,8 +30,8 @@ impl TableSchema {
             id: Arc::new(Field::new("id", DataType::Int32, false)),
             content: Arc::new(Field::new("content", DataType::Utf8, false)),
             metadata: Arc::new(Field::new("metadata", DataType::Utf8, false)),
-            embedding: Arc::new(Field::new(
-                "embedding",
+            vector: Arc::new(Field::new(
+                "vector",
                 DataType::FixedSizeList(
                     Arc::new(Field::new("item", DataType::Float32, true)),
                     VECTOR_DB_DIM_SIZE,
@@ -58,7 +52,7 @@ impl TableSchema {
             Arc::clone(&self.id),
             Arc::clone(&self.content),
             Arc::clone(&self.metadata),
-            Arc::clone(&self.embedding),
+            Arc::clone(&self.vector),
             Arc::clone(&self.model),
             Arc::clone(&self.created_at),
         ])
@@ -145,7 +139,7 @@ pub async fn insert_embeddings(
     let table_name = table_schema.get_table_name();
     let arrow_schema = Arc::new(table_schema.create_schema());
     let table = db.open_table(table_name).execute().await?;
-    let mut writer = table.merge_insert(&["id", "content", "metadata", "embedding", "model"]);
+    let mut writer = table.merge_insert(&["content", "metadata", "vector", "model"]);
     writer.when_not_matched_insert_all();
     writer.when_matched_update_all(None);
 
@@ -157,10 +151,12 @@ pub async fn insert_embeddings(
         .context("Failed to insert records")?;
 
     log::info!("Records inserted successfully");
+
     Ok(())
 }
 
 pub fn create_record_batch(
+    id: i32,
     request: Arc<std::sync::RwLock<EmbedRequest>>,
     response: EmbedResponse,
     table_schema: &TableSchema,
@@ -169,12 +165,10 @@ pub fn create_record_batch(
         .read()
         .map_err(|e| anyhow::Error::msg(format!("Error: {}", e)))?;
 
-    let num_embeddings = response.embeddings.len();
-    let len = num_embeddings.min(VECTOR_DB_DIM_SIZE as usize);
+    // let num_embeddings = response.embeddings.len();
+    let len = response.embeddings.len();
 
-    let id_array = Arc::new(Int32Array::from_iter_values(
-        response.embeddings.len() as i32..(response.embeddings.len() + len) as i32,
-    ));
+    let id_array = Arc::new(Int32Array::from_iter_values((0..len).map(|_| id)));
     let content_array = Arc::new(StringArray::from_iter_values(
         request.input.iter().take(len).map(|s| s.to_string()),
     ));
@@ -209,28 +203,6 @@ pub fn create_record_batch(
         (0..len).map(|_| chrono::Utc::now().timestamp()),
     ));
 
-    debug!("Len of id_array: {}", &id_array.len());
-    debug!(
-        "Len of content_array: {}",
-        arrow_array::Array::len(&*content_array)
-    );
-    debug!(
-        "Len of metadata_array: {}",
-        arrow_array::Array::len(&*metadata_array)
-    );
-    debug!(
-        "Len of embedding_array: {}",
-        arrow_array::Array::len(&*embedding_array)
-    );
-    debug!(
-        "Len of model_array: {}",
-        arrow_array::Array::len(&*model_array)
-    );
-    debug!(
-        "Len of created_at_array: {}",
-        arrow_array::Array::len(&*created_at_array)
-    );
-
     let record_batch = RecordBatch::try_new(
         Arc::new(table_schema.create_schema()),
         vec![
@@ -245,4 +217,37 @@ pub fn create_record_batch(
     .context("Failed to create a RecordBatch")?;
 
     Ok(record_batch)
+}
+
+pub async fn create_index_on_embedding(
+    db: &mut Connection,
+    table_name: &str,
+    column: Vec<&str>,
+) -> Result<()> {
+    let table = db.open_table(table_name).execute().await?;
+
+    // Initialize the builder first
+    let hns_index = lancedb::index::vector::IvfHnswSqIndexBuilder::default()
+        .distance_type(lancedb::DistanceType::Cosine) // Set the desired distance type, e.g., L2
+        .num_partitions(100) // Set the number of partitions, e.g., 100
+        .sample_rate(256) // Set the sample rate
+        .max_iterations(50) // Set the max iterations for training
+        .ef_construction(300); // Set the ef_construction value
+
+    // Now create the Index using the builder
+    let index = Index::IvfHnswSq(hns_index);
+
+    table
+        .create_index(&column, index)
+        .execute()
+        .await
+        .context("Failed to create an index")?;
+
+    log::info!(
+        "Created index on table: {:?} column: {:?}",
+        table_name,
+        column
+    );
+
+    Ok(())
 }

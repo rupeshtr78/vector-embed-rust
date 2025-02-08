@@ -16,7 +16,6 @@ use anyhow::Result;
 use hyper::Client as HttpClient;
 use log::{debug, error, info, warn};
 use postgres::Client;
-use std::fs::File;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
@@ -164,16 +163,20 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             rt.block_on(load_lancedb::create_lance_table(&mut db, &table_schema))
                 .context("Failed to create table")?;
 
-            for embed_request in embed_requests {
+            for (id, embed_request) in embed_requests.iter().enumerate() {
                 let embed_response: EmbedResponse =
                     rt.block_on(fetch_embedding(&url, &embed_request, &http_client));
                 info!("Embedding Response: {:?}", embed_response.embeddings.len());
 
                 let request: Arc<std::sync::RwLock<EmbedRequest>> = Arc::clone(&embed_request);
                 // create record batch
-                let record_batch =
-                    load_lancedb::create_record_batch(request, embed_response, &table_schema)
-                        .context("Failed to create record batch")?;
+                let record_batch = load_lancedb::create_record_batch(
+                    id as i32,
+                    request,
+                    embed_response,
+                    &table_schema,
+                )
+                .context("Failed to create record batch")?;
 
                 // insert records
                 rt.block_on(load_lancedb::insert_embeddings(
@@ -184,17 +187,27 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 .context("Failed to insert embeddings")?;
             }
 
+            // create index
+            let embedding_col = table_schema.vector.name();
+            rt.block_on(load_lancedb::create_index_on_embedding(
+                &mut db,
+                &table_schema.name.as_str(),
+                [embedding_col.as_str()].to_vec(),
+            ))
+            .context("Failed to create index")?;
+
             // query the table
             let input_list = vec!["what is mirostat".to_string()];
             let embed_model = constants::EMBEDDING_MODEL.to_string();
-            let vector_table = "codebase_table".to_string();
+
             rt.block_on(lancevectordb::query::run_query(
                 &mut db,
                 embed_model,
                 &input_list,
-                vector_table,
+                &table_schema.name.as_str(),
                 &http_client,
-            ));
+            ))
+            .context("Failed to run query")?;
 
             // shutdown the runtime after the embedding is done
             rt.shutdown_timeout(std::time::Duration::from_secs(1));

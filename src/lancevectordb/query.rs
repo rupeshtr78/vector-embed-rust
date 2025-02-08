@@ -2,7 +2,7 @@ use crate::app::config::EmbedRequest;
 use crate::app::constants::EMBEDDING_URL;
 use crate::embedder;
 use ::hyper::Client as HttpClient;
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use futures::StreamExt;
 use hyper::client::HttpConnector;
 use lancedb::query::ExecutableQuery;
@@ -23,9 +23,9 @@ pub async fn run_query(
     db: &mut Connection,
     embed_model: String,
     input_list: &Vec<String>,
-    vector_table: String,
+    vector_table: &str,
     http_client: &HttpClient<HttpConnector>,
-) {
+) -> Result<()> {
     // colog::init();
 
     info!("Starting query");
@@ -35,7 +35,7 @@ pub async fn run_query(
     // check if list is length one String is length one
     if input_list.len() == 1 && input_list[0].len() == 0 {
         error!("Query Input is empty");
-        return;
+        return Err(anyhow!("Query Input is empty"));
     }
 
     let url = EMBEDDING_URL;
@@ -47,11 +47,13 @@ pub async fn run_query(
 
     let query_vector = query_response.embeddings[0].clone();
 
-    query_table(db, vector_table.as_str(), query_vector)
+    query_table(db, vector_table, query_vector)
         .await
-        .unwrap();
+        .context("Failed to query table")?;
 
     debug!("Finishes running query");
+
+    Ok(())
 }
 
 pub async fn query_table(
@@ -65,22 +67,33 @@ pub async fn query_table(
         .await
         .context("Failed to open a table")?;
 
+    // let lower_bound = Some(0.5);
+    // let upper_bound = Some(1.5);
+
     let stream = table
         .query()
-        .select(lancedb::query::Select::All) // Select all columns
         .nearest_to(query_vector) // Find the nearest vectors to the query vector
-        .unwrap()
-        .refine_factor(5)
-        .nprobes(10)
+        .context("Failed to select nearest vector")?
+        // .distance_range(lower_bound, upper_bound) // bug in DataFusion library
+        .distance_type(lancedb::DistanceType::Cosine)
+        .refine_factor(10)
+        .nprobes(5)
+        .postfilter()
+        .only_if("_distance > 0.3 AND _distance < 1")
+        .select(lancedb::query::Select::Columns(vec![
+            "_distance".to_string(),
+            "id".to_string(),
+            "content".to_string(),
+        ]))
         .execute()
         .await
-        .unwrap();
+        .context("Failed to execute query and fetch records")?;
 
     let batches = stream.collect::<Vec<_>>().await;
 
     for batch in batches {
         let batch: arrow_array::RecordBatch = batch.unwrap();
-        println!("Batch: {:?}", batch);
+        // println!("Batch: {:?}", batch);
 
         let schema = batch.schema(); // Bind schema to a variable
         for i in 0..batch.num_columns() {
