@@ -1,5 +1,5 @@
 use crate::app::config::{EmbedRequest, EmbedResponse};
-use crate::app::constants::VECTOR_DB_DIM_SIZE;
+use crate::app::constants::{self, VECTOR_DB_DIM_SIZE};
 use anyhow::Context;
 use anyhow::Result;
 use arrow::array::{FixedSizeListArray, StringArray, TimestampSecondArray};
@@ -228,7 +228,7 @@ pub async fn create_index_on_embedding(
 
     // Initialize the builder first
     let hns_index = lancedb::index::vector::IvfHnswSqIndexBuilder::default()
-        .distance_type(lancedb::DistanceType::L2) // Set the desired distance type, e.g., L2
+        .distance_type(constants::LANCEDB_DISTANCE_FN) // Set the desired distance type, e.g., L2
         .num_partitions(100) // Set the number of partitions, e.g., 100
         .sample_rate(256) // Set the sample rate
         .max_iterations(50) // Set the max iterations for training
