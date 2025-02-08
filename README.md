@@ -1,6 +1,6 @@
-# PG Vector Embedding and Query Rust
+# Vector Embedding and Query Rust
 
-This repository contains a Rust-based system for managing vector embeddings and querying them using a PostgreSQL-backed vector database. The system is designed to handle embedding generation, storage, and querying.
+This repository contains a Rust-based system for managing vector embeddings and querying them using lanceDb/PostgreSQL-backed vector database. The system is designed to handle embedding generation, storage, and querying.
 
 ## Table of Contents
 
@@ -31,37 +31,19 @@ The system is composed of several modules that handle different aspects of the e
 
 ## Features
 
-- **Embedding Generation**: Generate vector embeddings from input data.
+## Features
+
+- **File Type Support**: The tool supports multiple file types including Rust (`rs`), Python (`py`), C++ (`cpp`), Java (`java`), JavaScript (`js`), TypeScript (`ts`), text files. ( TODO add pdf )
+- **LanceDB Integration**:
+  - Create and manage vector tables in LanceDB.
+  - Insert and update records in LanceDB tables.
+  - Query the nearest vectors in LanceDB tables.
+- **Embedding**:
+  - Generate embeddings for text data using an external embedding service.
+  - Store embeddings in LanceDB tables.
+- **CLI Interface**: Command-line interface for easy interaction with the tool.
 - **Database Persistence**: Store embeddings in a PostgreSQL database.
 - **Querying**: Query the database to find nearest neighbors based on vector embeddings.
-
-## Directory Structure
-
-```
-src/
-├── app/
-│   ├── commands.rs
-│   ├── config.rs
-│   └── constants.rs
-├── embedding/
-│   ├── run_embedding.rs
-│   └── vector_embedding.rs
-├── main.rs
-├── tests/
-│   ├── setup_docker.rs
-│   ├── test_pgclient.rs
-│   ├── test_query_vector.rs
-│   ├── test_run_embedding.rs
-│   └── test_vector_embedding.rs
-├── vectordb/
-│   ├── pg_vector.rs
-│   └── query_vector.rs
-├── lib.rs
-├── vectordb/mod.rs
-├── tests/mod.rs
-├── embedding/mod.rs
-└── app/mod.rs
-```
 
 ## Getting Started
 
@@ -70,11 +52,12 @@ src/
 - Rust (latest stable version)
 - PostgreSQL Vector Db.
 - Docker (for running tests)
-- Active Ollama Service with `nomic-embed-text` or similar model. 
+- Active Ollama Service with `nomic-embed-text` or similar model.
 
 ### Installation
 
 1. Clone the repository:
+
    ```sh
    git clone https://github.com/rupeshtr78/pg-vector-embed-rust.git
    cd pg-vector-embed-rust
@@ -91,9 +74,10 @@ src/
 2. Ollama service should be running with the specified model.
 
 3. Run the application:
+
    ```sh
-   cargo run
-      
+   cargo run -- --help
+
 
    ```
 
@@ -106,7 +90,7 @@ The application supports various commands and subcommands. Use the `--help` flag
 ```sh
    cargo run -- --help
    cargo run -- write --input "dog sound is called bark" --input "cat sounds is called purr" --model "nomic-embed-text" --table "from_rust2" --dim 768 --log-level "debug"
-   cargo run -- query --input "who is barking" --model "nomic-embed-text" --table "from_rust2"  
+   cargo run -- query --input "who is barking" --model "nomic-embed-text" --table "from_rust2"
 ```
 
 ### Configuration
@@ -125,6 +109,13 @@ The test suite requires postgres vectordb and ollama with embedding model to be 
 ```sh
 cargo test
 ```
+
+## Code Structure
+
+- **`code_loader.rs`**: Handles file type detection and content loading.
+- **`load_lancedb.rs`**: Manages LanceDB table creation, insertion, and querying.
+- **`query.rs`**: Contains logic for running queries on LanceDB tables.
+- **`main.rs`**: Entry point for the CLI application.
 
 ## Contributing
 
