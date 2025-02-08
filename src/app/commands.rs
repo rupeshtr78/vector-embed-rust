@@ -67,7 +67,7 @@ pub enum Commands {
         #[clap(default_value = "1024")]
         chunk_size: usize,
     },
-    /// Query the PG Vector Database   
+    /// Query the Lancedb Vector Database   
     LanceQuery {
         /// The query string to use
         #[clap(short, long)]

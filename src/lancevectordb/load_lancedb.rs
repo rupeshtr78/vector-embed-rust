@@ -228,7 +228,7 @@ pub async fn create_index_on_embedding(
 
     // Initialize the builder first
     let hns_index = lancedb::index::vector::IvfHnswSqIndexBuilder::default()
-        .distance_type(lancedb::DistanceType::Cosine) // Set the desired distance type, e.g., L2
+        .distance_type(lancedb::DistanceType::L2) // Set the desired distance type, e.g., L2
         .num_partitions(100) // Set the number of partitions, e.g., 100
         .sample_rate(256) // Set the sample rate
         .max_iterations(50) // Set the max iterations for training
