@@ -83,6 +83,7 @@ pub async fn query_table(
         .select(lancedb::query::Select::Columns(vec![
             "_distance".to_string(),
             "id".to_string(),
+            "metadata".to_string(),
             "content".to_string(),
         ]))
         .execute()

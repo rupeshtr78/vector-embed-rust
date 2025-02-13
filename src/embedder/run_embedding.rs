@@ -1,7 +1,7 @@
 use crate::app::config::{EmbedRequest, EmbedResponse};
 use crate::pgvectordb;
-use ::hyper::Client as HttpClient;
 use hyper::client::HttpConnector;
+use hyper::Client as HttpClient;
 use log::{debug, error};
 use postgres::Client;
 use std::error::Error;

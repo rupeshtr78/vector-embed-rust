@@ -157,21 +157,4 @@ Helps stabilize training, especially for very deep networks.
 Seed
 Sets the initial random state for model initialization and training. Ensures reproducibility of results across different runs.
 These parameters, along with those mentioned earlier (temperature, top_k, top_p, etc.), provide fine-grained control over various aspects of model training, inference, and generation. The optimal values for these parameters often depend on the specific task, dataset, and desired outcomes, requiring careful tuning and experimentation to achieve the best performance[1][2][3][4].
-Citations:
-[1] https://www.youtube.com/watch?v=PAbZRGGYNyM
 
-[2] https://shecancode.io/blog/7-parameters-that-control-the-performance-of-large- language-models/
-[3] https://kelvin.legal/understanding-large-language-models-what-are-paramters/ [4] https://www.linkedin.com/learning/introduction-to-large-language-models/what- are-parameters
-[5] https://developers.google.com/machine-learning/resources/intro-llms
- # Good Results
-PARAMETER temperature 0.6
-PARAMETER top_k 80
-PARAMETER top_p 0.8
-PARAMETER frequency_penalty 0.9
-PARAMETER num_ctx 16384
-PARAMETER mirostat_eta 0.5
-PARAMETER num_batch 1024
-PARAMETER num_keep 256
-PARAMETER num_thread 8
-PARAMETER repeat_last_n 64
-}
