@@ -45,3 +45,4 @@ text-splitter = { version = "0.22.0", features = [
 anyhow = "1.0.95"
 arrow-schema = "53.3.0"
 chrono = "0.4.39"
+handlebars = "6.3.1"
