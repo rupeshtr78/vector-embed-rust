@@ -1,4 +1,3 @@
-use ::serde_json::de;
 use anyhow::Result;
 use anyhow::{anyhow, Context};
 use hyper::client::HttpConnector;
@@ -7,6 +6,7 @@ use hyper::{Body, Request};
 use log::{debug, error};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock};
+
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct ChatRequest {
     model: String,
@@ -149,7 +149,6 @@ impl ChatResponse {
     pub fn print_response(&self) {
         println!("{}", self.response);
     }
-    
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
