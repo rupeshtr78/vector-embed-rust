@@ -15,8 +15,8 @@ const CHAT_API_URL: &str = "http://10.0.0.213:11434/api/generate";
 const CHAT_API_KEY: &str = "api_key";
 
 const CHAT_RESPONSE_FORMAT: &str = "json";
-const SYSTEM_PROMPT_PATH : &str = "/Users/rupeshraghavan/apl/gits/gits-rupesh/rtr-rust-lab/multi-workspace/ai-chat/template/system_prompt.txt";
-const PROMPT_TEMPLATE_PATH : &str = "/Users/rupeshraghavan/apl/gits/gits-rupesh/rtr-rust-lab/multi-workspace/ai-chat/template/chat_template.hbs";
+const SYSTEM_PROMPT_PATH : &str = "template/system_prompt.txt";
+const PROMPT_TEMPLATE_PATH : &str = "template/chat_template.hbs";
 
 const AI_MODEL: &str = "mistral:latest";
 
@@ -32,7 +32,7 @@ async fn run_chat() -> Result<()> {
         }
     });
 
-    let content = std::fs::read_to_string("/Users/rupeshraghavan/apl/gits/gits-rupesh/rtr-rust-lab/multi-workspace/ai-chat/template/sample.txt")
+    let content = std::fs::read_to_string("template/sample.txt")
         .context("Failed to read system prompt")?;
 
     let prompt =
