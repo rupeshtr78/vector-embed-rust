@@ -125,91 +125,10 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             info!(" Path: {:?}", path);
             info!(" Chunk Size: {:?}", chunk_size);
 
-            // Load the codebase into chunks
-            let chunks = rt.block_on(code_loader::load_codebase_into_chunks(&path, chunk_size));
-            let chunks = match chunks {
-                Ok(chunks) => chunks,
-                Err(e) => {
-                    error!("Error: {}", e);
-                    return Err(anyhow!("Error: {}", e));
-                }
-            };
-
-            // Extract the embed requests from the chunks
-            let embed_requests: Vec<Arc<std::sync::RwLock<EmbedRequest>>> = chunks
-                .iter()
-                .map(|chunk: &code_loader::FileChunk| chunk.embed_request_arc())
-                .collect::<Vec<_>>();
-
-            // Print the embed requests
-            for embed_request in &embed_requests {
-                let embed_request = embed_request.read().unwrap();
-                debug!("Embed Request Metadata: {:?}", embed_request.metadata);
-            }
-
-            // Initialize the http client outside the thread // TODO wrap in Arc<Mutex>
             let http_client = HttpClient::new();
 
-            // @TODO: Properly initialize the db connection with anyhow
-            let db_uri = get_file_name(&path) + "_db/";
-            let mut db = rt
-                .block_on(lancedb::connect(&db_uri).execute())
-                .context("Failed to connect to the database")?;
-
-            // create table
-            let table_name = get_file_name(&path) + "_table";
-            let table_schema = TableSchema::new(table_name);
-
-            rt.block_on(load_lancedb::create_lance_table(&mut db, &table_schema))
-                .context("Failed to create table")?;
-
-            for (id, embed_request) in embed_requests.iter().enumerate() {
-                let embed_response: EmbedResponse =
-                    rt.block_on(fetch_embedding(&url, &embed_request, &http_client));
-                info!("Embedding Response: {:?}", embed_response.embeddings.len());
-
-                let request: Arc<std::sync::RwLock<EmbedRequest>> = Arc::clone(&embed_request);
-                // create record batch
-                let record_batch = load_lancedb::create_record_batch(
-                    id as i32,
-                    request,
-                    embed_response,
-                    &table_schema,
-                )
-                .context("Failed to create record batch")?;
-
-                // insert records
-                rt.block_on(load_lancedb::insert_embeddings(
-                    &mut db,
-                    &table_schema,
-                    record_batch,
-                ))
-                .context("Failed to insert embeddings")?;
-            }
-
-            // create index
-            let embedding_col = table_schema.vector.name();
-            rt.block_on(load_lancedb::create_index_on_embedding(
-                &mut db,
-                &table_schema.name.as_str(),
-                [embedding_col.as_str()].to_vec(),
-            ))
-            .context("Failed to create index")?;
-
-            // query the table
-            let input_list = vec!["what is mirostat".to_string()];
-            let embed_model = constants::EMBEDDING_MODEL.to_string();
-
-            let content = rt.block_on(lancevectordb::query::run_query(
-                &mut db,
-                embed_model,
-                &input_list,
-                &table_schema.name.as_str(),
-                &http_client,
-            ))
-            .context("Failed to run query")?;
-
-            println!("Query Response: {:?}", content);
+            rt.block_on(lancevectordb::run(path, chunk_size, url, &http_client))
+                .context("Failed to run lancevectordb")?;
 
             // shutdown the runtime after the embedding is done
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
@@ -233,26 +152,33 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             // Initialize the http client outside the thread // TODO wrap in Arc<Mutex>
             let http_client = HttpClient::new();
 
+            // Initialize the database
             let mut db = rt
                 .block_on(lancedb::connect(&db_uri).execute())
                 .context("Failed to connect to the database")?;
 
-            let content = rt.block_on(lancevectordb::query::run_query(
-                &mut db,
-                embed_model,
-                &input_list,
-                &vector_table,
-                &http_client,
-            ))
-            .context("Failed to run query")?;
+            // Query the database
+            let content = rt
+                .block_on(lancevectordb::query::run_query(
+                    &mut db,
+                    embed_model,
+                    &input_list,
+                    &vector_table,
+                    &http_client,
+                ))
+                .context("Failed to run query")?;
 
             println!("Query Response: {:?}", content);
 
             let context = content.join(" ");
 
             // @TODO: Properly get the prompt from from cli
-            rt.block_on(crate::chat::chat_main::run_chat(input_list.get(0).unwrap(), Some(&context)))
-                .context("Failed to run chat")?;
+            rt.block_on(crate::chat::chat_main::run_chat(
+                input_list.get(0).unwrap(),
+                Some(&context),
+                &http_client,
+            ))
+            .context("Failed to run chat")?;
 
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }
@@ -260,10 +186,10 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             info!("Chat command is run with below arguments:");
             info!(" Prompt: {:?}", prompt);
 
-
             let context: Option<&str> = None;
+            let client = HttpClient::new();
 
-            rt.block_on(crate::chat::chat_main::run_chat(&prompt, context))
+            rt.block_on(crate::chat::chat_main::run_chat(&prompt, context, &client))
                 .context("Failed to run chat")?;
 
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
