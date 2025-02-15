@@ -1,6 +1,7 @@
 # Vector Embedding and Query Rust
 
 This repository contains a Rust-based system for managing vector embeddings and querying them using lanceDb/PostgreSQL-backed vector database. The system is designed to handle embedding generation, storage, and querying.
+The repository supports chat with ollama llm model after retrieving the embeddings from the database.
 
 ## Table of Contents
 
@@ -92,7 +93,9 @@ The application supports various commands and subcommands. Use the `--help` flag
    cargo run -- write --input "dog sound is called bark" --input "cat sounds is called purr" --model "nomic-embed-text" --table "from_rust2" --dim 768 --log-level "debug"
 
    cargo run -- load -p /home/rupesh/aqrtr/gits/vector-embed-rust/src/scripts
-   cargo run -- lance-query -d scripts_db -t scripts_table -i "what is mirostat" --log-level "info"
+   cargo run -- rag-query -t scripts_table -d scripts_db -i "what is temperature"
+   cargo run -- chat -p "what is mirostat"
+
 ```
 
 ### Configuration
