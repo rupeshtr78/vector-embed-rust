@@ -1,4 +1,3 @@
-use crate::app::config::{EmbedRequest, EmbedResponse};
 use hyper::client::HttpConnector;
 use hyper::Client as HttpClient;
 use log::{debug, error, info};
@@ -8,6 +7,10 @@ use hyper::{Body, Request};
 use std::error::Error;
 use std::str;
 
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+pub mod config;
+use config::{EmbedRequest, EmbedResponse};
 
 /// Fetch the embedding from the embedding service
 /// Arguments:

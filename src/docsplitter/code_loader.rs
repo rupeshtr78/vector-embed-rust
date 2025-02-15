@@ -1,4 +1,4 @@
-use crate::app::config::EmbedRequest;
+use crate::embedder::config::EmbedRequest;
 use crate::app::constants::EMBEDDING_MODEL;
 use anyhow::anyhow;
 use anyhow::Context;

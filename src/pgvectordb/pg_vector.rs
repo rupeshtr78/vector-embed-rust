@@ -1,9 +1,10 @@
-use crate::app::config::{EmbedRequest, VectorDbConfig};
+use crate::embedder::config::EmbedRequest;
 use crate::app::constants::QUERY_LIMIT;
 use log::{debug, error, info};
 use pgvector::Vector;
 use postgres::{Client, Config, NoTls};
 use std::{error::Error, time::Duration};
+use crate::pgvectordb::VectorDbConfig;
 
 /// Create a connection to the Postgres database
 /// Argumemts:

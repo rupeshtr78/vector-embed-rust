@@ -1,4 +1,4 @@
-use crate::app::config::VectorDbConfig;
+use crate::pgvectordb::VectorDbConfig;
 use postgres::Client;
 use std::io::{Write};
 use std::{error::Error};
@@ -30,7 +30,7 @@ fn teardown_db(client: &mut Client, table: String) -> Result<(), Box<dyn Error>>
 mod pg_client_tests {
 
     use super::*;
-    use crate::app::config::VectorDbConfig;
+    use crate::pgvectordb::VectorDbConfig;
     use crate::pgvectordb::pg_vector;
     #[cfg(test)]
     #[test]
@@ -164,7 +164,7 @@ mod pg_client_tests {
 #[cfg(test)]
 mod load_vector_data_tests {
     use super::*;
-    use crate::app::config::{EmbedRequest};
+    use crate::embedder::config::{EmbedRequest};
     use crate::pgvectordb::pg_vector;
     use crate::pgvectordb::pg_vector::pg_client;
     use hyper::Client as HttpClient;
@@ -174,7 +174,7 @@ mod load_vector_data_tests {
 
     fn setup_db() -> Result<Client, Box<dyn Error>> {
         let db_config = create_dbconfig();
-        let mut pg_client: postgres::Client = pg_client(&db_config)?;
+        let pg_client: Client = pg_client(&db_config)?;
         Ok(pg_client)
     }
 

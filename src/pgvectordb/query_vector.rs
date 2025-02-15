@@ -1,5 +1,5 @@
 use super::pg_vector;
-use crate::app::config::EmbedRequest;
+use crate::embedder::config::EmbedRequest;
 use crate::app::constants::EMBEDDING_URL;
 use ::hyper::Client as HttpClient;
 use hyper::client::HttpConnector;

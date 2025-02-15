@@ -1,6 +1,6 @@
 pub mod load_lancedb;
 pub mod query;
-use crate::app::config::EmbedRequest;
+use crate::embedder::config::EmbedRequest;
 use crate::docsplitter::code_loader;
 use crate::embedder::fetch_embedding;
 use ::anyhow::Context;

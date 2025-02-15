@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::app::config::EmbedRequest;
+    use crate::embedder::config::EmbedRequest;
     use crate::app::constants::{EMBEDDING_MODEL, EMBEDDING_URL};
     use crate::embedder::create_embed_request;
     

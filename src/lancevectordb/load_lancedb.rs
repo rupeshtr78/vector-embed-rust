@@ -1,4 +1,4 @@
-use crate::app::config::{EmbedRequest, EmbedResponse};
+use crate::embedder::config::{EmbedRequest, EmbedResponse};
 use crate::app::constants::{self, VECTOR_DB_DIM_SIZE};
 use anyhow::Context;
 use anyhow::Result;

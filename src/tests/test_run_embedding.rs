@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod test_fetch_embedding {
-    use crate::app::config::{EmbedRequest};
+    use crate::embedder::config::{EmbedRequest};
     use crate::app::constants::EMBEDDING_MODEL;
     use crate::app::constants::EMBEDDING_URL;
     use crate::embedder::fetch_embedding;

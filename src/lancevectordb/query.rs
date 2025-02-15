@@ -1,4 +1,4 @@
-use crate::app::config::EmbedRequest;
+use crate::embedder::config::EmbedRequest;
 use crate::app::constants::EMBEDDING_URL;
 use crate::embedder;
 use ::hyper::Client as HttpClient;

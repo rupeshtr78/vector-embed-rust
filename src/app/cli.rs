@@ -1,5 +1,5 @@
 use crate::app::commands::Commands;
-use crate::app::config::VectorDbConfig;
+use crate::pgvectordb::VectorDbConfig;
 use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
 use crate::pgvectordb::run_embedding::{run_embedding_load};
 use crate::lancevectordb;

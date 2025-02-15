@@ -2,11 +2,11 @@
 mod tests {
     use crate::pgvectordb::query_vector::run_query;
 
-    use crate::app::config::{EmbedRequest, VectorDbConfig};
-    use crate::pgvectordb::pg_vector;
+    use crate::embedder::config::EmbedRequest;
+    use crate::pgvectordb::{pg_vector, VectorDbConfig};
     use crate::pgvectordb::pg_vector::pg_client;
     use ::hyper::Client as HttpClient;
-    use postgres::{Client};
+    use postgres::Client;
     use std::error::Error;
     use std::sync::{Arc, Mutex};
     use tokio::runtime::Runtime; // Import runtime

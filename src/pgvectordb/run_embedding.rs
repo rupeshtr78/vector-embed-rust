@@ -1,4 +1,4 @@
-use crate::app::config::{EmbedRequest};
+use crate::embedder::config::{EmbedRequest};
 use crate::pgvectordb;
 use hyper::client::HttpConnector;
 use hyper::Client as HttpClient;
