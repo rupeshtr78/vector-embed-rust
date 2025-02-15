@@ -2,7 +2,8 @@ use crate::chat::chat_config;
 use crate::chat::chat_config::ai_chat;
 use crate::chat::prompt_template;
 use anyhow::{Context, Result};
-use hyper::Client as HttpClient;
+use hyper::client::HttpConnector;
+use hyper::Client;
 use log::{debug, error, info};
 use std::{
     process::exit,
@@ -24,7 +25,11 @@ const AI_MODEL: &str = "mistral:latest";
 /// * `context` - The context to send to the AI model
 /// # Returns
 /// * `Result<()>` - The result of the chatbot
-pub async fn run_chat(ai_prompt: &str, context: Option<&str>) -> Result<()> {
+pub async fn run_chat(
+    ai_prompt: &str,
+    context: Option<&str>,
+    client: &Client<HttpConnector>,
+) -> Result<()> {
     info!("Starting LLM chat...");
 
     let paths = [SYSTEM_PROMPT_PATH];
@@ -34,17 +39,15 @@ pub async fn run_chat(ai_prompt: &str, context: Option<&str>) -> Result<()> {
             exit(1);
         }
     });
-    
 
-    let prompt =
-        prompt_template::Prompt::new(&SYSTEM_PROMPT_PATH, context, ai_prompt)
-            .await
-            .context("Failed to create prompt")?;
+    let prompt = prompt_template::Prompt::new(&SYSTEM_PROMPT_PATH, context, ai_prompt)
+        .await
+        .context("Failed to create prompt")?;
 
     // @TODO: Implement the template
     // let template = prompt_template::get_template(&prompt, PROMPT_TEMPLATE_PATH)
     //     .context("Failed to get template")?;
-    
+
     let chat_url = format!("{}/{}", CHAT_API_URL, "api/chat");
 
     let chat_request = chat_config::ChatRequest::new(
@@ -61,8 +64,8 @@ pub async fn run_chat(ai_prompt: &str, context: Option<&str>) -> Result<()> {
     debug!("Chat Body {:?}", chat_body);
 
     // Create a new HTTP client
-    let client = HttpClient::new();
-    
+    // let client = HttpClient::new();
+
     // Create a new Arc<RwLock<ChatRequest>> to share the request between threads
     let request = Arc::new(RwLock::new(chat_request));
 
@@ -72,7 +75,7 @@ pub async fn run_chat(ai_prompt: &str, context: Option<&str>) -> Result<()> {
         .context("Failed to get ai chat response")?;
 
     // debug!("{:?}", response);
-    
+
     response.print_message();
 
     Ok(())

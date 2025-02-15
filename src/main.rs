@@ -5,11 +5,11 @@ use app::constants::EMBEDDING_URL;
 use log::{error, info};
 
 mod app;
+mod chat;
 mod docsplitter;
 mod embedder;
 mod lancevectordb;
 mod pgvectordb;
-mod chat;
 
 fn main() -> Result<()> {
     info!("Starting");

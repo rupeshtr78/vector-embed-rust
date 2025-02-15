@@ -85,7 +85,12 @@ impl TableSchema {
     }
 }
 
-/// A struct that represents a chunk of text with its corresponding embeddings.
+/// Create a table in the database with the given schema
+/// Arguments:
+/// - db: &mut Connection
+/// - table_schema: &TableSchema
+/// Returns:
+/// - Result<(), Box<dyn Error>>
 pub async fn create_lance_table(db: &mut Connection, table_schema: &TableSchema) -> Result<()> {
     let table_name = table_schema.get_table_name();
     let all_tables = db.table_names().execute().await?;
@@ -131,6 +136,13 @@ pub async fn create_lance_table(db: &mut Connection, table_schema: &TableSchema)
     Ok(())
 }
 
+/// Insert embeddings into the database
+/// Arguments:
+/// - db: &mut Connection
+/// - table_schema: &TableSchema
+/// - records: RecordBatch (Arrow)
+/// Returns:
+/// - Result<(), Box<dyn Error>>
 pub async fn insert_embeddings(
     db: &mut Connection,
     table_schema: &TableSchema,
@@ -155,6 +167,14 @@ pub async fn insert_embeddings(
     Ok(())
 }
 
+/// Create a RecordBatch from the EmbedRequest and EmbedResponse
+/// Arguments:
+/// - id: i32
+/// - request: Arc<RwLock<EmbedRequest>>
+/// - response: EmbedResponse
+/// - table_schema: &TableSchema
+/// Returns:
+/// - Result<RecordBatch, Box<dyn Error>> - The RecordBatch (Arrow)
 pub fn create_record_batch(
     id: i32,
     request: Arc<std::sync::RwLock<EmbedRequest>>,
@@ -233,6 +253,13 @@ pub fn create_record_batch(
     Ok(record_batch)
 }
 
+/// Create an index on the embedding column
+/// Arguments:
+/// - db: &mut Connection
+/// - table_name: &str
+/// - column: Vec<&str>
+/// Returns:
+/// - Result<(), Box<dyn Error>>
 pub async fn create_index_on_embedding(
     db: &mut Connection,
     table_name: &str,
