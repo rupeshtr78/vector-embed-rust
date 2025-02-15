@@ -13,6 +13,20 @@ use hyper::client::HttpConnector;
 use hyper::Client;
 use load_lancedb::TableSchema;
 
+/// Run the LanceVectorDB pipeline
+/// 1. Load the codebase into chunks
+/// 2. Extract the embed requests from the chunks
+/// 3. Initialize the database
+/// 4. Create a table
+/// 5. Load embeddings
+/// 6. Create an index
+/// # Arguments
+/// * `path` - The path to the codebase
+/// * `chunk_size` - The size of the chunks
+/// * `embed_url` - The URL of the embedder
+/// * `http_client` - The HTTP client
+/// # Returns
+/// * `Result<()>` - The result of the operation
 pub async fn run(
     path: String,
     chunk_size: usize,
