@@ -2,7 +2,8 @@ use hyper::Client;
 use hyper::client::HttpConnector;
 use log::{debug, error, info};
 use std::process::exit;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc};
+use tokio::sync::RwLock;
 use anyhow::Context;
 use crate::chat::chat_config::ai_chat;
 
@@ -38,7 +39,7 @@ pub async fn run_chat(
         }
     });
 
-    let prompt = prompt_template::Prompt::new(&SYSTEM_PROMPT_PATH, context, ai_prompt)
+    let prompt = prompt_template::Prompt::new(SYSTEM_PROMPT_PATH, context, ai_prompt)
         .await
         .context("Failed to create prompt")?;
 
@@ -68,7 +69,7 @@ pub async fn run_chat(
     let request = Arc::new(RwLock::new(chat_request));
 
     // Call the AI chat API
-    let response = ai_chat(&request, &client)
+    let response = ai_chat(&request, client)
         .await
         .context("Failed to get ai chat response")?;
 

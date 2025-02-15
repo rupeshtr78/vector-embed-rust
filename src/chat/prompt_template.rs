@@ -52,7 +52,7 @@ async fn get_system_prompt(prompt_path: &str) -> Result<String> {
 /// * `Result<String>` - Rendered template
 #[allow(dead_code)]
 pub fn get_template(prompt: &Prompt, template_file: &str) -> Result<String> {
-    // let template_file = "/Users/rupeshraghavan/apl/gits/gits-rupesh/rtr-rust-lab/multi-workspace/ai-chat/src/template/prompt_template.hbs";
+   
     let template = std::fs::read_to_string(template_file).expect("Failed to read template file");
 
     let mut handlebars = Handlebars::new();

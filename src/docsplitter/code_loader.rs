@@ -70,8 +70,8 @@ impl FileChunk {
         let content_lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
         Self {
             content: content_lines,
-            file_path: file_path,
-            chunk_number: chunk_number,
+            file_path,
+            chunk_number,
         }
     }
 
@@ -202,12 +202,12 @@ async fn split_file_into_chunks(
         is_supported_file.1
     );
 
-    if is_supported_file.1 == false {
+    if !is_supported_file.1 {
         debug!("Unsupported file extension");
     }
 
     // let mut chunks: Vec<FileChunk> = Vec::new();
-    if is_supported_file.1 == true && is_supported_file.0 == Language::Text {
+    if is_supported_file.1 && is_supported_file.0 == Language::Text {
         // user tree_sitter_markdown
         let splitter = text_splitter::TextSplitter::new(chunk_config);
         let chunks = splitter
@@ -225,7 +225,7 @@ async fn split_file_into_chunks(
         return Ok(chunks);
     }
 
-    if is_supported_file.1 == true && is_supported_file.0 != Language::Text {
+    if is_supported_file.1 && is_supported_file.0 != Language::Text {
         let splitter = CodeSplitter::new(
             get_language_from_file_extension(is_supported_file.0)
                 .context("Unsupported file extension")?,

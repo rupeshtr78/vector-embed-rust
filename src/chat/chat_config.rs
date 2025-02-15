@@ -3,10 +3,11 @@ use anyhow::{anyhow, Context};
 use hyper::client::HttpConnector;
 use hyper::{body, Client, Uri};
 use hyper::{Body, Request};
-use log::{debug, error};
+use log::debug;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 use crate::chat::prompt_template::Prompt;
 
@@ -77,14 +78,14 @@ impl ChatRequest {
         options: Option<Options>,
         prompt: Prompt,
     ) -> ChatRequest {
-        let mut messages = Vec::<ChatMessage>::new();
-
-        messages.push(ChatMessage::new(ChatRole::System, prompt.system_message));
-        messages.push(ChatMessage::new(
-            ChatRole::User,
-            prompt.content.unwrap_or_else(|| "".to_string()),
-        ));
-        messages.push(ChatMessage::new(ChatRole::User, prompt.prompt));
+        let messages = vec![
+            ChatMessage::new(ChatRole::System, prompt.system_message),
+            ChatMessage::new(
+                ChatRole::User,
+                prompt.content.map_or_else(|| "".to_string(), |c| c),
+            ),
+            ChatMessage::new(ChatRole::User, prompt.prompt),
+        ];
 
         ChatRequest {
             model,
@@ -122,13 +123,7 @@ pub async fn ai_chat(
     chat_request: &Arc<RwLock<ChatRequest>>,
     http_client: &Client<HttpConnector>,
 ) -> Result<ChatResponse> {
-    let chat_request = match chat_request.read() {
-        Ok(data) => data,
-        Err(e) => {
-            error!("Error: {}", e);
-            return Err(anyhow!("Error: {}", e));
-        }
-    };
+    let chat_request = chat_request.read().await;
 
     let url = chat_request
         .api_url

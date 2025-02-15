@@ -70,10 +70,10 @@ pub async fn run(
     // load embeddings
     for (id, embed_request) in embed_requests.iter().enumerate() {
         // fetch embeddings
-        let embed_response = fetch_embedding(embed_url, &embed_request, &http_client).await;
+        let embed_response = fetch_embedding(embed_url, embed_request, http_client).await;
         info!("Embedding Response: {:?}", embed_response.embeddings.len());
 
-        let request: Arc<std::sync::RwLock<EmbedRequest>> = Arc::clone(&embed_request);
+        let request: Arc<std::sync::RwLock<EmbedRequest>> = Arc::clone(embed_request);
 
         // create record batch
         let record_batch =
@@ -92,7 +92,7 @@ pub async fn run(
     let embedding_col = table_schema.vector.name();
     load_lancedb::create_index_on_embedding(
         &mut db,
-        &table_schema.name.as_str(),
+        table_schema.name.as_str(),
         [embedding_col.as_str()].to_vec(),
     )
     .await

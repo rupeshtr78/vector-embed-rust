@@ -182,7 +182,7 @@ mod load_vector_data_tests {
         let mut client = setup_db().expect("Failed to set up database");
         let dimension = 768;
         let url = EMBEDDING_URL;
-        let input = vec!["item1".to_string(), "item2".to_string()];
+        let input = ["item1".to_string(), "item2".to_string()];
         let http_client = HttpClient::new();
 
         // Arrange
@@ -193,7 +193,7 @@ mod load_vector_data_tests {
 
         let response = rt.block_on(crate::embedder::create_embed_request(
             url,
-            &embed_data,
+            embed_data,
             &http_client,
         ));
         assert!(response.is_ok());

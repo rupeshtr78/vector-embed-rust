@@ -40,7 +40,7 @@ mod tests {
         let mut pg_client: postgres::Client = pg_client(&db_config).unwrap();
         let dimension = 768;
         let url = EMBEDDING_URL;
-        let input = vec!["item1".to_string(), "item2".to_string()];
+        let input = ["item1".to_string(), "item2".to_string()];
         let http_client = HttpClient::new();
 
         // Arrange
@@ -52,7 +52,7 @@ mod tests {
         let response = rt
             .block_on(crate::embedder::create_embed_request(
                 url,
-                &embed_data,
+                embed_data,
                 &http_client,
             ))
             .unwrap();
@@ -152,7 +152,7 @@ mod tests {
 
         // Run and expect an error due to invalid models or other conditions
         let wrong_model = "wrong_model".to_string();
-        let result = run_query(
+        run_query(
             &rt,
             wrong_model,
             &input_list,
@@ -196,7 +196,7 @@ mod tests {
         // Run and expect an error due to invalid models or other conditions
 
         let input_list_empty: Vec<String> = Vec::new();
-        let result = run_query(
+        run_query(
             &rt,
             embed_model,
             &input_list_empty,

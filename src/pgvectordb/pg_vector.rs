@@ -61,7 +61,7 @@ pub fn create_table(
     info!("Vector Table created: {}", table);
     transaction.commit()?;
 
-    return Ok(());
+    Ok(())
 }
 
 ///  Load vector data into the Postgres database
@@ -87,7 +87,7 @@ pub fn load_vector_data(
         .map(|v| Vector::from(v.clone()))
         .collect::<Vec<Vector>>();
 
-    if input.get_input().len() != pgv.len() || input.get_input().len() == 0 || pgv.len() == 0 {
+    if input.get_input().len() != pgv.len() || input.get_input().is_empty() || pgv.is_empty() {
         return Err("Invalid Input and Embeddings length or mismatch".into());
     }
 
@@ -140,7 +140,7 @@ pub fn query_nearest(
     let mut result: Vec<String> = Vec::new();
     match row {
         Ok(rows) => {
-            if rows.len() == 0 {
+            if rows.is_empty() {
                 info!("No results found");
                 return Ok(result);
             }

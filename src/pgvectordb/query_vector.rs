@@ -32,7 +32,7 @@ pub fn run_query(
     // let commands = build_args();
     info!("Length of input list: {}", input_list[0].len());
     // check if list is length one String is length one
-    if input_list.len() == 1 && input_list[0].len() == 0 {
+    if input_list.len() == 1 && input_list[0].is_empty() {
         error!("Query Input is empty");
         return;
     }
@@ -40,9 +40,9 @@ pub fn run_query(
     let url = EMBEDDING_URL;
 
     let query_request_arc =
-        EmbedRequest::NewArcEmbedRequest(&embed_model, &input_list, &"".to_string());
+        EmbedRequest::NewArcEmbedRequest(&embed_model, input_list, &"".to_string());
     let query_response = rt.block_on(crate::embedder::fetch_embedding(
-        &url,
+        url,
         &query_request_arc,
         http_client,
     ));
@@ -66,7 +66,6 @@ pub fn run_query(
             Ok(_) => {} // TODO - handle the query response
             Err(e) => {
                 error!("Error: {}", e);
-                return;
             }
         }
     });

@@ -34,7 +34,7 @@ pub async fn run_query(
     // let commands = build_args();
     info!("Length of input list: {}", input_list[0].len());
     // check if list is length one String is length one
-    if input_list.len() == 1 && input_list[0].len() == 0 {
+    if input_list.len() == 1 && input_list[0].is_empty() {
         error!("Query Input is empty");
         return Err(anyhow!("Query Input is empty"));
     }
@@ -42,9 +42,9 @@ pub async fn run_query(
     let url = EMBEDDING_URL;
 
     let query_request_arc =
-        EmbedRequest::NewArcEmbedRequest(&embed_model, &input_list, &"".to_string());
+        EmbedRequest::NewArcEmbedRequest(&embed_model, input_list, &"".to_string());
     let query_response =
-        embedder::fetch_embedding(&url, &query_request_arc, http_client).await;
+        embedder::fetch_embedding(url, &query_request_arc, http_client).await;
 
     let query_vector = query_response.embeddings[0].clone();
 

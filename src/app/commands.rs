@@ -201,17 +201,17 @@ pub fn build_args() -> Commands {
         colog_init(LogLevel::Debug);
     }
 
-    let commands = match args.cmd {
+    
+
+    match args.cmd {
         Some(command) => command,
         None => {
             info!("No subcommand provided. Use --help for more information.");
-            return Commands::Version {
+            Commands::Version {
                 version: VERSION.to_string(),
-            };
+            }
         }
-    };
-
-    commands
+    }
 }
 
 /// quick and dirty way to test the command line arguments

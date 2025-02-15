@@ -38,7 +38,7 @@ pub fn run_embedding_load(
     let embed_request_arc_clone = Arc::clone(&embed_request_arc);
 
     // Run embedding request in a separate thread
-    let embed_response = rt.block_on(crate::embedder::fetch_embedding(&url, &embed_request_arc, http_client));
+    let embed_response = rt.block_on(crate::embedder::fetch_embedding(url, &embed_request_arc, http_client));
 
     let dim = dimension.parse::<i32>().unwrap_or_else(|_| {
         error!("Failed to parse dimension");
@@ -107,7 +107,7 @@ pub fn pg_persist_embedding_data(
     embeddings: &Vec<Vec<f32>>,
 ) -> Result<(), Box<dyn Error>> {
     debug!("Loading data into table");
-    match pgvectordb::pg_vector::create_table(pg_client, &table, dimension) {
+    match pgvectordb::pg_vector::create_table(pg_client, table, dimension) {
         Ok(_) => {
             debug!("Create table successful");
         }
@@ -116,7 +116,7 @@ pub fn pg_persist_embedding_data(
         }
     }
 
-    match pgvectordb::pg_vector::load_vector_data(pg_client, &table, &embed_request, embeddings) {
+    match pgvectordb::pg_vector::load_vector_data(pg_client, table, embed_request, embeddings) {
         Ok(_) => {
             debug!("Load vector data successful");
         }

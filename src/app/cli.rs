@@ -167,7 +167,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
 
             // @TODO: Properly get the prompt from from cli
             rt.block_on(crate::chat::run_chat(
-                input_list.get(0).unwrap(),
+                input_list.first().unwrap(),
                 Some(&context),
                 &http_client,
             ))

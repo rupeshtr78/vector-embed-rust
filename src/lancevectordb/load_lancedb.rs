@@ -59,7 +59,7 @@ impl TableSchema {
     }
 
     fn get_table_name(&self) -> &str {
-        &self.name.as_str()
+        self.name.as_str()
     }
 
     fn empty_batch(&self) -> Result<RecordBatch> {
