@@ -10,6 +10,7 @@ use std::sync::{Arc, RwLock};
 
 use crate::chat::prompt_template::Prompt;
 
+/// ChatRole is an enum that represents the role of the chat message
 #[derive(Serialize, Deserialize, Debug, Clone)]
 
 pub enum ChatRole {
@@ -23,6 +24,7 @@ pub enum ChatRole {
     Tool,
 }
 
+/// ChatMessage is a struct that represents a chat message
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ChatMessage {
     role: ChatRole,
@@ -42,6 +44,7 @@ impl ChatMessage {
     }
 }
 
+/// ChatRequest is a struct that represents a chat request
 // @TODO: Add tools
 #[derive(Serialize, Deserialize)]
 pub(crate) struct ChatRequest {
@@ -54,6 +57,7 @@ pub(crate) struct ChatRequest {
     pub options: Option<Options>,
 }
 
+/// ChatBody is a struct that represents the body of a chat request
 #[derive(Serialize, Deserialize)]
 struct ChatBody {
     model: String,
@@ -108,6 +112,12 @@ impl ChatRequest {
     }
 }
 
+/// Get chat response from the AI model
+/// # Arguments
+/// * `chat_request` - The chat request to send to the AI model
+/// * `http_client` - The HTTP client to use for the request
+/// # Returns
+/// * `Result<ChatResponse>` - The result of the chat response
 pub async fn ai_chat(
     chat_request: &Arc<RwLock<ChatRequest>>,
     http_client: &Client<HttpConnector>,
@@ -153,6 +163,7 @@ pub async fn ai_chat(
     Ok(response_body)
 }
 
+/// ChatResponse is a struct that represents a chat response
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ChatResponse {
     model: String,
@@ -192,6 +203,7 @@ impl ChatResponse {
     }
 }
 
+/// Options is a struct that represents the options for the chat request
 // @TODO: Add options support
 #[allow(dead_code)]
 #[derive(Serialize, Deserialize, Debug, Clone)]

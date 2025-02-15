@@ -18,6 +18,12 @@ const SYSTEM_PROMPT_PATH: &str = "template/system_prompt.txt";
 
 const AI_MODEL: &str = "mistral:latest";
 
+/// Run the chatbot
+/// # Arguments
+/// * `ai_prompt` - The prompt to send to the AI model
+/// * `context` - The context to send to the AI model
+/// # Returns
+/// * `Result<()>` - The result of the chatbot
 pub async fn run_chat(ai_prompt: &str, context: Option<&str>) -> Result<()> {
     info!("Starting LLM chat...");
 
@@ -56,13 +62,14 @@ pub async fn run_chat(ai_prompt: &str, context: Option<&str>) -> Result<()> {
 
     // Create a new HTTP client
     let client = HttpClient::new();
+    
     // Create a new Arc<RwLock<ChatRequest>> to share the request between threads
     let request = Arc::new(RwLock::new(chat_request));
 
     // Call the AI chat API
     let response = ai_chat(&request, &client)
         .await
-        .context("Failed to get response")?;
+        .context("Failed to get ai chat response")?;
 
     // debug!("{:?}", response);
     

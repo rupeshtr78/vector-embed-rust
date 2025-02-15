@@ -4,6 +4,7 @@ use anyhow::Result;
 use handlebars::Handlebars;
 use serde::Serialize;
 
+/// Prompt struct
 #[derive(Serialize)]
 pub(crate) struct Prompt {
     pub(crate) system_message: String,
@@ -11,6 +12,11 @@ pub(crate) struct Prompt {
     pub prompt: String,
 }
 
+/// Get system prompt from file
+/// # Arguments
+/// * `prompt_path` - Path to the system prompt file
+/// # Returns
+/// * `Result<String>` - System prompt
 async fn get_system_prompt(prompt_path: &str) -> Result<String> {
     let path = std::path::Path::new(prompt_path);
     if !path.exists() || !path.is_file() {
@@ -38,6 +44,12 @@ impl Prompt {
 
 }
 
+/// Get template from file
+/// # Arguments
+/// * `prompt` - Prompt struct
+/// * `template_file` - Path to the template file
+/// # Returns
+/// * `Result<String>` - Rendered template
 #[allow(dead_code)]
 pub fn get_template(prompt: &Prompt, template_file: &str) -> Result<String> {
     // let template_file = "/Users/rupeshraghavan/apl/gits/gits-rupesh/rtr-rust-lab/multi-workspace/ai-chat/src/template/prompt_template.hbs";
