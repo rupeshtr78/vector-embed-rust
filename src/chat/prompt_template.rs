@@ -12,6 +12,20 @@ pub(crate) struct Prompt {
     pub prompt: String,
 }
 
+impl Prompt {
+    pub(crate) async fn new(path: &str, content: Option<&str>, prompt: &str) -> Result<Prompt> {
+        let system_prompt = get_system_prompt(path).await?;
+        
+        let prompt = Prompt {
+            system_message: system_prompt,
+            content: content.map(|c| c.to_string()),
+            prompt: prompt.to_string(),
+        };
+        Ok(prompt)
+    }
+
+}
+
 /// Get system prompt from file
 /// # Arguments
 /// * `prompt_path` - Path to the system prompt file
@@ -28,20 +42,6 @@ async fn get_system_prompt(prompt_path: &str) -> Result<String> {
         .context("Failed to read system prompt")?;
 
     Ok(system_prompt)
-}
-
-impl Prompt {
-    pub(crate) async fn new(path: &str, content: Option<&str>, prompt: &str) -> Result<Prompt> {
-        let system_prompt = get_system_prompt(path).await?;
-
-        let prompt = Prompt {
-            system_message: system_prompt,
-            content: content.map(|c| c.to_string()),
-            prompt: prompt.to_string(),
-        };
-        Ok(prompt)
-    }
-
 }
 
 /// Get template from file
