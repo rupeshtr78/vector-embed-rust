@@ -2,17 +2,11 @@
 mod tests {
     use crate::app::config::EmbedRequest;
     use crate::app::constants::{EMBEDDING_MODEL, EMBEDDING_URL};
-    use crate::embedder::vector_embedding::create_embed_request;
-
-    use super::*;
-    use hyper::{Body, Client, Request, Response, StatusCode};
-    use mockall::predicate::*;
+    use crate::embedder::create_embed_request;
+    
+    use hyper::{Body, Client, Request, Response};
     use mockall::*;
-    use serde_json::json;
     use std::error::Error;
-    use std::sync::Arc;
-    use tokio::sync::Mutex;
-
     mock! {
         HttpClient {
             async fn request(&self, req: Request<Body>) -> Result<Response<Body>, Box<dyn Error + Send + Sync>>;

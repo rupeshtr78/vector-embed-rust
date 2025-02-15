@@ -1,7 +1,6 @@
 use super::pg_vector;
 use crate::app::config::EmbedRequest;
 use crate::app::constants::EMBEDDING_URL;
-use crate::embedder;
 use ::hyper::Client as HttpClient;
 use hyper::client::HttpConnector;
 use log::{debug, error, info};
@@ -42,7 +41,7 @@ pub fn run_query(
 
     let query_request_arc =
         EmbedRequest::NewArcEmbedRequest(&embed_model, &input_list, &"".to_string());
-    let query_response = rt.block_on(embedder::run_embedding::fetch_embedding(
+    let query_response = rt.block_on(crate::embedder::fetch_embedding(
         &url,
         &query_request_arc,
         http_client,

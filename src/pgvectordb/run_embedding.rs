@@ -1,14 +1,14 @@
-use crate::app::config::{EmbedRequest, EmbedResponse};
+use crate::app::config::{EmbedRequest};
 use crate::pgvectordb;
 use hyper::client::HttpConnector;
 use hyper::Client as HttpClient;
 use log::{debug, error};
 use postgres::Client;
 use std::error::Error;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 
-use super::vector_embedding;
+
 
 /// Run the embedding request and load the embeddings into the database
 /// Arguments:
@@ -38,7 +38,7 @@ pub fn run_embedding_load(
     let embed_request_arc_clone = Arc::clone(&embed_request_arc);
 
     // Run embedding request in a separate thread
-    let embed_response = rt.block_on(fetch_embedding(&url, &embed_request_arc, http_client));
+    let embed_response = rt.block_on(crate::embedder::fetch_embedding(&url, &embed_request_arc, http_client));
 
     let dim = dimension.parse::<i32>().unwrap_or_else(|_| {
         error!("Failed to parse dimension");
@@ -66,7 +66,7 @@ pub fn run_embedding_load(
             }
         };
 
-        match persist_embedding_data(
+        match pg_persist_embedding_data(
             &mut client,
             &vector_table,
             dim,
@@ -89,46 +89,8 @@ pub fn run_embedding_load(
     Ok(run_embed_thread?)
 }
 
-/// Fetch the embedding from the embedding service
-/// Arguments:
-/// - url: &str
-/// - embed_data: &Arc<RwLock<EmbedRequest>>
-/// Returns:
-/// - EmbedResponse
-pub async fn fetch_embedding(
-    url: &str,
-    embed_data: &Arc<RwLock<EmbedRequest>>,
-    http_client: &HttpClient<HttpConnector>,
-) -> EmbedResponse {
-    debug!("Running Embedding");
-    let embed_data = match embed_data.read() {
-        Ok(data) => data,
-        Err(e) => {
-            error!("Error: {}", e);
-            return EmbedResponse {
-                model: "".to_string(),
-                embeddings: vec![],
-            };
-        }
-    };
 
-    let response = match vector_embedding::create_embed_request(url, &embed_data, http_client).await
-    {
-        Ok(embed_response) => embed_response,
-        Err(e) => {
-            error!("Error: {}", e);
-            return EmbedResponse {
-                model: "".to_string(),
-                embeddings: vec![],
-            };
-        }
-    };
-
-    debug!("Finished Running Embedding");
-    response
-}
-
-/// Persist the embedding data into the database
+/// Persist the embedding data into the postgres database
 /// Arguments:
 /// - pg_client: &mut Client
 /// - table: &String
@@ -137,7 +99,7 @@ pub async fn fetch_embedding(
 /// - embeddings: &Vec<Vec<f32>>
 /// Returns:
 /// - Result<(), Box<dyn Error>>
-pub fn persist_embedding_data(
+pub fn pg_persist_embedding_data(
     pg_client: &mut Client,
     table: &String,
     dimension: i32,

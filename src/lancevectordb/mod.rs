@@ -2,7 +2,7 @@ pub mod load_lancedb;
 pub mod query;
 use crate::app::config::EmbedRequest;
 use crate::docsplitter::code_loader;
-use crate::embedder::run_embedding::fetch_embedding;
+use crate::embedder::fetch_embedding;
 use ::anyhow::Context;
 use ::anyhow::Result;
 use ::log::debug;
@@ -12,6 +12,7 @@ use ::std::sync::Arc;
 use hyper::client::HttpConnector;
 use hyper::Client;
 use load_lancedb::TableSchema;
+
 
 /// Run the LanceVectorDB pipeline
 /// 1. Load the codebase into chunks
@@ -51,14 +52,15 @@ pub async fn run(
     }
 
     // Initialize the database
-    let db_uri = get_file_name(&path) + "_db/";
+    let file_name = get_file_name(&path);
+    let db_uri = format!("{}_{}", &file_name, "db");
     let mut db = lancedb::connect(&db_uri)
         .execute()
         .await
         .context("Failed to connect to the database")?;
 
     // create table
-    let table_name = get_file_name(&path) + "_table";
+    let table_name = format!("{}_{}", &file_name, "table");
     let table_schema = TableSchema::new(table_name);
 
     load_lancedb::create_lance_table(&mut db, &table_schema)

@@ -2,16 +2,12 @@
 mod tests {
     use crate::pgvectordb::query_vector::run_query;
 
-    use super::*;
     use crate::app::config::{EmbedRequest, VectorDbConfig};
-    use crate::embedder::{self, vector_embedding};
     use crate::pgvectordb::pg_vector;
     use crate::pgvectordb::pg_vector::pg_client;
     use ::hyper::Client as HttpClient;
-    use hyper::client::HttpConnector;
-    use postgres::{Client, NoTls};
+    use postgres::{Client};
     use std::error::Error;
-    use std::pin::Pin;
     use std::sync::{Arc, Mutex};
     use tokio::runtime::Runtime; // Import runtime
 
@@ -54,7 +50,7 @@ mod tests {
         let rt = Runtime::new().unwrap();
 
         let response = rt
-            .block_on(vector_embedding::create_embed_request(
+            .block_on(crate::embedder::create_embed_request(
                 url,
                 &embed_data,
                 &http_client,

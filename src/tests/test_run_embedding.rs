@@ -1,13 +1,10 @@
 #[cfg(test)]
 mod test_fetch_embedding {
-    use crate::app::config::{EmbedRequest, EmbedResponse};
+    use crate::app::config::{EmbedRequest};
     use crate::app::constants::EMBEDDING_MODEL;
     use crate::app::constants::EMBEDDING_URL;
-    use crate::embedder::run_embedding::fetch_embedding;
-    use hyper::client::HttpConnector;
+    use crate::embedder::fetch_embedding;
     use hyper::Client;
-    use log::{debug, error};
-    use std::panic;
     use std::sync::Arc;
     use std::sync::RwLock;
 

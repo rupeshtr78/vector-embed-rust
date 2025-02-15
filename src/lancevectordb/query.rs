@@ -44,7 +44,7 @@ pub async fn run_query(
     let query_request_arc =
         EmbedRequest::NewArcEmbedRequest(&embed_model, &input_list, &"".to_string());
     let query_response =
-        embedder::run_embedding::fetch_embedding(&url, &query_request_arc, http_client).await;
+        embedder::fetch_embedding(&url, &query_request_arc, http_client).await;
 
     let query_vector = query_response.embeddings[0].clone();
 

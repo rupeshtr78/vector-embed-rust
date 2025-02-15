@@ -1,7 +1,7 @@
 use crate::app::config::VectorDbConfig;
 use postgres::Client;
-use std::io::{self, Write};
-use std::{error::Error, process::Command};
+use std::io::{Write};
+use std::{error::Error};
 const PORT: u16 = 5555;
 const HOST: &str = "10.0.0.213";
 const USER: &str = "rupesh";
@@ -164,14 +164,12 @@ mod pg_client_tests {
 #[cfg(test)]
 mod load_vector_data_tests {
     use super::*;
-    use crate::app::config::{EmbedRequest, VectorDbConfig};
-    use crate::embedder::{self, vector_embedding};
+    use crate::app::config::{EmbedRequest};
     use crate::pgvectordb::pg_vector;
     use crate::pgvectordb::pg_vector::pg_client;
     use hyper::Client as HttpClient;
     use postgres::Client;
     use std::error::Error;
-    use std::pin::Pin;
     use tokio::runtime::Runtime; // Import runtime
 
     fn setup_db() -> Result<Client, Box<dyn Error>> {
@@ -193,7 +191,7 @@ mod load_vector_data_tests {
 
         let rt = Runtime::new().unwrap();
 
-        let response = rt.block_on(vector_embedding::create_embed_request(
+        let response = rt.block_on(crate::embedder::create_embed_request(
             url,
             &embed_data,
             &http_client,

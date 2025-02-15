@@ -1,22 +1,15 @@
 use crate::app::commands::Commands;
-use crate::app::config::EmbedRequest;
-use crate::app::config::EmbedResponse;
 use crate::app::config::VectorDbConfig;
-use crate::app::constants;
 use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
-use crate::docsplitter::code_loader;
-use crate::embedder::run_embedding::{fetch_embedding, run_embedding_load};
+use crate::pgvectordb::run_embedding::{run_embedding_load};
 use crate::lancevectordb;
-use crate::lancevectordb::load_lancedb;
-use crate::lancevectordb::load_lancedb::TableSchema;
 use crate::pgvectordb::{pg_vector, query_vector};
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
 use hyper::Client as HttpClient;
-use log::{debug, error, info};
+use log::{error, info};
 use postgres::Client;
-use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result<()> {
@@ -202,13 +195,4 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
     Ok(())
 }
 
-fn get_file_name(root_dir: &str) -> String {
-    let root_path = PathBuf::from(root_dir);
 
-    let file_name = root_path.file_name().map_or_else(
-        || "None".to_string(),
-        |s| s.to_str().unwrap_or("None").to_string(),
-    );
-    println!("File Name: {}", file_name);
-    file_name
-}
