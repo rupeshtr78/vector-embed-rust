@@ -14,7 +14,7 @@ use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
 use hyper::Client as HttpClient;
-use log::{debug, error, info, warn};
+use log::{debug, error, info};
 use postgres::Client;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -200,7 +200,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             let input_list = vec!["what is mirostat".to_string()];
             let embed_model = constants::EMBEDDING_MODEL.to_string();
 
-            rt.block_on(lancevectordb::query::run_query(
+            let content = rt.block_on(lancevectordb::query::run_query(
                 &mut db,
                 embed_model,
                 &input_list,
@@ -209,10 +209,12 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             ))
             .context("Failed to run query")?;
 
+            println!("Query Response: {:?}", content);
+
             // shutdown the runtime after the embedding is done
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }
-        Commands::LanceQuery {
+        Commands::RagQuery {
             input,
             model,
             table,
@@ -235,7 +237,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 .block_on(lancedb::connect(&db_uri).execute())
                 .context("Failed to connect to the database")?;
 
-            rt.block_on(lancevectordb::query::run_query(
+            let content = rt.block_on(lancevectordb::query::run_query(
                 &mut db,
                 embed_model,
                 &input_list,
@@ -244,13 +246,30 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             ))
             .context("Failed to run query")?;
 
+            println!("Query Response: {:?}", content);
+
+            let context = content.join(" ");
+
+            // @TODO: Properly get the prompt from from cli
+            rt.block_on(crate::chat::chat_main::run_chat(input_list.get(0).unwrap(), Some(&context)))
+                .context("Failed to run chat")?;
+
+            rt.shutdown_timeout(std::time::Duration::from_secs(1));
+        }
+        Commands::Chat { prompt } => {
+            info!("Chat command is run with below arguments:");
+            info!(" Prompt: {:?}", prompt);
+
+
+            let context: Option<&str> = None;
+
+            rt.block_on(crate::chat::chat_main::run_chat(&prompt, context))
+                .context("Failed to run chat")?;
+
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }
         Commands::Version { version } => {
             info!("Version: {}", version);
-        }
-        _ => {
-            warn!("No embedding command provided");
         }
     }
 

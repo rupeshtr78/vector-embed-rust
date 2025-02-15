@@ -2,15 +2,13 @@ use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
 use handlebars::Handlebars;
-use log::debug;
 use serde::Serialize;
-use serde_json::json;
 
 #[derive(Serialize)]
 pub(crate) struct Prompt {
     pub(crate) system_message: String,
-    content: Option<String>,
-    prompt: String,
+    pub content: Option<String>,
+    pub prompt: String,
 }
 
 async fn get_system_prompt(prompt_path: &str) -> Result<String> {
@@ -38,19 +36,15 @@ impl Prompt {
         Ok(prompt)
     }
 
-    pub fn to_string(&self) -> String {
-        format!("{} {} {}", self.system_message, self.content.as_ref().unwrap_or(&"".to_string()), self.prompt)
-    }
 }
 
+#[allow(dead_code)]
 pub fn get_template(prompt: &Prompt, template_file: &str) -> Result<String> {
     // let template_file = "/Users/rupeshraghavan/apl/gits/gits-rupesh/rtr-rust-lab/multi-workspace/ai-chat/src/template/prompt_template.hbs";
-    let template = std::fs::read_to_string(template_file)
-        .expect("Failed to read template file");
-    
-    
+    let template = std::fs::read_to_string(template_file).expect("Failed to read template file");
+
     let mut handlebars = Handlebars::new();
-    // 
+    //
     // let template = r#"
     // <|system|> {{ system_prompt }}</s>
     // <|content|> {{ content }}</s>
@@ -66,11 +60,12 @@ pub fn get_template(prompt: &Prompt, template_file: &str) -> Result<String> {
         content: prompt.content.clone(),
         prompt: prompt.prompt.to_string(),
     };
-    
-    
+
     // Render the template with the data
-    let rendered = handlebars.render("tpl", &data).context("Failed to render template")?;
-    debug!("Rendered Template {}", rendered);
+    let rendered = handlebars
+        .render("tpl", &data)
+        .context("Failed to render template")?;
+    // debug!("Rendered Template {}", rendered);
 
     Ok(rendered)
 }

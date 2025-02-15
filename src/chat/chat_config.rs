@@ -5,22 +5,59 @@ use hyper::{body, Client, Uri};
 use hyper::{Body, Request};
 use log::{debug, error};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::sync::{Arc, RwLock};
 
-#[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct ChatRequest {
-    model: String,
-    api_url: String,
-    api_key: String,
-    prompt: String,
-    stream: bool,
-    format: String,
-    options: Option<Options>,
+use crate::chat::prompt_template::Prompt;
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+
+pub enum ChatRole {
+    #[serde(rename = "user")]
+    User,
+    #[serde(rename = "assistant")]
+    Assistant,
+    #[serde(rename = "system")]
+    System,
+    #[serde(rename = "tool")]
+    Tool,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ChatMessage {
+    role: ChatRole,
+    content: String,
+}
+
+impl ChatMessage {
+    pub fn new(role: ChatRole, content: String) -> ChatMessage {
+        ChatMessage { role, content }
+    }
+
+    fn to_string(&self) -> String {
+        serde_json::to_string(self).unwrap()
+    }
+    pub fn print_chat(&self) {
+        println!("{:?}: {}", &self.role, &self.content);
+    }
+}
+
+// @TODO: Add tools
+#[derive(Serialize, Deserialize)]
+pub(crate) struct ChatRequest {
+    pub model: String,
+    pub api_url: String,
+    pub api_key: String,
+    pub messages: Vec<ChatMessage>,
+    pub stream: bool,
+    pub format: String,
+    pub options: Option<Options>,
+}
+
 #[derive(Serialize, Deserialize)]
 struct ChatBody {
     model: String,
-    prompt: String,
+    pub messages: Vec<ChatMessage>,
     stream: bool,
     format: String,
     options: Option<Options>,
@@ -31,16 +68,25 @@ impl ChatRequest {
         model: String,
         api_url: String,
         api_key: String,
-        prompt: String,
         stream: bool,
         format: String,
         options: Option<Options>,
+        prompt: Prompt,
     ) -> ChatRequest {
+        let mut messages = Vec::<ChatMessage>::new();
+
+        messages.push(ChatMessage::new(ChatRole::System, prompt.system_message));
+        messages.push(ChatMessage::new(
+            ChatRole::User,
+            prompt.content.unwrap_or_else(|| "".to_string()),
+        ));
+        messages.push(ChatMessage::new(ChatRole::User, prompt.prompt));
+
         ChatRequest {
             model,
             api_url,
             api_key,
-            prompt,
+            messages,
             stream,
             format,
             options,
@@ -50,7 +96,7 @@ impl ChatRequest {
     pub(crate) fn create_chat_body(&self) -> Result<String> {
         let chat_body = ChatBody {
             model: self.model.to_string(),
-            prompt: self.prompt.to_string(),
+            messages: self.messages.clone(),
             stream: self.stream,
             format: self.format.to_string(),
             options: self.options.clone(),
@@ -101,14 +147,8 @@ pub async fn ai_chat(
     let body = body::to_bytes(response).await?;
     debug!("Response body: {:?}", body.len());
 
-    // get raw string from bytes and print for debugging
-    // let body_str = String::from_utf8(body.to_vec()).unwrap();
-    // debug!("Response body: {:?}", body_str);
-
     let response_body: ChatResponse =
         serde_json::from_slice(&body).context("Failed to parse response")?;
-
-    // response.print_response();
 
     Ok(response_body)
 }
@@ -117,40 +157,43 @@ pub async fn ai_chat(
 pub struct ChatResponse {
     model: String,
     created_at: String,
-    response: String,
-    done: bool,
+    message: ChatMessage,
     done_reason: Option<String>,
+    done: bool,
     context: Option<Vec<i32>>,
-    total_duration: i64,
-    load_duration: i64,
-    prompt_eval_count: i32,
-    prompt_eval_duration: i64,
-    eval_count: i32,
-    eval_duration: i64,
+    total_duration: Option<i64>,
+    load_duration: Option<i64>,
+    prompt_eval_count: Option<i32>,
+    prompt_eval_duration: Option<i64>,
+    eval_count: Option<i32>,
+    eval_duration: Option<i64>,
 }
 
 impl ChatResponse {
-    fn get_response(&self) -> String {
-        self.response.to_string()
+    pub fn print_message(&self) {
+        let message: &ChatMessage = &self.message;
+        println!("{:?}", message.print_chat());
     }
 
-    fn get_context(&self) -> Vec<i32> {
-        self.context.clone().unwrap()
-    }
+    #[allow(dead_code)]
+    pub fn pretty_print_message(&self) {
+        let message: &ChatMessage = &self.message;
 
-    fn get_model(&self) -> String {
-        self.model.to_string()
-    }
-
-    fn to_json(&self) -> String {
-        serde_json::to_string(self).unwrap()
-    }
-
-    pub fn print_response(&self) {
-        println!("{}", self.response);
+        // Assuming `print_content()` returns a `&str` that is a JSON string
+        if let Ok(parsed_json) = serde_json::from_str::<Value>(&message.to_string()) {
+            if let Ok(pretty_json) = serde_json::to_string_pretty(&parsed_json) {
+                println!("{}", pretty_json);
+            } else {
+                eprintln!("Failed to pretty print the JSON.");
+            }
+        } else {
+            eprintln!("Failed to parse JSON string.");
+        }
     }
 }
 
+// @TODO: Add options support
+#[allow(dead_code)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Options {
     num_keep: i32,
@@ -182,6 +225,7 @@ pub struct Options {
     num_thread: i32,
 }
 
+#[allow(dead_code)]
 impl Options {
     fn new(
         num_keep: i32,

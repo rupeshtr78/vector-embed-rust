@@ -3,6 +3,7 @@ use crate::app::constants::EMBEDDING_URL;
 use crate::embedder;
 use ::hyper::Client as HttpClient;
 use anyhow::{anyhow, Context, Result};
+use arrow_array::{Array, StringArray};
 use futures::StreamExt;
 use hyper::client::HttpConnector;
 use lancedb::query::ExecutableQuery;
@@ -25,7 +26,7 @@ pub async fn run_query(
     input_list: &Vec<String>,
     vector_table: &str,
     http_client: &HttpClient<HttpConnector>,
-) -> Result<()> {
+) -> Result<Vec<String>> {
     // colog::init();
 
     info!("Starting query");
@@ -47,20 +48,20 @@ pub async fn run_query(
 
     let query_vector = query_response.embeddings[0].clone();
 
-    query_table(db, vector_table, query_vector)
+    let content = query_table(db, vector_table, query_vector)
         .await
         .context("Failed to query table")?;
 
     debug!("Finishes running query");
 
-    Ok(())
+    Ok(content)
 }
 
 pub async fn query_table(
     db: &mut Connection,
     table_name: &str,
     query_vector: impl IntoQueryVector,
-) -> Result<()> {
+) -> Result<Vec<String>> {
     let table = db
         .open_table(table_name)
         .execute()
@@ -76,7 +77,7 @@ pub async fn query_table(
         .context("Failed to select nearest vector")?
         // .distance_range(lower_bound, upper_bound) // bug in DataFusion library
         .distance_type(lancedb::DistanceType::L2)
-        .refine_factor(10)
+        .refine_factor(20)
         .nprobes(10)
         .postfilter()
         .only_if("_distance > 0.3 AND _distance < 1")
@@ -93,7 +94,7 @@ pub async fn query_table(
     let batches = stream.collect::<Vec<_>>().await;
 
     for batch in batches {
-        let batch: arrow_array::RecordBatch = batch.unwrap();
+        let batch: arrow_array::RecordBatch = batch.context("Failed to get RecordBatch")?;
         // println!("Batch: {:?}", batch);
 
         let schema = batch.schema(); // Bind schema to a variable
@@ -101,9 +102,27 @@ pub async fn query_table(
             let column = batch.column(i);
             let column_name = schema.field(i).name(); // Now this is safe
 
-            println!("Column {:?}: {:?}", column_name, column);
+            debug!("Column {:?}: {:?}", column_name, column);
+
+            if column_name == "content" {
+                let content_array = column.as_any().downcast_ref::<arrow_array::StringArray>().context("Failed to downcast to StringArray")?;
+                let content = get_content(content_array).context("Failed to get content from lancedb")?;
+                return Ok(content);
+            }
         }
     }
 
-    Ok(())
+
+
+    Ok(Vec::new())
+}
+
+
+pub fn get_content(batch: &StringArray) -> Result<Vec<String>> {
+    let mut content_vec = Vec::new();
+    for i in 0..batch.len() {
+        let content = batch.value(i);
+        content_vec.push(content.to_string());
+    }
+    Ok(content_vec)
 }
