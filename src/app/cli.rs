@@ -166,7 +166,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             let context = content.join(" ");
 
             // @TODO: Properly get the prompt from from cli
-            rt.block_on(crate::chat::chat_main::run_chat(
+            rt.block_on(crate::chat::run_chat(
                 input_list.get(0).unwrap(),
                 Some(&context),
                 &http_client,
@@ -182,7 +182,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             let context: Option<&str> = None;
             let client = HttpClient::new();
 
-            rt.block_on(crate::chat::chat_main::run_chat(&prompt, context, &client))
+            rt.block_on(crate::chat::run_chat(&prompt, context, &client))
                 .context("Failed to run chat")?;
 
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
