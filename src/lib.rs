@@ -13,3 +13,5 @@ pub mod pgvectordb;
 #[allow(unused)]
 #[allow(dead_code)]
 pub mod tests;
+#[allow(unused)]
+mod chat;

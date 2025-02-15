@@ -9,6 +9,7 @@ mod docsplitter;
 mod embedder;
 mod lancevectordb;
 mod pgvectordb;
+mod chat;
 
 fn main() -> Result<()> {
     info!("Starting");

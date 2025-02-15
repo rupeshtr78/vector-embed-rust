@@ -161,6 +161,9 @@ pub fn create_record_batch(
     response: EmbedResponse,
     table_schema: &TableSchema,
 ) -> Result<RecordBatch> {
+    if response.embeddings.is_empty() {
+        return Err(anyhow::Error::msg("No embeddings found in the response"));
+    }
     let request = request
         .read()
         .map_err(|e| anyhow::Error::msg(format!("Error: {}", e)))?;
@@ -172,13 +175,24 @@ pub fn create_record_batch(
     let content_array = Arc::new(StringArray::from_iter_values(
         request.input.iter().take(len).map(|s| s.to_string()),
     ));
+
+    let dir_name = match request.metadata {
+        Some(ref dir_name) => dir_name.to_string(),
+        None => String::from("Empty"),
+    };
+
     let metadata_array = Arc::new(StringArray::from_iter_values(
-        request.metadata.iter().map(|s| s.to_string()).chain(
-            std::iter::repeat(String::from(""))
-                .take(len - 1)
-                .map(|s| s.to_string()),
-        ),
+        std::iter::repeat(dir_name).take(len).map(|s| s.to_string()),
     ));
+
+    // let metadata_array = Arc::new(StringArray::from_iter_values(
+    //     request.metadata.iter().map(|s| s.to_string()).chain(
+    //         std::iter::repeat(String::from(""))
+    //             .take(len - 1)
+    //             .map(|s| s.to_string()),
+    //     ),
+    // ));
+
     let model_array = Arc::new(StringArray::from_iter_values(
         (0..len).map(|_| request.model.to_string()),
     ));
@@ -214,7 +228,7 @@ pub fn create_record_batch(
             created_at_array,
         ],
     )
-    .context("Failed to create a RecordBatch")?;
+    .context("Failed to create a Embedding Records")?;
 
     Ok(record_batch)
 }

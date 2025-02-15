@@ -68,7 +68,7 @@ pub enum Commands {
         chunk_size: usize,
     },
     /// Query the Lancedb Vector Database   
-    LanceQuery {
+    RagQuery {
         /// The query string to use
         #[clap(short, long)]
         input: Vec<String>,
@@ -83,8 +83,13 @@ pub enum Commands {
         #[clap(short, long)]
         database: String,
     },
+    /// Chat with the AI
+    Chat {
+        /// Prompt for AI
+        #[clap(short, long)]
+        prompt: String,
+    },
 
-    Empty,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, ValueEnum)]
@@ -200,7 +205,9 @@ pub fn build_args() -> Commands {
         Some(command) => command,
         None => {
             info!("No subcommand provided. Use --help for more information.");
-            return Commands::Empty;
+            return Commands::Version {
+                version: VERSION.to_string(),
+            };
         }
     };
 
@@ -260,7 +267,7 @@ pub fn dbg_cmd() {
             println!("Path: {:?}", path);
             println!("Chunk size: {:?}", chunk_size);
         }
-        Commands::LanceQuery {
+        Commands::RagQuery {
             input,
             model,
             table,
@@ -272,8 +279,9 @@ pub fn dbg_cmd() {
             println!("Table: {:?}", table);
             println!("Database: {:?}", database);
         }
-        Commands::Empty => {
-            println!("Empty command");
+        Commands::Chat { prompt } => {
+            println!("Chat command");
+            println!("Prompt: {:?}", prompt);
         }
     }
 }
