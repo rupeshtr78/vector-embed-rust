@@ -1,16 +1,15 @@
 use crate::app::commands::Commands;
-use crate::pgvectordb::VectorDbConfig;
 use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
-use crate::pgvectordb::run_embedding::{run_embedding_load};
 use crate::lancevectordb;
+use crate::pgvectordb::run_embedding::run_embedding_load;
+use crate::pgvectordb::VectorDbConfig;
 use crate::pgvectordb::{pg_vector, query_vector};
-use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
 use hyper::Client as HttpClient;
-use log::{error, info};
+use log::info;
 use postgres::Client;
-use std::sync::{Arc, Mutex};
+use tokio::sync::Mutex;
 
 pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result<()> {
     match commands {
@@ -38,20 +37,14 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             );
 
             // Initialize the client outside the thread and wrap it in Arc<Mutex>
-            let client: Arc<Mutex<Client>> =
-                Arc::new(Mutex::new(match pg_vector::pg_client(&db_config) {
-                    Ok(client) => client,
-                    Err(e) => {
-                        error!("Error: {}", e);
-                        return Err(anyhow!("Error: {}", e));
-                    }
-                }));
+            let client: Mutex<Client> = pg_vector::pg_client(&db_config)
+                .context("Failed to create a new client")?
+                .into();
 
             // Initialize the http client outside the thread // TODO wrap in Arc<Mutex>
             let http_client = HttpClient::new();
 
-            let embed_handler = run_embedding_load(
-                &rt,
+            rt.block_on(run_embedding_load(
                 url,
                 embed_model,
                 &input_list,
@@ -59,12 +52,8 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 dimension,
                 client,
                 &http_client,
-            );
-
-            match embed_handler {
-                Ok(_) => info!("Embedding loaded successfully"),
-                Err(e) => error!("Error: {}", e),
-            }
+            ))
+            .context("Failed to run embedding load")?;
 
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }
@@ -90,26 +79,30 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             );
 
             // Initialize the client outside the thread and wrap it in Arc<Mutex>
-            let client: Arc<Mutex<Client>> =
-                Arc::new(Mutex::new(match pg_vector::pg_client(&db_config) {
-                    Ok(client) => client,
-                    Err(e) => {
-                        error!("Error: {}", e);
-                        return Err(anyhow!("Error: {}", e));
-                    }
-                }));
+            // let client: Arc<Mutex<Client>> =
+            //     Arc::new(Mutex::new(match pg_vector::pg_client(&db_config) {
+            //         Ok(client) => client,
+            //         Err(e) => {
+            //             error!("Error: {}", e);
+            //             return Err(anyhow!("Error: {}", e));
+            //         }
+            //     }));
+
+            let mut client =
+                pg_vector::pg_client(&db_config).context("Failed to create a new client")?;
 
             // Initialize the http client outside the thread // TODO wrap in Arc<Mutex>
             let http_client = HttpClient::new();
 
-            query_vector::run_query(
+            rt.block_on(query_vector::run_query(
                 &rt,
                 embed_model,
                 &input_list,
                 vector_table,
-                client,
+                &mut client,
                 &http_client,
-            );
+            ))
+            .context("Failed to run query")?;
 
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }
@@ -194,5 +187,3 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
 
     Ok(())
 }
-
-

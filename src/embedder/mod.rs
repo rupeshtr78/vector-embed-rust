@@ -1,11 +1,13 @@
+use anyhow::Context;
+use anyhow::Result;
 use hyper::client::HttpConnector;
 use hyper::Client as HttpClient;
-use log::{debug, error, info};
-use std::sync::{Arc, RwLock};
 use hyper::{body, Client, Uri};
 use hyper::{Body, Request};
-use std::error::Error;
+use log::{debug, info};
 use std::str;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
@@ -22,33 +24,16 @@ pub async fn fetch_embedding(
     url: &str,
     embed_data: &Arc<RwLock<EmbedRequest>>,
     http_client: &HttpClient<HttpConnector>,
-) -> EmbedResponse {
+) -> Result<EmbedResponse> {
     debug!("Running Embedding");
-    let embed_data = match embed_data.read() {
-        Ok(data) => data,
-        Err(e) => {
-            error!("Error: {}", e);
-            return EmbedResponse {
-                model: "".to_string(),
-                embeddings: vec![],
-            };
-        }
-    };
+    let embed_data = embed_data.read().await;
 
-    let response = match create_embed_request(url, &embed_data, http_client).await
-    {
-        Ok(embed_response) => embed_response,
-        Err(e) => {
-            error!("Error: {}", e);
-            return EmbedResponse {
-                model: "".to_string(),
-                embeddings: vec![],
-            };
-        }
-    };
+    let response = create_embed_request(url, &embed_data, http_client)
+        .await
+        .context("Failed to create embed request")?;
 
     debug!("Finished Running Embedding");
-    response
+    Ok(response)
 }
 
 /// Create an embedding request
@@ -61,7 +46,7 @@ pub async fn create_embed_request(
     url: &str,
     req: &EmbedRequest,
     http_client: &Client<HttpConnector>,
-) -> Result<EmbedResponse, Box<dyn Error + Send + Sync>> {
+) -> Result<EmbedResponse> {
     debug!("Creating Embed Request");
     // Create an HTTP connector.
     // let client = Client::new();

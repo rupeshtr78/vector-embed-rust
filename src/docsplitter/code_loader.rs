@@ -12,6 +12,8 @@ use std::path::Path;
 use std::path::PathBuf;
 use text_splitter::{ChunkConfig, CodeSplitter, CodeSplitterError};
 use tree_sitter_language::LanguageFn;
+use tokio::sync::RwLock;
+use std::sync::Arc;
 
 #[derive(Debug, PartialEq)]
 enum Language {
@@ -118,8 +120,8 @@ impl FileChunk {
         }
     }
 
-    pub fn embed_request_arc(&self) -> std::sync::Arc<std::sync::RwLock<EmbedRequest>> {
-        std::sync::Arc::new(std::sync::RwLock::new(self.embed_request()))
+    pub fn embed_request_arc(&self) -> Arc<RwLock<EmbedRequest>> {
+        Arc::new(RwLock::new(self.embed_request()))
     }
 }
 
@@ -231,7 +233,7 @@ async fn split_file_into_chunks(
                 .context("Unsupported file extension")?,
             chunk_config,
         )
-        .context("Failed to create code splitter")?;
+            .context("Failed to create code splitter")?;
 
         let code_chunks = splitter.chunks(&content);
 

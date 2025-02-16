@@ -1,5 +1,5 @@
 // add configs here
-use std::sync::RwLock;
+use tokio::sync::RwLock;
 
 #[derive(serde::Serialize, Debug, Clone)]
 

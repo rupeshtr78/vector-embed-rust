@@ -6,7 +6,8 @@ mod test_fetch_embedding {
     use crate::embedder::fetch_embedding;
     use hyper::Client;
     use std::sync::Arc;
-    use std::sync::RwLock;
+    use anyhow::Context;
+    use tokio::sync::RwLock;
 
     #[tokio::test]
     async fn test_fetch_embedding_success() {
@@ -20,7 +21,7 @@ mod test_fetch_embedding {
         let http_client = Client::new();
 
         // Run the function
-        let result = fetch_embedding(url, &embed_data, &http_client).await;
+        let result = fetch_embedding(url, &embed_data, &http_client).await.context("Failed to fetch embedding").unwrap();
 
         // Assertions
         assert!(!result.model.is_empty(), "Model should not be empty");
@@ -47,7 +48,7 @@ mod test_fetch_embedding {
         let http_client = Client::new();
 
         // Run the function
-        let result = fetch_embedding(url, &embed_data, &http_client).await;
+        let result = fetch_embedding(url, &embed_data, &http_client).await.context("Failed to fetch embedding").unwrap();
 
         // Assertions
         assert!(
@@ -72,7 +73,7 @@ mod test_fetch_embedding {
         let http_client = Client::new();
 
         // Run the function
-        let result = fetch_embedding(url, &embed_data, &http_client).await;
+        let result = fetch_embedding(url, &embed_data, &http_client).await.context("Failed to fetch embedding").unwrap();
 
         // Assertions
         assert!(!result.model.is_empty(), "Model should not be empty");

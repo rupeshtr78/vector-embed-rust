@@ -1,17 +1,18 @@
-use crate::embedder::config::EmbedRequest;
 use crate::app::constants::QUERY_LIMIT;
+use crate::embedder::config::EmbedRequest;
+use crate::pgvectordb::VectorDbConfig;
+use anyhow::Result;
 use log::{debug, error, info};
 use pgvector::Vector;
 use postgres::{Client, Config, NoTls};
-use std::{error::Error, time::Duration};
-use crate::pgvectordb::VectorDbConfig;
+use std::time::Duration;
 
 /// Create a connection to the Postgres database
 /// Argumemts:
 /// - db_config: &VectorDbConfig
 /// Returns:
 /// - Result<Client, Box<dyn Error>>
-pub fn pg_client(db_config: &VectorDbConfig) -> Result<Client, Box<dyn Error>> {
+pub fn pg_client(db_config: &VectorDbConfig) -> Result<Client> {
     let mut config = Config::new();
     config
         .host(db_config.host.as_str())
@@ -32,11 +33,7 @@ pub fn pg_client(db_config: &VectorDbConfig) -> Result<Client, Box<dyn Error>> {
 /// - dimension: i32 (dimension of the vector)
 /// Returns:
 /// - Result<(), Box<dyn Error>>
-pub fn create_table(
-    pg_client: &mut Client,
-    table: &String,
-    dimension: i32,
-) -> Result<(), Box<dyn Error>> {
+pub fn create_table(pg_client: &mut Client, table: &String, dimension: i32) -> Result<()> {
     let mut transaction = pg_client.transaction()?;
 
     // drop table if exists
@@ -77,7 +74,7 @@ pub fn load_vector_data(
     table: &str,
     input: &EmbedRequest,
     embeddings: &Vec<Vec<f32>>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     let mut transaction = pg_client.transaction()?;
     let query = format!("INSERT INTO {} (content, embedding) VALUES ($1, $2)", table);
 
@@ -88,7 +85,7 @@ pub fn load_vector_data(
         .collect::<Vec<Vector>>();
 
     if input.get_input().len() != pgv.len() || input.get_input().is_empty() || pgv.is_empty() {
-        return Err("Invalid Input and Embeddings length or mismatch".into());
+        return Err(anyhow::anyhow!("Input and Embeddings length mismatch"));
     }
 
     // iterate over input and embeddings
@@ -111,11 +108,11 @@ pub fn load_vector_data(
 /// - query_vec: &Vec<Vec<f32>>
 /// Returns:
 /// - Result<(), Box<dyn Error>>
-pub fn query_nearest(
+pub async fn query_nearest(
     client: &mut Client,
     table: &String,
     query_vec: &Vec<Vec<f32>>,
-) -> Result<Vec<String>, Box<dyn Error>> {
+) -> Result<Vec<String>> {
     // convert input to pg vector
     let pgv = query_vec
         .iter()
@@ -123,7 +120,7 @@ pub fn query_nearest(
         .collect::<Vec<Vector>>();
 
     if query_vec.len() != 1 {
-        return Err("Failed to fetch query embedding Query vector length should be 1".into());
+        return Err(anyhow::anyhow!("Query vector length should be 1"));
     }
 
     let query = format!(
@@ -134,7 +131,7 @@ pub fn query_nearest(
     let row = client.query(&query, &[&pgv[0]]);
     if row.is_err() {
         error!("Error: {}", row.err().unwrap());
-        return Err("Failed to fetch query embedding".into());
+        return Err(anyhow::anyhow!("Error querying the database"));
     }
 
     let mut result: Vec<String> = Vec::new();
@@ -160,7 +157,7 @@ pub fn query_nearest(
 
 /// Select embeddings from the Postgres database
 #[allow(dead_code)]
-pub fn select_embeddings(client: &mut Client, table: &str) -> Result<(), Box<dyn Error>> {
+pub fn select_embeddings(client: &mut Client, table: &str) -> Result<()> {
     info!("Select method started");
 
     let query = format!("SELECT id, content FROM {}", table);
