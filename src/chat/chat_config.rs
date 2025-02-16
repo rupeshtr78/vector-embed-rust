@@ -1,3 +1,4 @@
+use std::fmt;
 use anyhow::Result;
 use anyhow::{anyhow, Context};
 use hyper::client::HttpConnector;
@@ -32,14 +33,20 @@ pub struct ChatMessage {
     content: String,
 }
 
+impl fmt::Display for ChatMessage {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}: {}", self.role, self.content)
+    }
+}
+
 impl ChatMessage {
     pub fn new(role: ChatRole, content: String) -> ChatMessage {
         ChatMessage { role, content }
     }
 
-    fn to_string(&self) -> String {
-        serde_json::to_string(self).unwrap()
-    }
+    // fn to_string(&self) -> String {
+    //     serde_json::to_string(self).context("Failed to serialize ChatMessage").unwrap()
+    // }
     pub fn print_chat(&self) {
         println!("{:?}: {}", &self.role, &self.content);
     }

@@ -198,7 +198,7 @@ async fn split_file_into_chunks(
 
     let is_supported_file = is_supported_file(file_path);
 
-    log::debug!(
+    debug!(
         "File Extension: {:?} Is Supported File {:}",
         is_supported_file.0,
         is_supported_file.1

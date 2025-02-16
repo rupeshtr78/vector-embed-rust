@@ -1,5 +1,4 @@
 use crate::app::commands::Commands;
-use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
 use crate::lancevectordb;
 use crate::pgvectordb::run_embedding::run_embedding_load;
 use crate::pgvectordb::VectorDbConfig;
@@ -10,6 +9,7 @@ use hyper::Client as HttpClient;
 use log::info;
 use postgres::Client;
 use tokio::sync::Mutex;
+use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
 
 pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result<()> {
     match commands {
@@ -36,6 +36,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 VECTOR_DB_NAME,
             );
 
+
             // Initialize the client outside the thread and wrap it in Arc<Mutex>
             let client: Mutex<Client> = pg_vector::pg_client(&db_config)
                 .context("Failed to create a new client")?
@@ -53,7 +54,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 client,
                 &http_client,
             ))
-            .context("Failed to run embedding load")?;
+                .context("Failed to run embedding load")?;
 
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }
@@ -102,7 +103,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 &mut client,
                 &http_client,
             ))
-            .context("Failed to run query")?;
+                .context("Failed to run query")?;
 
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }
@@ -164,7 +165,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 Some(&context),
                 &http_client,
             ))
-            .context("Failed to run chat")?;
+                .context("Failed to run chat")?;
 
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }

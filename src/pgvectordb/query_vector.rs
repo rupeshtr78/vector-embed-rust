@@ -55,6 +55,6 @@ pub async fn run_query(
         .await
         .context("Failed to query nearest embeddings");
 
-    debug!("Done with main");
+    debug!("Query Response: {:?}", query);
     Ok(())
 }

@@ -12,17 +12,8 @@ pub struct VectorDbConfig {
 
 impl VectorDbConfig {
 
-    pub fn clone(&self) -> VectorDbConfig {
-        VectorDbConfig {
-            host: self.host.clone(),
-            port: self.port,
-            user: self.user.clone(),
-            dbname: self.dbname.clone(),
-            timeout: self.timeout,
-        }
-    }
-
     /// constructor
+    #[allow(non_snake_case)]
     pub fn NewVectorDbConfig(host: &str, port: u16, user: &str, dbname: &str) -> VectorDbConfig {
         VectorDbConfig {
             host: host.to_string(),

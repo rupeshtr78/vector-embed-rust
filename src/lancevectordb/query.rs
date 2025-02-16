@@ -105,13 +105,12 @@ pub async fn query_table(
             debug!("Column {:?}: {:?}", column_name, column);
 
             if column_name == "content" {
-                let content_array = column.as_any().downcast_ref::<arrow_array::StringArray>().context("Failed to downcast to StringArray")?;
+                let content_array = column.as_any().downcast_ref::<StringArray>().context("Failed to downcast to StringArray")?;
                 let content = get_content(content_array).context("Failed to get content from lancedb")?;
                 return Ok(content);
             }
         }
     }
-
 
 
     Ok(Vec::new())

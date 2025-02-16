@@ -1,6 +1,6 @@
-use super::constants::{EMBEDDING_MODEL, VECTOR_DB_DIM_STR, VECTOR_DB_TABLE, VERSION};
 use clap::{Parser, Subcommand, ValueEnum};
 use log::info;
+use crate::app::constants::{EMBEDDING_MODEL, VECTOR_DB_DIM_STR, VECTOR_DB_TABLE, VERSION};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -201,7 +201,6 @@ pub fn build_args() -> Commands {
         colog_init(LogLevel::Debug);
     }
 
-    
 
     match args.cmd {
         Some(command) => command,
