@@ -2,21 +2,15 @@ use hyper::Client;
 use hyper::client::HttpConnector;
 use log::{debug, error, info};
 use std::process::exit;
-use std::sync::{Arc};
+use std::sync::Arc;
 use tokio::sync::RwLock;
 use anyhow::Context;
+use crate::app::constants::{AI_MODEL, CHAT_API_KEY, CHAT_API_URL, CHAT_RESPONSE_FORMAT, SYSTEM_PROMPT_PATH};
 use crate::chat::chat_config::ai_chat;
 
 mod chat_config;
 mod prompt_template;
 
-const CHAT_API_URL: &str = "http://10.0.0.213:11434";
-const CHAT_API_KEY: &str = "api_key";
-const CHAT_RESPONSE_FORMAT: &str = "json";
-const SYSTEM_PROMPT_PATH: &str = "template/system_prompt.txt";
-const AI_MODEL: &str = "mistral:latest";
-
-// const PROMPT_TEMPLATE_PATH: &str = "template/chat_template.hbs";
 
 /// Run the chatbot
 /// # Arguments

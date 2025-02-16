@@ -1,12 +1,13 @@
 #[cfg(test)]
 mod tests {
     use crate::embedder::config::EmbedRequest;
-    use crate::app::constants::{EMBEDDING_MODEL, EMBEDDING_URL};
     use crate::embedder::create_embed_request;
-    
+
     use hyper::{Body, Client, Request, Response};
     use mockall::*;
     use std::error::Error;
+    use crate::app::constants::{EMBEDDING_MODEL, EMBEDDING_URL};
+
     mock! {
         HttpClient {
             async fn request(&self, req: Request<Body>) -> Result<Response<Body>, Box<dyn Error + Send + Sync>>;

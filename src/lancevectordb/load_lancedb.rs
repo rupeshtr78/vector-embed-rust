@@ -1,5 +1,4 @@
 use crate::embedder::config::{EmbedRequest, EmbedResponse};
-use crate::app::constants::{self, VECTOR_DB_DIM_SIZE};
 use anyhow::Context;
 use anyhow::Result;
 use arrow::array::{FixedSizeListArray, StringArray, TimestampSecondArray};
@@ -11,6 +10,8 @@ use arrow_schema::{DataType, Field};
 use lancedb::index::Index;
 use lancedb::Connection;
 use std::sync::Arc;
+use tokio::sync::RwLock;
+use crate::app::constants::VECTOR_DB_DIM_SIZE;
 
 #[derive(Debug, Clone)]
 pub struct TableSchema {
@@ -81,7 +82,7 @@ impl TableSchema {
                 )),
             ],
         )
-        .context("Failed to create a RecordBatch")
+            .context("Failed to create a RecordBatch")
     }
 }
 
@@ -175,18 +176,16 @@ pub async fn insert_embeddings(
 /// - table_schema: &TableSchema
 /// Returns:
 /// - Result<RecordBatch, Box<dyn Error>> - The RecordBatch (Arrow)
-pub fn create_record_batch(
+pub async fn create_record_batch(
     id: i32,
-    request: Arc<std::sync::RwLock<EmbedRequest>>,
+    request: Arc<RwLock<EmbedRequest>>,
     response: EmbedResponse,
     table_schema: &TableSchema,
 ) -> Result<RecordBatch> {
     if response.embeddings.is_empty() {
         return Err(anyhow::Error::msg("No embeddings found in the response"));
     }
-    let request = request
-        .read()
-        .map_err(|e| anyhow::Error::msg(format!("Error: {}", e)))?;
+    let request = request.read().await;
 
     // let num_embeddings = response.embeddings.len();
     let len = response.embeddings.len();
@@ -248,7 +247,7 @@ pub fn create_record_batch(
             created_at_array,
         ],
     )
-    .context("Failed to create a Embedding Records")?;
+        .context("Failed to create a Embedding Records")?;
 
     Ok(record_batch)
 }
@@ -269,7 +268,7 @@ pub async fn create_index_on_embedding(
 
     // Initialize the builder first
     let hns_index = lancedb::index::vector::IvfHnswSqIndexBuilder::default()
-        .distance_type(constants::LANCEDB_DISTANCE_FN) // Set the desired distance type, e.g., L2
+        .distance_type(crate::app::constants::LANCEDB_DISTANCE_FN) // Set the desired distance type, e.g., L2
         .num_partitions(100) // Set the number of partitions, e.g., 100
         .sample_rate(256) // Set the sample rate
         .max_iterations(50) // Set the max iterations for training

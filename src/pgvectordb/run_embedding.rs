@@ -1,14 +1,13 @@
-use crate::embedder::config::{EmbedRequest};
+use crate::embedder::config::EmbedRequest;
+use crate::embedder::fetch_embedding;
 use crate::pgvectordb;
+use anyhow::Context;
+use anyhow::Result;
 use hyper::client::HttpConnector;
 use hyper::Client as HttpClient;
 use log::{debug, error};
 use postgres::Client;
-use std::error::Error;
-use std::sync::{Arc, Mutex};
-use std::thread::{self, JoinHandle};
-
-
+use tokio::sync::Mutex;
 
 /// Run the embedding request and load the embeddings into the database
 /// Arguments:
@@ -20,75 +19,47 @@ use std::thread::{self, JoinHandle};
 /// - db_config: VectorDbConfig
 /// Returns:
 /// - Result<JoinHandle<()>, Box<dyn Error>>
-pub fn run_embedding_load(
-    rt: &tokio::runtime::Runtime,
+pub async fn run_embedding_load(
     url: &str,
     embed_model: String,
     input_list: &Vec<String>,
     vector_table: String,
     dimension: String,
-    client: Arc<Mutex<Client>>,
+    client: Mutex<Client>,
     http_client: &HttpClient<HttpConnector>,
-) -> Result<JoinHandle<()>, Box<dyn Error>> {
+) -> Result<()> {
     debug!("Starting Loading Embeddings");
 
     // Arc (Atomic Reference Counted) pointer. It is a thread-safe reference-counting pointer.
     let embed_request_arc =
         EmbedRequest::NewArcEmbedRequest(&embed_model, input_list, &"".to_string());
-    let embed_request_arc_clone = Arc::clone(&embed_request_arc);
+    // let embed_request_arc_clone = Arc::clone(&embed_request_arc);
 
     // Run embedding request in a separate thread
-    let embed_response = rt.block_on(crate::embedder::fetch_embedding(url, &embed_request_arc, http_client));
+    let embed_response = fetch_embedding(url, &embed_request_arc, http_client)
+        .await
+        .context("Failed to fetch embedding")?;
 
     let dim = dimension.parse::<i32>().unwrap_or_else(|_| {
         error!("Failed to parse dimension");
         0
     });
 
-    // load the embeddings in a separate thread
-    let embed_thread = thread::Builder::new().name("embedding_thread".to_owned());
+    let mut client = client.lock().await;
+    let embed_data = embed_request_arc.read().await;
 
-    let run_embed_thread = embed_thread.spawn(move || {
-        let client_clone = Arc::clone(&client);
-        let mut client = match client_clone.lock() {
-            Ok(client) => client,
-            Err(p) => {
-                error!("Error: {:?}", p);
-                return;
-            }
-        };
-
-        let embed_data = match embed_request_arc_clone.read() {
-            Ok(data) => data,
-            Err(e) => {
-                error!("Error: {}", e);
-                return;
-            }
-        };
-
-        match pg_persist_embedding_data(
-            &mut client,
-            &vector_table,
-            dim,
-            &embed_data,
-            &embed_response.embeddings,
-        ) {
-            Ok(_) => {}
-            Err(e) => {
-                error!("Error: {}", e);
-            }
-        }
-
-        // if let Err(e) = client.close() {
-        //     error!("Error: {}", e);
-        //     return;
-        // }
-    });
+    pg_persist_embedding_data(
+        &mut client,
+        &vector_table,
+        dim,
+        &embed_data,
+        &embed_response.embeddings,
+    )
+    .context("Failed to persist embedding data")?;
 
     debug!("Finished Loading Embeddings");
-    Ok(run_embed_thread?)
+    Ok(())
 }
-
 
 /// Persist the embedding data into the postgres database
 /// Arguments:
@@ -105,7 +76,7 @@ pub fn pg_persist_embedding_data(
     dimension: i32,
     embed_request: &EmbedRequest,
     embeddings: &Vec<Vec<f32>>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     debug!("Loading data into table");
     match pgvectordb::pg_vector::create_table(pg_client, table, dimension) {
         Ok(_) => {

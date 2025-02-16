@@ -44,7 +44,7 @@ pub async fn run_query(
     let query_request_arc =
         EmbedRequest::NewArcEmbedRequest(&embed_model, input_list, &"".to_string());
     let query_response =
-        embedder::fetch_embedding(url, &query_request_arc, http_client).await;
+        embedder::fetch_embedding(url, &query_request_arc, http_client).await.context("Failed to fetch embedding")?;
 
     let query_vector = query_response.embeddings[0].clone();
 
@@ -105,13 +105,12 @@ pub async fn query_table(
             debug!("Column {:?}: {:?}", column_name, column);
 
             if column_name == "content" {
-                let content_array = column.as_any().downcast_ref::<arrow_array::StringArray>().context("Failed to downcast to StringArray")?;
+                let content_array = column.as_any().downcast_ref::<StringArray>().context("Failed to downcast to StringArray")?;
                 let content = get_content(content_array).context("Failed to get content from lancedb")?;
                 return Ok(content);
             }
         }
     }
-
 
 
     Ok(Vec::new())

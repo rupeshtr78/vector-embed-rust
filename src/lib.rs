@@ -18,3 +18,5 @@ pub mod pgvectordb;
 pub mod tests;
 #[allow(unused)]
 mod chat;
+
+// const PROMPT_TEMPLATE_PATH: &str = "template/chat_template.hbs";

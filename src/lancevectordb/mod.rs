@@ -1,6 +1,5 @@
 pub mod load_lancedb;
 pub mod query;
-use crate::embedder::config::EmbedRequest;
 use crate::docsplitter::code_loader;
 use crate::embedder::fetch_embedding;
 use ::anyhow::Context;
@@ -12,7 +11,6 @@ use ::std::sync::Arc;
 use hyper::client::HttpConnector;
 use hyper::Client;
 use load_lancedb::TableSchema;
-
 
 /// Run the LanceVectorDB pipeline
 /// 1. Load the codebase into chunks
@@ -40,14 +38,14 @@ pub async fn run(
         .context("Failed to split codebase into chunks")?;
 
     // Extract the embed requests from the chunks
-    let embed_requests: Vec<Arc<std::sync::RwLock<EmbedRequest>>> = chunks
+    let embed_requests = chunks
         .iter()
         .map(|chunk: &code_loader::FileChunk| chunk.embed_request_arc())
         .collect::<Vec<_>>();
 
     // Print the embed requests for debugging
     for embed_request in &embed_requests {
-        let embed_request = embed_request.read().unwrap();
+        let embed_request = embed_request.read().await;
         debug!("Embed Request Metadata: {:?}", embed_request.metadata);
     }
 
@@ -70,14 +68,17 @@ pub async fn run(
     // load embeddings
     for (id, embed_request) in embed_requests.iter().enumerate() {
         // fetch embeddings
-        let embed_response = fetch_embedding(embed_url, embed_request, http_client).await;
+        let embed_response = fetch_embedding(embed_url, embed_request, http_client)
+            .await
+            .context("Failed to fetch embeddings")?;
         info!("Embedding Response: {:?}", embed_response.embeddings.len());
 
-        let request: Arc<std::sync::RwLock<EmbedRequest>> = Arc::clone(embed_request);
+        let request = Arc::clone(embed_request);
 
         // create record batch
         let record_batch =
             load_lancedb::create_record_batch(id as i32, request, embed_response, &table_schema)
+                .await
                 .context("Failed to create record batch")?;
 
         // insert records
