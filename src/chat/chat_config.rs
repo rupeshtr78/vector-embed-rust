@@ -1,4 +1,3 @@
-use std::fmt;
 use anyhow::Result;
 use anyhow::{anyhow, Context};
 use hyper::client::HttpConnector;
@@ -7,6 +6,7 @@ use hyper::{Body, Request};
 use log::debug;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::fmt;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -44,6 +44,10 @@ impl ChatMessage {
         ChatMessage { role, content }
     }
 
+    pub fn get_content(&self) -> &String {
+        &self.content
+    }
+
     // fn to_string(&self) -> String {
     //     serde_json::to_string(self).context("Failed to serialize ChatMessage").unwrap()
     // }
@@ -54,7 +58,7 @@ impl ChatMessage {
 
 /// ChatRequest is a struct that represents a chat request
 // @TODO: Add tools
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub(crate) struct ChatRequest {
     pub model: String,
     pub api_url: String,
@@ -117,6 +121,25 @@ impl ChatRequest {
         let body = serde_json::to_string(&chat_body).context("Failed to serialize ChatBody")?;
 
         Ok(body)
+    }
+
+    pub fn request_with_history(&self, history: &ChatMessage, user_prompt: &str) -> ChatRequest {
+        let mut messages = self.messages.clone();
+        messages.push(ChatMessage::new(ChatRole::User, user_prompt.to_string()));
+        messages.push(ChatMessage::new(
+            ChatRole::Assistant,
+            history.get_content().to_string(),
+        ));
+
+        ChatRequest {
+            model: self.model.to_string(),
+            api_url: self.api_url.to_string(),
+            api_key: self.api_key.to_string(),
+            messages,
+            stream: self.stream,
+            format: self.format.to_string(),
+            options: self.options.clone(),
+        }
     }
 }
 
@@ -183,6 +206,10 @@ pub struct ChatResponse {
 }
 
 impl ChatResponse {
+    pub fn get_message(&self) -> &ChatMessage {
+        &self.message
+    }
+
     pub fn print_message(&self) {
         let message: &ChatMessage = &self.message;
         println!("{:?}", message.print_chat());

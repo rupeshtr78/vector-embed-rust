@@ -1,3 +1,5 @@
+use crate::chat::chat_config::ChatMessage;
+use crate::chat::chat_config::ChatRole;
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
@@ -15,7 +17,7 @@ pub(crate) struct Prompt {
 impl Prompt {
     pub(crate) async fn new(path: &str, content: Option<&str>, prompt: &str) -> Result<Prompt> {
         let system_prompt = get_system_prompt(path).await?;
-        
+
         let prompt = Prompt {
             system_message: system_prompt,
             content: content.map(|c| c.to_string()),
@@ -23,7 +25,6 @@ impl Prompt {
         };
         Ok(prompt)
     }
-
 }
 
 /// Get system prompt from file
@@ -52,7 +53,6 @@ async fn get_system_prompt(prompt_path: &str) -> Result<String> {
 /// * `Result<String>` - Rendered template
 #[allow(dead_code)]
 pub fn get_template(prompt: &Prompt, template_file: &str) -> Result<String> {
-   
     let template = std::fs::read_to_string(template_file).expect("Failed to read template file");
 
     let mut handlebars = Handlebars::new();

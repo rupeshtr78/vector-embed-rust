@@ -1,16 +1,18 @@
-use hyper::Client;
+use crate::app::constants::{
+    AI_MODEL, CHAT_API_KEY, CHAT_API_URL, CHAT_RESPONSE_FORMAT, SYSTEM_PROMPT_PATH,
+};
+use crate::chat::chat_config::ai_chat;
+use anyhow::Context;
+use chat_config::ChatResponse;
 use hyper::client::HttpConnector;
+use hyper::Client;
 use log::{debug, error, info};
 use std::process::exit;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use anyhow::Context;
-use crate::app::constants::{AI_MODEL, CHAT_API_KEY, CHAT_API_URL, CHAT_RESPONSE_FORMAT, SYSTEM_PROMPT_PATH};
-use crate::chat::chat_config::ai_chat;
 
 mod chat_config;
 mod prompt_template;
-
 
 /// Run the chatbot
 /// # Arguments
@@ -22,7 +24,7 @@ pub async fn run_chat(
     ai_prompt: &str,
     context: Option<&str>,
     client: &Client<HttpConnector>,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<ChatResponse> {
     info!("Starting LLM chat...");
 
     let paths = [SYSTEM_PROMPT_PATH];
@@ -53,7 +55,9 @@ pub async fn run_chat(
         prompt,
     );
 
-    let chat_body = chat_request.create_chat_body()?;
+    let req2 = chat_request.clone();
+
+    let chat_body = &chat_request.create_chat_body()?;
     debug!("Chat Body {:?}", chat_body);
 
     // Create a new HTTP client
@@ -71,5 +75,14 @@ pub async fn run_chat(
 
     response.print_message();
 
-    Ok(())
+    let ai_message = response.get_message();
+
+    // @TODO: Implement the logic in loop wait for use input
+    let res = req2.request_with_history(&ai_message, ai_prompt);
+
+    res.messages.iter().for_each(|m| {
+        debug!("Request2 ...{:?}", m);
+    });
+
+    Ok(response)
 }
