@@ -57,12 +57,6 @@ pub async fn run_chat(
 
     let req2 = chat_request.clone();
 
-    let chat_body = &chat_request.create_chat_body()?;
-    debug!("Chat Body {:?}", chat_body);
-
-    // Create a new HTTP client
-    // let client = HttpClient::new();
-
     // Create a new Arc<RwLock<ChatRequest>> to share the request between threads
     let request = Arc::new(RwLock::new(chat_request));
 

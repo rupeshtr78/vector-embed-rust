@@ -1,6 +1,8 @@
+use ::std::io::{self, Write};
+
+use crate::app::constants::{EMBEDDING_MODEL, VECTOR_DB_DIM_STR, VECTOR_DB_TABLE, VERSION};
 use clap::{Parser, Subcommand, ValueEnum};
 use log::info;
-use crate::app::constants::{EMBEDDING_MODEL, VECTOR_DB_DIM_STR, VECTOR_DB_TABLE, VERSION};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -89,7 +91,6 @@ pub enum Commands {
         #[clap(short, long)]
         prompt: String,
     },
-
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, ValueEnum)]
@@ -186,6 +187,7 @@ fn colog_init(log_level: LogLevel) {
     println!("Log level set to: {:?}", log_level);
 }
 
+/// Initiates the log builds the command line arguments and return the command to run.
 pub fn build_args() -> Commands {
     let args = Args::parse();
 
@@ -200,7 +202,6 @@ pub fn build_args() -> Commands {
     } else {
         colog_init(LogLevel::Debug);
     }
-
 
     match args.cmd {
         Some(command) => command,
@@ -237,13 +238,13 @@ pub fn dbg_cmd() {
     match &commands {
         Commands::Write {
             input,
-            model: embed_model,
+            model,
             table,
             dim,
         } => {
             println!("Write command");
             println!("Input: {:?}", input);
-            println!("Model: {:?}", embed_model);
+            println!("Model: {:?}", model);
             println!("Table: {:?}", table);
             println!("Dimension: {:?}", dim);
         }
@@ -273,7 +274,12 @@ pub fn dbg_cmd() {
             database,
         } => {
             println!("Lance Query command");
-            println!("Query: {:?}", input);
+            let mut i2 = vec!["".to_string()];
+            if input.is_empty() {
+                let i = fetch_value("Enter the Query: ");
+                i2 = vec![i];
+            }
+            println!("Query: {:?}", i2);
             println!("Model: {:?}", model);
             println!("Table: {:?}", table);
             println!("Database: {:?}", database);
@@ -283,4 +289,20 @@ pub fn dbg_cmd() {
             println!("Prompt: {:?}", prompt);
         }
     }
+}
+
+/// Generic function to fetch a value from the command line if not provided as an argument.
+///
+/// # Arguments.
+/// * `prompt_message` - The message to display when prompting the user for input.
+/// # Returns
+/// A `String` containing the value provided by the user or from the argument.
+fn fetch_value(prompt_message: &str) -> String {
+    print!("{}", prompt_message);
+    io::stdout().flush().unwrap();
+    let mut input = String::new();
+    io::stdin()
+        .read_line(&mut input)
+        .expect("Failed to read line");
+    input.trim().to_string()
 }
