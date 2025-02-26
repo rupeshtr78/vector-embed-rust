@@ -58,7 +58,7 @@ impl ChatMessage {
 
 /// ChatRequest is a struct that represents a chat request
 // @TODO: Add tools
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct ChatRequest {
     pub model: String,
     pub api_url: String,
@@ -89,14 +89,18 @@ impl ChatRequest {
         options: Option<Options>,
         prompt: Prompt,
     ) -> ChatRequest {
-        let messages = vec![
-            ChatMessage::new(ChatRole::System, prompt.system_message),
-            ChatMessage::new(
-                ChatRole::User,
-                prompt.content.map_or_else(|| "".to_string(), |c| c),
-            ),
-            ChatMessage::new(ChatRole::User, prompt.prompt),
-        ];
+        let mut messages = Vec::new();
+        let system_message = ChatMessage::new(ChatRole::System, prompt.system_message);
+        messages.push(system_message);
+        for content in prompt.content.clone() {
+            if let Some(c) = content {
+                let user_content = ChatMessage::new(ChatRole::User, c.get_content().to_string());
+                messages.push(user_content);
+            }
+        }
+        let user_prompt = ChatMessage::new(ChatRole::User, prompt.prompt);
+        messages.push(user_prompt);
+
 
         ChatRequest {
             model,
@@ -123,24 +127,6 @@ impl ChatRequest {
         Ok(body)
     }
 
-    pub fn request_with_history(&self, history: &ChatMessage, user_prompt: &str) -> ChatRequest {
-        let mut messages = self.messages.clone();
-        messages.push(ChatMessage::new(ChatRole::User, user_prompt.to_string()));
-        messages.push(ChatMessage::new(
-            ChatRole::Assistant,
-            history.get_content().to_string(),
-        ));
-
-        ChatRequest {
-            model: self.model.to_string(),
-            api_url: self.api_url.to_string(),
-            api_key: self.api_key.to_string(),
-            messages,
-            stream: self.stream,
-            format: self.format.to_string(),
-            options: self.options.clone(),
-        }
-    }
 }
 
 /// Get chat response from the AI model
@@ -180,7 +166,7 @@ pub async fn ai_chat(
 
     // Parse the response body
     let body = body::to_bytes(response).await?;
-    debug!("Response body: {:?}", body.len());
+    // debug!("Response body: {:?}", body.len());
 
     let response_body: ChatResponse =
         serde_json::from_slice(&body).context("Failed to parse response")?;
@@ -206,8 +192,8 @@ pub struct ChatResponse {
 }
 
 impl ChatResponse {
-    pub fn get_message(&self) -> &ChatMessage {
-        &self.message
+    pub fn get_message(&self) -> Option<&ChatMessage> {
+        Some(&self.message)
     }
 
     pub fn print_message(&self) {

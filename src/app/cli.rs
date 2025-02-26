@@ -125,7 +125,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             table,
             database,
         } => {
-            let input_list = input;
+            let input_list = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
             let embed_model = model.to_string();
             let vector_table = table.to_string();
             let db_uri = database.to_string();
@@ -159,18 +159,24 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             let context = content.join(" ");
 
             // @TODO: Properly get the prompt from from cli
-            let response = rt
-                .block_on(crate::chat::run_chat(
-                    input_list.first().unwrap(),
-                    Some(&context),
-                    &http_client,
-                ))
-                .context("Failed to run chat")?;
+            // let response = rt
+            //     .block_on(crate::chat::run_chat(
+            //         input_list.first().unwrap(),
+            //         Some(&context),
+            //         &http_client,
+            //     ))
+            //     .context("Failed to run chat")?;
+            // 
+            // let message = response.get_message();
 
-            let message = response.get_message();
-
-            info!("AI Response: {}", message);
-
+            // info!("AI Response: {}", message);
+            
+            rt.block_on(crate::chat::run_chat_with_history(
+                input_list.first().unwrap(),
+                Some(&context),
+                &http_client,
+            )).context("Failed to run chat")?;
+            
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }
         Commands::Chat { prompt } => {
@@ -182,6 +188,8 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
 
             rt.block_on(crate::chat::run_chat(&prompt, context, &client))
                 .context("Failed to run chat")?;
+            
+    
 
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }
