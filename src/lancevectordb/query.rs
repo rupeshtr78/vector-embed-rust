@@ -6,6 +6,7 @@ use anyhow::{anyhow, Context, Result};
 use arrow_array::{Array, StringArray};
 use futures::StreamExt;
 use hyper::client::HttpConnector;
+use lancedb::arrow::SendableRecordBatchStream;
 use lancedb::query::ExecutableQuery;
 use lancedb::query::IntoQueryVector;
 use lancedb::query::QueryBase;
@@ -26,6 +27,7 @@ pub async fn run_query(
     input_list: &Vec<String>,
     vector_table: &str,
     http_client: &HttpClient<HttpConnector>,
+    whole_query: bool,
 ) -> Result<Vec<String>> {
     // colog::init();
 
@@ -48,7 +50,7 @@ pub async fn run_query(
 
     let query_vector = query_response.embeddings[0].clone();
 
-    let content = query_table(db, vector_table, query_vector)
+    let content = query_vector_table(db, vector_table, query_vector, whole_query)
         .await
         .context("Failed to query table")?;
 
@@ -57,10 +59,11 @@ pub async fn run_query(
     Ok(content)
 }
 
-pub async fn query_table(
+pub async fn query_vector_table(
     db: &mut Connection,
     table_name: &str,
     query_vector: impl IntoQueryVector,
+    whole_query: bool,
 ) -> Result<Vec<String>> {
     let table = db
         .open_table(table_name)
@@ -71,40 +74,46 @@ pub async fn query_table(
     // let lower_bound = Some(0.5);
     // let upper_bound = Some(1.5);
 
-    let stream2 = table
-        .query()
-        .nearest_to(query_vector) // Find the nearest vectors to the query vector
-        .context("Failed to select nearest vector")?
-        // .distance_range(lower_bound, upper_bound) // bug in DataFusion library
-        .distance_type(lancedb::DistanceType::L2)
-        .refine_factor(20)
-        .nprobes(10)
-        .postfilter()
-        .only_if("_distance > 0.3 AND _distance < 1")
-        .select(lancedb::query::Select::Columns(vec![
-            "_distance".to_string(),
-            "id".to_string(),
-            "metadata".to_string(),
-            "content".to_string(),
-        ]))
-        .execute()
-        .await
-        .context("Failed to execute query and fetch records")?;
+    let batches;
+    
+    if !whole_query {
+        let stream: SendableRecordBatchStream = table
+            .query()
+            .nearest_to(query_vector) // Find the nearest vectors to the query vector
+            .context("Failed to select nearest vector")?
+            // .distance_range(lower_bound, upper_bound) // bug in DataFusion library
+            .distance_type(lancedb::DistanceType::L2)
+            .refine_factor(20)
+            .nprobes(10)
+            .postfilter()
+            .only_if("_distance > 0.3 AND _distance < 1")
+            .select(lancedb::query::Select::Columns(vec![
+                "_distance".to_string(),
+                "id".to_string(),
+                "metadata".to_string(),
+                "content".to_string(),
+            ]))
+            .execute()
+            .await
+            .context("Failed to execute query and fetch records")?;
+        
+        batches = stream.collect::<Vec<_>>().await;
+    } else {
+        let stream = table
+            .query()
+            .only_if("metadata IS NOT NULL")
+            .select(lancedb::query::Select::Columns(vec![
+                "id".to_string(),
+                "metadata".to_string(),
+                "content".to_string(),
+            ]))
+            .limit(1000)
+            .execute()
+            .await
+            .context("Failed to execute query and fetch records")?;
 
-    let stream = table
-        .query()
-        .only_if("metadata IS NOT NULL")
-        .select(lancedb::query::Select::Columns(vec![
-            "id".to_string(),
-            "metadata".to_string(),
-            "content".to_string(),
-        ]))
-        .limit(1000)
-        .execute()
-        .await
-        .context("Failed to execute query and fetch records")?;
-
-    let batches = stream.collect::<Vec<_>>().await;
+        batches = stream.collect::<Vec<_>>().await;
+    }
 
     for batch in batches {
         let batch: arrow_array::RecordBatch = batch.context("Failed to get RecordBatch")?;

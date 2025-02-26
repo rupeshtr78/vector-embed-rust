@@ -124,11 +124,13 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             model,
             table,
             database,
+            whole_query,
         } => {
             let input_list = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
             let embed_model = model.to_string();
             let vector_table = table.to_string();
             let db_uri = database.to_string();
+            let whole_query: bool = whole_query.parse().context("Failed to parse whole_query flag")?;
 
             info!("Query command is run with below arguments:");
             info!(" Query: {:?}", input_list);
@@ -151,6 +153,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                     &input_list,
                     &vector_table,
                     &http_client,
+                    whole_query,
                 ))
                 .context("Failed to run query")?;
 

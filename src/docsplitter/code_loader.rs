@@ -348,7 +348,9 @@ fn capture_context_lines(content: &str, num_lines: usize) -> String {
             let end = usize::min(i + num_lines + 1, filtered_lines.len());
 
             for context_line in &filtered_lines[start..end] {
-                result.push(*context_line);
+                if !context_line.trim().is_empty() {
+                    result.push(*context_line);
+                }
             }
         }
     }
