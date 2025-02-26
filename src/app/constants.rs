@@ -14,5 +14,5 @@ pub const LANCEDB_DISTANCE_FN: lancedb::DistanceType = lancedb::DistanceType::L2
 pub const CHAT_API_URL: &str = "http://10.0.0.213:11434";
 pub const CHAT_API_KEY: &str = "api_key";
 pub const CHAT_RESPONSE_FORMAT: &str = "json";
-pub const SYSTEM_PROMPT_PATH: &str = "template/system_prompt.txt";
+pub const SYSTEM_PROMPT_PATH: &str = "template/spark_prompt.txt"; ///"template/system_prompt.txt";
 pub const AI_MODEL: &str = "mistral:latest";
