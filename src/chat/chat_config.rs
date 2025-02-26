@@ -1,4 +1,3 @@
-use std::fmt;
 use anyhow::Result;
 use anyhow::{anyhow, Context};
 use hyper::client::HttpConnector;
@@ -7,6 +6,7 @@ use hyper::{Body, Request};
 use log::debug;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::fmt;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -44,6 +44,10 @@ impl ChatMessage {
         ChatMessage { role, content }
     }
 
+    pub fn get_content(&self) -> &String {
+        &self.content
+    }
+
     // fn to_string(&self) -> String {
     //     serde_json::to_string(self).context("Failed to serialize ChatMessage").unwrap()
     // }
@@ -54,7 +58,7 @@ impl ChatMessage {
 
 /// ChatRequest is a struct that represents a chat request
 // @TODO: Add tools
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct ChatRequest {
     pub model: String,
     pub api_url: String,
@@ -85,14 +89,18 @@ impl ChatRequest {
         options: Option<Options>,
         prompt: Prompt,
     ) -> ChatRequest {
-        let messages = vec![
-            ChatMessage::new(ChatRole::System, prompt.system_message),
-            ChatMessage::new(
-                ChatRole::User,
-                prompt.content.map_or_else(|| "".to_string(), |c| c),
-            ),
-            ChatMessage::new(ChatRole::User, prompt.prompt),
-        ];
+        let mut messages = Vec::new();
+        let system_message = ChatMessage::new(ChatRole::System, prompt.system_message);
+        messages.push(system_message);
+        for content in prompt.content.clone() {
+            if let Some(c) = content {
+                let user_content = ChatMessage::new(ChatRole::User, c.get_content().to_string());
+                messages.push(user_content);
+            }
+        }
+        let user_prompt = ChatMessage::new(ChatRole::User, prompt.prompt);
+        messages.push(user_prompt);
+
 
         ChatRequest {
             model,
@@ -118,6 +126,7 @@ impl ChatRequest {
 
         Ok(body)
     }
+
 }
 
 /// Get chat response from the AI model
@@ -157,7 +166,7 @@ pub async fn ai_chat(
 
     // Parse the response body
     let body = body::to_bytes(response).await?;
-    debug!("Response body: {:?}", body.len());
+    // debug!("Response body: {:?}", body.len());
 
     let response_body: ChatResponse =
         serde_json::from_slice(&body).context("Failed to parse response")?;
@@ -183,6 +192,10 @@ pub struct ChatResponse {
 }
 
 impl ChatResponse {
+    pub fn get_message(&self) -> Option<&ChatMessage> {
+        Some(&self.message)
+    }
+
     pub fn print_message(&self) {
         let message: &ChatMessage = &self.message;
         println!("{:?}", message.print_chat());

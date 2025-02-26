@@ -1,6 +1,8 @@
+use ::std::io::{self, Write};
+
+use crate::app::constants::{EMBEDDING_MODEL, VECTOR_DB_DIM_STR, VECTOR_DB_TABLE, VERSION};
 use clap::{Parser, Subcommand, ValueEnum};
 use log::info;
-use crate::app::constants::{EMBEDDING_MODEL, VECTOR_DB_DIM_STR, VECTOR_DB_TABLE, VERSION};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -89,7 +91,6 @@ pub enum Commands {
         #[clap(short, long)]
         prompt: String,
     },
-
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, ValueEnum)]
@@ -156,6 +157,23 @@ impl Commands {
             None
         }
     }
+    
+    pub fn fetch_args_from_cli(input: String, prompt_message: &str) -> String {
+        if input.is_empty() {
+            fetch_value(prompt_message)
+        } else {
+            input
+        }
+    }
+
+    pub fn fetch_prompt_from_cli(input: Vec<String>, prompt_message: &str) -> Vec<String> {
+        if input.is_empty() {
+            let user_input = fetch_value(prompt_message);
+            vec![user_input]
+        } else {
+            input
+        }
+    }
 }
 
 impl LogLevel {
@@ -186,6 +204,7 @@ fn colog_init(log_level: LogLevel) {
     println!("Log level set to: {:?}", log_level);
 }
 
+/// Initiates the log builds the command line arguments and return the command to run.
 pub fn build_args() -> Commands {
     let args = Args::parse();
 
@@ -201,16 +220,24 @@ pub fn build_args() -> Commands {
         colog_init(LogLevel::Debug);
     }
 
-
-    match args.cmd {
-        Some(command) => command,
-        None => {
-            info!("No subcommand provided. Use --help for more information.");
-            Commands::Version {
-                version: VERSION.to_string(),
-            }
+    // match args.cmd {
+    //     Some(command) => command,
+    //     None => {
+    //         info!("No subcommand provided. Use --help for more information.");
+    //         Commands::Version {
+    //             version: VERSION.to_string(),
+    //         }
+    //     }
+    // }
+    
+    args.cmd.map_or_else(|| {
+        info!("No subcommand provided. Use --help for more information.");
+        Commands::Version {
+            version: VERSION.to_string(),
         }
-    }
+    }, |cmd: Commands| cmd)
+    
+       
 }
 
 /// quick and dirty way to test the command line arguments
@@ -237,13 +264,13 @@ pub fn dbg_cmd() {
     match &commands {
         Commands::Write {
             input,
-            model: embed_model,
+            model,
             table,
             dim,
         } => {
             println!("Write command");
             println!("Input: {:?}", input);
-            println!("Model: {:?}", embed_model);
+            println!("Model: {:?}", model);
             println!("Table: {:?}", table);
             println!("Dimension: {:?}", dim);
         }
@@ -273,7 +300,8 @@ pub fn dbg_cmd() {
             database,
         } => {
             println!("Lance Query command");
-            println!("Query: {:?}", input);
+            let cli_input = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
+            println!("Query: {:?}", cli_input);
             println!("Model: {:?}", model);
             println!("Table: {:?}", table);
             println!("Database: {:?}", database);
@@ -283,4 +311,22 @@ pub fn dbg_cmd() {
             println!("Prompt: {:?}", prompt);
         }
     }
+}
+
+/// Generic function to fetch a value from the command line if not provided as an argument.
+///
+/// # Arguments.
+/// * `prompt_message` - The message to display when prompting the user for input.
+/// # Returns
+/// A `String` containing the value provided by the user or from the argument.
+fn fetch_value(prompt_message: &str) -> String {
+    print!("{}", prompt_message);
+    io::stdout().flush().map_err(|e| e.to_string()).unwrap_or_else(|e| {
+        panic!("Failed to flush stdout: {}", e);
+    });
+    let mut input = String::new();
+    io::stdin()
+        .read_line(&mut input)
+        .expect("Failed to read line");
+    input.trim().to_string()
 }

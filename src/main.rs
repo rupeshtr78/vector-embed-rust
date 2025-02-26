@@ -14,8 +14,9 @@ mod pgvectordb;
 fn main() -> Result<()> {
     info!("Starting");
 
+    // app::commands::dbg_cmd(); // Debugging
+
     let commands = build_args();
-    // dbg_cmd(); // Debugging command
     let url = EMBEDDING_URL;
 
     let rt = match tokio::runtime::Builder::new_multi_thread()
@@ -31,7 +32,7 @@ fn main() -> Result<()> {
 
     cli::cli(commands, rt, url).context("Failed to run Command")?;
 
-    info!("Finished");
+    info!("Exiting Chatbot");
 
     Ok(())
 }
