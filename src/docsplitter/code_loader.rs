@@ -352,6 +352,8 @@ fn capture_context_lines(content: &str, num_lines: usize) -> String {
             }
         }
     }
+    
+    debug!("Error Lines: {}", result.join("\n"));
 
     result.join("\n")
 }

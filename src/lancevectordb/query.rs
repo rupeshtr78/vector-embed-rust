@@ -71,7 +71,7 @@ pub async fn query_table(
     // let lower_bound = Some(0.5);
     // let upper_bound = Some(1.5);
 
-    let stream = table
+    let stream2 = table
         .query()
         .nearest_to(query_vector) // Find the nearest vectors to the query vector
         .context("Failed to select nearest vector")?
@@ -87,6 +87,19 @@ pub async fn query_table(
             "metadata".to_string(),
             "content".to_string(),
         ]))
+        .execute()
+        .await
+        .context("Failed to execute query and fetch records")?;
+
+    let stream = table
+        .query()
+        .only_if("metadata IS NOT NULL")
+        .select(lancedb::query::Select::Columns(vec![
+            "id".to_string(),
+            "metadata".to_string(),
+            "content".to_string(),
+        ]))
+        .limit(1000)
         .execute()
         .await
         .context("Failed to execute query and fetch records")?;
