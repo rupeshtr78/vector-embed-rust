@@ -10,7 +10,7 @@ use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::Path;
 use std::path::PathBuf;
-use text_splitter::{ChunkConfig, CodeSplitter, CodeSplitterError};
+use text_splitter::{Characters, ChunkConfig, CodeSplitter, CodeSplitterError};
 use tree_sitter_language::LanguageFn;
 use tokio::sync::RwLock;
 use std::sync::Arc;
@@ -29,6 +29,7 @@ enum Language {
     Go,
     Scala,
     Text,
+    SPARKLOG,
     UNKNOWN,
 }
 
@@ -47,6 +48,7 @@ impl Language {
             "go" => Language::Go,
             "scala" => Language::Scala,
             "txt" => Language::Text,
+            "log" => Language::SPARKLOG,
             // "sh" => Language::Text,
             "unknown" => Language::UNKNOWN,
             _ => Language::UNKNOWN,
@@ -196,20 +198,20 @@ async fn split_file_into_chunks(
         .with_overlap(256)
         .context("Failed to create chunk config")?;
 
-    let is_supported_file = is_supported_file(file_path);
+    let (language, is_supported) = is_supported_file(file_path);
 
     debug!(
         "File Extension: {:?} Is Supported File {:}",
-        is_supported_file.0,
-        is_supported_file.1
+        language,
+        is_supported
     );
 
-    if !is_supported_file.1 {
+    if !is_supported {
         debug!("Unsupported file extension");
     }
 
     // let mut chunks: Vec<FileChunk> = Vec::new();
-    if is_supported_file.1 && is_supported_file.0 == Language::Text {
+    if is_supported && language == Language::Text {
         // user tree_sitter_markdown
         let splitter = text_splitter::TextSplitter::new(chunk_config);
         let chunks = splitter
@@ -227,10 +229,9 @@ async fn split_file_into_chunks(
         return Ok(chunks);
     }
 
-    if is_supported_file.1 && is_supported_file.0 != Language::Text {
+    if is_supported && language != Language::Text  && language != Language::SPARKLOG {
         let splitter = CodeSplitter::new(
-            get_language_from_file_extension(is_supported_file.0)
-                .context("Unsupported file extension")?,
+            get_language_from_file_extension(language).context("Unsupported file extension")?,
             chunk_config,
         )
             .context("Failed to create code splitter")?;
@@ -250,23 +251,38 @@ async fn split_file_into_chunks(
 
         return Ok(chunks);
     }
+    
+    if is_supported && language == Language::SPARKLOG {
+        return process_spark_log_file(file_path, chunk_config).await;
+    }
 
     Ok(vec![])
 }
 
-/// Check if a file is a code file based on its extension.
+/// Checks if the given file is a supported code file based on its extension.
+///
+/// # Arguments
+///
+/// * `file_path` - A reference to the path of the file to check.
+///
+/// # Returns
+///
+/// A tuple where the first element is the detected `Language` enum type,
+/// and the second element is a boolean indicating if the file is supported.
 fn is_supported_file(file_path: &Path) -> (Language, bool) {
-    // Add your own logic to determine if the file is a code file
+    // Extracts the file extension and converts it to a string slice
     let ext = file_path.extension().and_then(|e| e.to_str());
-    debug!("File Extension: {:?}", ext);
 
-    let res = Language::from_str(ext.unwrap_or("unknown"));
-    debug!("Language: {:?}", res);
+    if let Some(ext_str) = ext {
+        debug!("File Extension: {}", ext_str);
 
-    if res == Language::UNKNOWN || ext.is_none() {
-        (res, false)
+        match Language::from_str(ext_str) {
+            Language::UNKNOWN => (Language::UNKNOWN, false),
+            lang => (lang, true),
+        }
     } else {
-        (res, true)
+        debug!("No valid extension found.");
+        (Language::UNKNOWN, false)
     }
 }
 
@@ -287,4 +303,59 @@ fn get_language_from_file_extension(language: Language) -> Result<LanguageFn> {
     };
 
     Ok(language)
+}
+
+async fn process_spark_log_file(
+    file_path: &PathBuf,
+    chunk_config : ChunkConfig<Characters>,
+) -> Result<Vec<FileChunk>> {
+    let file = File::open(file_path).context("Failed to open file")?;
+    let mut reader = BufReader::new(file);
+    let mut content = String::new();
+    reader.read_to_string(&mut content)?;
+    
+    // remove lines without error or exception
+    let error_lines = capture_context_lines(&content, 20);
+    
+    let splitter = text_splitter::TextSplitter::new(chunk_config);
+    let chunks = splitter
+        .chunks(&error_lines)
+        .enumerate()
+        .map(|(i, chunk)| {
+            Ok(FileChunk::new(
+                chunk.to_string(),
+                file_path.clone(),
+                i as i32,
+            ))
+        })
+        .collect::<Result<Vec<FileChunk>, CodeSplitterError>>()?;
+
+    return Ok(chunks);
+}
+
+fn capture_context_lines(content: &str, num_lines: usize) -> String {
+    let filtered_lines: Vec<&str> = content
+        .lines()
+        .filter(|line| !line.to_lowercase().contains("lineage"))
+        .collect();
+
+    let mut result = Vec::new();
+
+    for (i, line) in filtered_lines.iter().enumerate() {
+        // Check for "ERROR" or "EXCEPTION" after filtering out "LINEAGE"
+        if line.to_lowercase().contains("error") || line.to_lowercase().contains("exception") {
+            let start = if i >= num_lines { i - num_lines } else { 0 };
+            let end = usize::min(i + num_lines + 1, filtered_lines.len());
+
+            for context_line in &filtered_lines[start..end] {
+                if !context_line.trim().is_empty() {
+                    result.push(*context_line);
+                }
+            }
+        }
+    }
+    
+    debug!("Error Lines: {}", result.join("\n"));
+
+    result.join("\n")
 }

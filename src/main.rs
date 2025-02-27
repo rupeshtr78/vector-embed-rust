@@ -1,8 +1,8 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use app::cli;
 use app::commands::build_args;
 use app::constants::EMBEDDING_URL;
-use log::{error, info};
+use log::{info};
 
 mod app;
 mod chat;
@@ -19,17 +19,13 @@ fn main() -> Result<()> {
     let commands = build_args();
     let url = EMBEDDING_URL;
 
-    let rt = match tokio::runtime::Builder::new_multi_thread()
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(4)
+        .thread_name("chatbot")
         .enable_all()
         .build()
-    {
-        Ok(rt) => rt,
-        Err(e) => {
-            error!("Failed to build runtime: {}", e);
-            return Err(anyhow!("Failed to build runtime: {}", e));
-        }
-    };
-
+        .context("Failed to build runtime")?;
+    
     cli::cli(commands, rt, url).context("Failed to run Command")?;
 
     info!("Exiting Chatbot");

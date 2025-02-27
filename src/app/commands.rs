@@ -84,6 +84,10 @@ pub enum Commands {
         /// Provide the database to use
         #[clap(short, long)]
         database: String,
+        /// specify if the whole table query is to be used default is false
+        #[clap(short, long)]
+        #[clap(default_value = "false")]
+        whole_query: String,
     },
     /// Chat with the AI
     Chat {
@@ -298,6 +302,7 @@ pub fn dbg_cmd() {
             model,
             table,
             database,
+            whole_query,
         } => {
             println!("Lance Query command");
             let cli_input = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
@@ -305,6 +310,7 @@ pub fn dbg_cmd() {
             println!("Model: {:?}", model);
             println!("Table: {:?}", table);
             println!("Database: {:?}", database);
+            println!("Whole Query: {:?}", whole_query);
         }
         Commands::Chat { prompt } => {
             println!("Chat command");
