@@ -131,9 +131,9 @@ pub async fn create_lance_table(db: &mut Connection, table_schema: &TableSchema)
 
 /// Insert embeddings into the database
 /// Arguments:
-/// - db: &mut Connection
 /// - table_schema: &TableSchema
 /// - records: RecordBatch (Arrow)
+/// - table: Table (lancedb)
 /// Returns:
 /// - Result<(), Box<dyn Error>>
 pub async fn insert_embeddings(
@@ -141,9 +141,7 @@ pub async fn insert_embeddings(
     records: RecordBatch,
     table: Table,
 ) -> Result<()> {
-    let table_name = table_schema.get_table_name();
     let arrow_schema = Arc::new(table_schema.create_schema());
-    // let table = db.open_table(table_name).execute().await?;
     let mut writer = table.merge_insert(&["content", "metadata", "vector", "model"]);
     writer.when_not_matched_insert_all();
     writer.when_matched_update_all(None);
