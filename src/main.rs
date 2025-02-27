@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use app::cli;
 use app::commands::build_args;
 use app::constants::EMBEDDING_URL;

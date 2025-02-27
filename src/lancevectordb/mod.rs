@@ -12,6 +12,8 @@ use hyper::client::HttpConnector;
 use hyper::Client;
 use load_lancedb::TableSchema;
 
+#[deprecated]
+#[allow(dead_code)]
 /// Run the LanceVectorDB pipeline
 /// 1. Load the codebase into chunks
 /// 2. Extract the embed requests from the chunks
@@ -193,7 +195,7 @@ pub async fn run_v2(
     // Wait for all tasks to complete
     for task in tasks {
         // task.await??;
-        task.await.context("Failed to run task").expect_err("Task failed");
+        task.await.context("Failed to run task")?.context("Task failed")?;
     }
 
     // Create an index on the embedding column
