@@ -82,13 +82,14 @@ pub async fn run_chat(
 /// # Returns
 /// * `Result<()>` - The result of the chatbot
 pub async fn run_chat_with_history(
+    system_prompt: &str,
     initial_prompt: &str,
     context: Option<&str>,
     client: &Client<HttpConnector>,
 ) -> anyhow::Result<()> {
     info!("Starting LLM chat with history...");
 
-    let paths = [SYSTEM_PROMPT_PATH];
+    let paths = [system_prompt];
     paths.iter().for_each(|path| {
         if std::fs::metadata(path).is_err() || !std::fs::metadata(path).unwrap().is_file() {
             error!("File does not exist: {}", path);

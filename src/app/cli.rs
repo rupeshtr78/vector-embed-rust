@@ -1,5 +1,5 @@
 use crate::app::commands::Commands;
-use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
+use crate::app::constants::{SYSTEM_PROMPT_PATH, VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
 use crate::lancevectordb;
 use crate::pgvectordb::run_embedding::run_embedding_load;
 use crate::pgvectordb::VectorDbConfig;
@@ -113,7 +113,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
 
             let http_client = HttpClient::new();
 
-            rt.block_on(lancevectordb::run(path, chunk_size, url, &http_client))
+            rt.block_on(lancevectordb::run_v2(path, chunk_size, url, &http_client))
                 .context("Failed to run lancevectordb")?;
 
             // shutdown the runtime after the embedding is done
@@ -173,8 +173,9 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             // let message = response.get_message();
 
             // info!("AI Response: {}", message);
-            
+            let system_prompt = SYSTEM_PROMPT_PATH;
             rt.block_on(crate::chat::run_chat_with_history(
+                system_prompt,
                 input_list.first().unwrap(),
                 Some(&context),
                 &http_client,

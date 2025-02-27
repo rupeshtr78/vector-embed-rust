@@ -8,7 +8,7 @@ use arrow_schema::Schema as ArrowSchema;
 use arrow_schema::TimeUnit;
 use arrow_schema::{DataType, Field};
 use lancedb::index::Index;
-use lancedb::Connection;
+use lancedb::{Connection, Table};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use crate::app::constants::VECTOR_DB_DIM_SIZE;
@@ -25,9 +25,9 @@ pub struct TableSchema {
 }
 
 impl TableSchema {
-    pub fn new(table_name: String) -> Self {
+    pub fn new(table_name: &String) -> Self {
         TableSchema {
-            name: table_name,
+            name: table_name.to_string(),
             id: Arc::new(Field::new("id", DataType::Int32, false)),
             content: Arc::new(Field::new("content", DataType::Utf8, false)),
             metadata: Arc::new(Field::new("metadata", DataType::Utf8, false)),
@@ -72,7 +72,7 @@ impl TableSchema {
                 Arc::new(StringArray::from_iter_values((0..256).map(|_| ""))),
                 Arc::new(
                     FixedSizeListArray::from_iter_primitive::<Float32Type, _, _>(
-                        (0..256).map(|_| Some(vec![Some(1.0); 768])),
+                        (0..256).map(|_| Some(vec![Some(1.0); VECTOR_DB_DIM_SIZE as usize])),
                         VECTOR_DB_DIM_SIZE,
                     ),
                 ),
@@ -124,14 +124,6 @@ pub async fn create_lance_table(db: &mut Connection, table_schema: &TableSchema)
         .await
         .context("Failed to insert records")?;
 
-    // Create an index on the embedding column.
-    // let table = db.open_table(table_name).execute().await?;
-    // table
-    //     .create_index(&["embedding"], Index::Auto)
-    //     .execute()
-    //     .await
-    //     .context("Failed to create an index")?;
-
     log::info!("Table created successfully");
 
     Ok(())
@@ -145,13 +137,13 @@ pub async fn create_lance_table(db: &mut Connection, table_schema: &TableSchema)
 /// Returns:
 /// - Result<(), Box<dyn Error>>
 pub async fn insert_embeddings(
-    db: &mut Connection,
     table_schema: &TableSchema,
     records: RecordBatch,
+    table: Table,
 ) -> Result<()> {
     let table_name = table_schema.get_table_name();
     let arrow_schema = Arc::new(table_schema.create_schema());
-    let table = db.open_table(table_name).execute().await?;
+    // let table = db.open_table(table_name).execute().await?;
     let mut writer = table.merge_insert(&["content", "metadata", "vector", "model"]);
     writer.when_not_matched_insert_all();
     writer.when_matched_update_all(None);
