@@ -19,7 +19,7 @@ pub struct Args {
 
 pub enum Commands {
     /// Write embedding to Postgres Vector Database
-    Write {
+    PgWrite {
         /// provide the input string to use
         #[clap(short, long)]
         input: Vec<String>,
@@ -38,7 +38,7 @@ pub enum Commands {
     },
 
     /// Query the PG Vector Database   
-    Query {
+    PgQuery {
         /// The query string to use
         #[clap(short, long)]
         input: Vec<String>,
@@ -46,7 +46,7 @@ pub enum Commands {
         #[clap(short, long)]
         #[clap(default_value = EMBEDDING_MODEL)]
         model: String,
-        /// Provide the table to use to query
+        /// Provide the pg table to use to query
         #[clap(short, long)]
         #[clap(default_value = VECTOR_DB_TABLE)]
         table: String,
@@ -59,7 +59,7 @@ pub enum Commands {
         version: String,
     },
 
-    /// Load a directory of files into the database
+    /// Load a directory of files into the lance vector database
     Load {
         /// The path to the directory to load
         #[clap(short, long)]
@@ -69,7 +69,27 @@ pub enum Commands {
         #[clap(default_value = "1024")]
         chunk_size: usize,
     },
-    /// Query the Lancedb Vector Database   
+    /// Query the Lance Vector Database
+    LanceQuery {
+        /// The query string to use
+        #[clap(short, long)]
+        input: Vec<String>,
+        /// Provide the model to use for query embedding
+        #[clap(short, long)]
+        #[clap(default_value = EMBEDDING_MODEL)]
+        model: String,
+        /// Provide the table to use to query
+        #[clap(short, long)]
+        table: String,
+        /// Provide the database to use
+        #[clap(short, long)]
+        database: String,
+        /// specify if the whole table query is to be used default is false
+        #[clap(short, long)]
+        #[clap(default_value = "false")]
+        whole_query: String,
+    },
+    /// Query the Lance Vector Database and chat with the AI
     RagQuery {
         /// The query string to use
         #[clap(short, long)]
@@ -90,7 +110,7 @@ pub enum Commands {
         whole_query: String,
     },
     /// Chat with the AI
-    Chat {
+    Generate {
         /// Prompt for AI
         #[clap(short, long)]
         prompt: String,
@@ -108,12 +128,12 @@ pub enum LogLevel {
 impl Commands {
     /// Checks if the command is a `Write` command.
     pub fn is_write(&self) -> bool {
-        matches!(self, Commands::Write { .. })
+        matches!(self, Commands::PgWrite { .. })
     }
 
     /// Returns an `Option` of `&Commands` if the command is a `Write` command.
     pub fn write(&self) -> Option<&Commands> {
-        if let Commands::Write { .. } = self {
+        if let Commands::PgWrite { .. } = self {
             Some(self)
         } else {
             None
@@ -122,12 +142,12 @@ impl Commands {
 
     /// Checks if the command is a `Query` command.
     pub fn is_query(&self) -> bool {
-        matches!(self, Commands::Query { .. })
+        matches!(self, Commands::PgQuery { .. })
     }
 
     /// Returns an `Option` of `&Commands` if the command is a `Query` command.
     pub fn query(&self) -> Option<&Commands> {
-        if let Commands::Query { .. } = self {
+        if let Commands::PgQuery { .. } = self {
             Some(self)
         } else {
             None
@@ -266,7 +286,7 @@ pub fn dbg_cmd() {
     };
 
     match &commands {
-        Commands::Write {
+        Commands::PgWrite {
             input,
             model,
             table,
@@ -278,7 +298,7 @@ pub fn dbg_cmd() {
             println!("Table: {:?}", table);
             println!("Dimension: {:?}", dim);
         }
-        Commands::Query {
+        Commands::PgQuery {
             input,
             model,
             table,
@@ -297,6 +317,20 @@ pub fn dbg_cmd() {
             println!("Path: {:?}", path);
             println!("Chunk size: {:?}", chunk_size);
         }
+        Commands::LanceQuery {
+            input,
+            model,
+            table,
+            database,
+            whole_query,
+        } => {
+            println!("Lance Query command");
+            println!("Query: {:?}", input);
+            println!("Model: {:?}", model);
+            println!("Table: {:?}", table);
+            println!("Database: {:?}", database);
+            println!("Whole Query: {:?}", whole_query);
+        }
         Commands::RagQuery {
             input,
             model,
@@ -312,7 +346,7 @@ pub fn dbg_cmd() {
             println!("Database: {:?}", database);
             println!("Whole Query: {:?}", whole_query);
         }
-        Commands::Chat { prompt } => {
+        Commands::Generate { prompt } => {
             println!("Chat command");
             println!("Prompt: {:?}", prompt);
         }

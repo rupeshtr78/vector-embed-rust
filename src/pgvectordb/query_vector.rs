@@ -1,5 +1,5 @@
 use super::pg_vector;
-use crate::app::constants::EMBEDDING_URL;
+use crate::app::constants::{CHAT_API_URL};
 use crate::embedder::config::EmbedRequest;
 use ::hyper::Client as HttpClient;
 use anyhow::Context;
@@ -18,7 +18,7 @@ use postgres::Client;
 /// - http_client: &HttpClient<HttpConnector>
 /// Returns:
 /// - Result<()>: Result of the query
-pub async fn run_query(
+pub async fn run_pg_vector_query(
     rt: &tokio::runtime::Runtime,
     embed_model: String,
     input_list: &Vec<String>,
@@ -37,14 +37,14 @@ pub async fn run_query(
         error!("Query Input is empty");
         return Err(anyhow::anyhow!("Query Input is empty"));
     }
-
-    let url = EMBEDDING_URL;
+    
+    let url = format!("{}/{}", CHAT_API_URL, "api/embed");
 
     let query_request_arc =
         EmbedRequest::NewArcEmbedRequest(&embed_model, input_list, &"".to_string());
     let query_response = rt
         .block_on(crate::embedder::fetch_embedding(
-            url,
+            &url,
             &query_request_arc,
             http_client,
         ))

@@ -48,11 +48,18 @@ impl ChatMessage {
         &self.content
     }
 
-    // fn to_string(&self) -> String {
-    //     serde_json::to_string(self).context("Failed to serialize ChatMessage").unwrap()
-    // }
-    pub fn print_chat(&self) {
-        println!("{:?}: {}", &self.role, &self.content);
+    #[allow(dead_code)]
+    pub fn pretty_print_chat(&self) {
+        let content = self.get_content();
+        if let Ok(parsed_json) = serde_json::from_str::<Value>(content) {
+            if let Ok(pretty_json) = serde_json::to_string_pretty(&parsed_json) {
+                println!("AI Response {}", pretty_json);
+            } else {
+                eprintln!("Failed to pretty print the JSON.");
+            }
+        } else {
+            eprintln!("Failed to parse JSON string.");
+        }
     }
 }
 
@@ -101,7 +108,6 @@ impl ChatRequest {
         let user_prompt = ChatMessage::new(ChatRole::User, prompt.prompt);
         messages.push(user_prompt);
 
-
         ChatRequest {
             model,
             api_url,
@@ -126,7 +132,6 @@ impl ChatRequest {
 
         Ok(body)
     }
-
 }
 
 /// Get chat response from the AI model
@@ -194,27 +199,6 @@ pub struct ChatResponse {
 impl ChatResponse {
     pub fn get_message(&self) -> Option<&ChatMessage> {
         Some(&self.message)
-    }
-
-    pub fn print_message(&self) {
-        let message: &ChatMessage = &self.message;
-        println!("{:?}", message.print_chat());
-    }
-
-    #[allow(dead_code)]
-    pub fn pretty_print_message(&self) {
-        let message: &ChatMessage = &self.message;
-
-        // Assuming `print_content()` returns a `&str` that is a JSON string
-        if let Ok(parsed_json) = serde_json::from_str::<Value>(&message.to_string()) {
-            if let Ok(pretty_json) = serde_json::to_string_pretty(&parsed_json) {
-                println!("{}", pretty_json);
-            } else {
-                eprintln!("Failed to pretty print the JSON.");
-            }
-        } else {
-            eprintln!("Failed to parse JSON string.");
-        }
     }
 }
 

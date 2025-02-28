@@ -1,12 +1,12 @@
+use crate::chat::chat_config::ChatMessage;
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
 use handlebars::Handlebars;
 use serde::Serialize;
-use crate::chat::chat_config::ChatMessage;
 
 /// Prompt struct
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub(crate) struct Prompt {
     pub(crate) system_message: String,
     pub content: Vec<Option<ChatMessage>>,
@@ -14,7 +14,11 @@ pub(crate) struct Prompt {
 }
 
 impl Prompt {
-    pub(crate) async fn new(path: &str, contents: &Vec<Option<ChatMessage>>, prompt: &str) -> Result<Prompt> {
+    pub(crate) async fn new(
+        path: &str,
+        contents: &Vec<Option<ChatMessage>>,
+        prompt: &str,
+    ) -> Result<Prompt> {
         let system_prompt = get_system_prompt(path).await?;
         let prompt = Prompt {
             system_message: system_prompt,
