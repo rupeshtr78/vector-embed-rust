@@ -1,11 +1,11 @@
-use crate::embedder::config::EmbedRequest;
-use crate::app::constants::EMBEDDING_URL;
+use crate::app::constants::CHAT_API_URL;
 use crate::embedder;
-use ::hyper::Client as HttpClient;
+use crate::embedder::config::EmbedRequest;
 use anyhow::{anyhow, Context, Result};
 use arrow_array::{Array, StringArray};
 use futures::StreamExt;
 use hyper::client::HttpConnector;
+use ::hyper::Client as HttpClient;
 use lancedb::arrow::SendableRecordBatchStream;
 use lancedb::query::ExecutableQuery;
 use lancedb::query::IntoQueryVector;
@@ -41,12 +41,13 @@ pub async fn run_query(
         return Err(anyhow!("Query Input is empty"));
     }
 
-    let url = EMBEDDING_URL;
+    let url = format!("{}/{}", CHAT_API_URL, "api/embed");
 
     let query_request_arc =
         EmbedRequest::NewArcEmbedRequest(&embed_model, input_list, &"".to_string());
-    let query_response =
-        embedder::fetch_embedding(url, &query_request_arc, http_client).await.context("Failed to fetch embedding")?;
+    let query_response = embedder::fetch_embedding(&url, &query_request_arc, http_client)
+        .await
+        .context("Failed to fetch embedding")?;
 
     let query_vector = query_response.embeddings[0].clone();
 
@@ -75,7 +76,7 @@ pub async fn query_vector_table(
     // let upper_bound = Some(1.5);
 
     let batches;
-    
+
     if !whole_query {
         let stream: SendableRecordBatchStream = table
             .query()
@@ -96,7 +97,7 @@ pub async fn query_vector_table(
             .execute()
             .await
             .context("Failed to execute query and fetch records")?;
-        
+
         batches = stream.collect::<Vec<_>>().await;
     } else {
         let stream = table
@@ -127,17 +128,19 @@ pub async fn query_vector_table(
             debug!("Column {:?}: {:?}", column_name, column);
 
             if column_name == "content" {
-                let content_array = column.as_any().downcast_ref::<StringArray>().context("Failed to downcast to StringArray")?;
-                let content = get_content(content_array).context("Failed to get content from lancedb")?;
+                let content_array = column
+                    .as_any()
+                    .downcast_ref::<StringArray>()
+                    .context("Failed to downcast to StringArray")?;
+                let content =
+                    get_content(content_array).context("Failed to get content from lancedb")?;
                 return Ok(content);
             }
         }
     }
 
-
     Ok(Vec::new())
 }
-
 
 pub fn get_content(batch: &StringArray) -> Result<Vec<String>> {
     let mut content_vec = Vec::new();

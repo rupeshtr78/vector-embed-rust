@@ -4,13 +4,13 @@ use crate::docsplitter::code_loader;
 use crate::embedder::fetch_embedding;
 use ::anyhow::Context;
 use ::anyhow::Result;
+use hyper::client::HttpConnector;
+use hyper::Client;
+use load_lancedb::TableSchema;
 use ::log::debug;
 use ::log::info;
 use ::std::path::PathBuf;
 use ::std::sync::Arc;
-use hyper::client::HttpConnector;
-use hyper::Client;
-use load_lancedb::TableSchema;
 
 #[deprecated]
 #[allow(dead_code)]
@@ -68,7 +68,11 @@ pub async fn run(
         .context("Failed to create table")?;
 
     // load embeddings
-    let table = db.open_table(&table_name).execute().await.context("Failed to open table")?;
+    let table = db
+        .open_table(&table_name)
+        .execute()
+        .await
+        .context("Failed to open table")?;
     for (id, embed_request) in embed_requests.iter().enumerate() {
         // fetch embeddings
         let embed_response = fetch_embedding(embed_url, embed_request, http_client)
@@ -157,7 +161,11 @@ pub async fn run_v2(
 
     // Load embeddings in parallel to improve performance
     let mut tasks = Vec::new();
-    let table = db.open_table(&table_name).execute().await.context("Failed to open table")?;
+    let table = db
+        .open_table(&table_name)
+        .execute()
+        .await
+        .context("Failed to open table")?;
     for (id, embed_request) in embed_requests.into_iter().enumerate() {
         let embed_url = embed_url.to_string();
         let http_client = http_client.clone();
@@ -178,10 +186,12 @@ pub async fn run_v2(
                 embed_request,
                 embed_response,
                 &table_schema,
-            ).await.context("Failed to create record batch")?;
+            )
+            .await
+            .context("Failed to create record batch")?;
 
             // Insert embeddings into the table
-            load_lancedb::insert_embeddings(&table_schema, record_batch, table.clone())
+            load_lancedb::insert_embeddings(&table_schema, record_batch, table)
                 .await
                 .context("Failed to insert embeddings")?;
 
@@ -195,7 +205,9 @@ pub async fn run_v2(
     // Wait for all tasks to complete
     for task in tasks {
         // task.await??;
-        task.await.context("Failed to run task")?.context("Task failed")?;
+        task.await
+            .context("Failed to run task")?
+            .context("Insert Task failed")?;
     }
 
     // Create an index on the embedding column
@@ -205,8 +217,8 @@ pub async fn run_v2(
         table_schema.name.as_str(),
         vec![embedding_col.as_str()],
     )
-        .await
-        .context("Failed to create index")?;
+    .await
+    .context("Failed to create index")?;
 
     Ok(())
 }

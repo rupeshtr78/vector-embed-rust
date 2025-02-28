@@ -1,8 +1,8 @@
+use crate::app::constants::CHAT_API_URL;
 use anyhow::{Context, Result};
 use app::cli;
 use app::commands::build_args;
-use app::constants::EMBEDDING_URL;
-use log::{info};
+use log::info;
 
 mod app;
 mod chat;
@@ -17,7 +17,7 @@ fn main() -> Result<()> {
     // app::commands::dbg_cmd(); // Debugging
 
     let commands = build_args();
-    let url = EMBEDDING_URL;
+    // let url = format!("{}/{}", CHAT_API_URL, "api/embed");
 
     let rt = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(4)
@@ -25,8 +25,8 @@ fn main() -> Result<()> {
         .enable_all()
         .build()
         .context("Failed to build runtime")?;
-    
-    cli::cli(commands, rt, url).context("Failed to run Command")?;
+
+    cli::cli(commands, rt, CHAT_API_URL).context("Failed to run Command")?;
 
     info!("Exiting Chatbot");
 

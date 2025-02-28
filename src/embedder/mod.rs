@@ -30,7 +30,7 @@ pub async fn fetch_embedding(
 
     let response = create_embed_request(url, &embed_data, http_client)
         .await
-        .context("Failed to create embed request")?;
+        .with_context(|| format!("Failed to fetch embedding from {}", url))?;
 
     debug!("Finished Running Embedding");
     Ok(response)
@@ -60,20 +60,26 @@ pub async fn create_embed_request(
     // Build the HTTP GET request using the http crate.
     let request = Request::builder()
         .method("POST")
-        .uri(url)
+        .uri(&url)
         .header("Content-Type", "application/json")
-        .body(data_body)?;
+        .body(data_body)
+        .context("Failed to build request")?;
 
     // Send the request and await the response.
-    let response_body = http_client.request(request).await?;
+    let response_body = http_client
+        .request(request)
+        .await
+        .with_context(|| format!("Failed to send request to {}", &url))?;
 
     info!("Embedding Response status: {}", response_body.status());
     // let body = hyper::body::to_bytes(response.into_body()).await?;
 
     let response_body = response_body.into_body();
-    let body_bytes = body::to_bytes(response_body).await?;
+    let body_bytes = body::to_bytes(response_body)
+        .await
+        .context("Failed to read response body")?;
     let body = str::from_utf8(&body_bytes)?;
-    let response: EmbedResponse = serde_json::from_str(body)?;
+    let response: EmbedResponse = serde_json::from_str(body).context("Failed to parse response")?;
 
     debug!("Response: {:?}", response.model);
     debug!("Response Length: {:?}", response.embeddings[0].len());

@@ -1,6 +1,7 @@
+use crate::app::constants::VECTOR_DB_DIM_SIZE;
 use crate::embedder::config::{EmbedRequest, EmbedResponse};
-use anyhow::Context;
 use anyhow::Result;
+use anyhow::{Context, Ok};
 use arrow::array::{FixedSizeListArray, StringArray, TimestampSecondArray};
 use arrow_array::types::Float32Type;
 use arrow_array::{Int32Array, RecordBatch, RecordBatchIterator};
@@ -10,8 +11,8 @@ use arrow_schema::{DataType, Field};
 use lancedb::index::Index;
 use lancedb::{Connection, Table};
 use std::sync::Arc;
+use std::vec;
 use tokio::sync::RwLock;
-use crate::app::constants::VECTOR_DB_DIM_SIZE;
 
 #[derive(Debug, Clone)]
 pub struct TableSchema {
@@ -82,7 +83,7 @@ impl TableSchema {
                 )),
             ],
         )
-            .context("Failed to create a RecordBatch")
+        .context("Failed to create a RecordBatch")
     }
 }
 
@@ -115,8 +116,10 @@ pub async fn create_lance_table(db: &mut Connection, table_schema: &TableSchema)
 
     // add rows to the writer
     let batch = table_schema.empty_batch()?;
-    let record_batch =
-        RecordBatchIterator::new(vec![batch].into_iter().map(Ok), arrow_schema.clone());
+    let record_batch = RecordBatchIterator::new(
+        vec![batch].into_iter().map(std::result::Result::Ok),
+        arrow_schema.clone(),
+    );
 
     // Pass the record batch to the writer.
     writer
@@ -142,16 +145,19 @@ pub async fn insert_embeddings(
     table: Table,
 ) -> Result<()> {
     let arrow_schema = Arc::new(table_schema.create_schema());
+    let record_iter = vec![records].into_iter().map(std::result::Result::Ok);
+    let record_batch = RecordBatchIterator::new(record_iter, arrow_schema);
+
     let mut writer = table.merge_insert(&["content", "metadata", "vector", "model"]);
+    // add merge options to writer
     writer.when_not_matched_insert_all();
-    writer.when_matched_update_all(None);
 
-    let record_batch = RecordBatchIterator::new(vec![records].into_iter().map(Ok), arrow_schema);
+    let write_result = writer.execute(Box::new(record_batch)).await;
 
-    writer
-        .execute(Box::new(record_batch))
-        .await
-        .context("Failed to insert records")?;
+    if let Err(e) = write_result {
+        log::error!("Failed to insert records: {:?}", e);
+        return Ok(());
+    }
 
     log::info!("Records inserted successfully");
 
@@ -237,7 +243,7 @@ pub async fn create_record_batch(
             created_at_array,
         ],
     )
-        .context("Failed to create a Embedding Records")?;
+    .context("Failed to create a Embedding Records")?;
 
     Ok(record_batch)
 }
