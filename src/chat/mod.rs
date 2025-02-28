@@ -68,13 +68,12 @@ pub async fn run_chat(
     let request = Arc::new(RwLock::new(chat_request));
 
     // Call the AI chat API
-    let response = ai_chat(&request, &client)
+    let response = ai_chat(&request, client)
         .await
         .context("Failed to get ai chat response")?;
 
-    response
-        .get_message()
-        .map(|m| println!("AI Response: {}", m.get_content()));
+    if let Some(m) = response
+        .get_message() { println!("AI Response: {}", m.get_content()) }
 
     Ok(response)
 }
@@ -131,7 +130,7 @@ pub async fn run_chat_with_history(
 
         let request = Arc::new(RwLock::new(chat_request));
 
-        let response = ai_chat(&request, &client)
+        let response = ai_chat(&request, client)
             .await
             .context("Failed to get AI chat response")?;
 
