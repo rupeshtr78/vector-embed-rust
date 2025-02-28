@@ -99,12 +99,12 @@ impl ChatRequest {
         let mut messages = Vec::new();
         let system_message = ChatMessage::new(ChatRole::System, prompt.system_message);
         messages.push(system_message);
-        for content in prompt.content.clone() {
-            if let Some(c) = content {
-                let user_content = ChatMessage::new(ChatRole::User, c.get_content().to_string());
-                messages.push(user_content);
-            }
-        }
+        
+        for content in prompt.content.clone().into_iter().flatten() {
+                    let user_content = ChatMessage::new(ChatRole::User, content.get_content().to_string());
+                    messages.push(user_content);
+                }
+        
         let user_prompt = ChatMessage::new(ChatRole::User, prompt.prompt);
         messages.push(user_prompt);
 
