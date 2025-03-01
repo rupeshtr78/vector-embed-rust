@@ -1,0 +1,758 @@
+++ id -u
++ myuid=185
+++ id -g
++ mygid=0
++ set +e
+++ getent passwd 185
++ uidentry=
++ set -e
++ '[' -z '' ']'
++ '[' -w /etc/passwd ']'
++ echo '185:x:185:0:anonymous uid:/opt/spark:/bin/false'
++ '[' -z '' ']'
+++ java -XshowSettings:properties -version
+++ grep java.home
+++ awk '{print $3}'
++ JAVA_HOME=/usr/lib/jvm/applejdk-11.0.25.9.2
++ SPARK_CLASSPATH=':/opt/spark/jars/*'
++ env
++ grep SPARK_JAVA_OPT_
++ sort -t_ -k4 -n
++ sed 's/[^=]*=\(.*\)/\1/g'
+++ command -v readarray
++ '[' readarray ']'
++ readarray -t SPARK_EXECUTOR_JAVA_OPTS
++ '[' -n '' ']'
++ '[' -z x ']'
++ export PYSPARK_PYTHON
++ '[' -z x ']'
++ export PYSPARK_DRIVER_PYTHON
++ '[' -n '' ']'
++ '[' -z ']'
++ '[' -z x ']'
++ SPARK_CLASSPATH='/opt/spark/conf::/opt/spark/jars/*'
++ case "$1" in
++ shift 1
++ CMD=("$SPARK_HOME/bin/spark-submit" --conf "spark.driver.bindAddress=$SPARK_DRIVER_BIND_ADDRESS" --deploy-mode client "$@")
++ exec /usr/bin/tini -s -- /opt/spark/bin/spark-submit --conf spark.driver.bindAddress=240.59.219.0 --deploy-mode client --proxy-user rupesh_raghavan --properties-file /opt/spark/conf/spark.properties --class org.apache.spark.deploy.PythonRunner s3a://aiml-prod-artifacts/skate_uploaded/20250110/64df823c-99db-4ed3-beca-8c117b3b0e0c/atalanta_stc_update.py
+Running driver with proxy user. Cluster manager: Kubernetes
+25/01/10 19:29:51 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+25/01/10 19:29:52 WARN MetricsConfig: Cannot locate configuration: tried hadoop-metrics2-s3a-file-system.properties,hadoop-metrics2.properties
+25/01/10 19:29:52 INFO MetricsSystemImpl: Scheduled Metric snapshot period at 10 second(s).
+25/01/10 19:29:52 INFO MetricsSystemImpl: s3a-file-system metrics system started
+25/01/10 19:29:54 INFO Utils: Fetching s3a://aiml-prod-artifacts/skate_uploaded/20250110/64df823c-99db-4ed3-beca-8c117b3b0e0c/atalanta_stc_update.py to /tmp/spark-caca5617-3d7c-44c1-8b6b-a97eec4ba25a/fetchFileTemp10706424360059330272.tmp
+25/01/10 19:29:55 INFO SparkContext: Running Spark version 3.4.0.53-apple-aiml
+25/01/10 19:29:55 INFO DriverLogger: Added a local log appender at: /tmp/driver.log
+25/01/10 19:29:55 INFO ResourceUtils: ==============================================================
+25/01/10 19:29:55 INFO ResourceUtils: No custom resources configured for spark.driver.
+25/01/10 19:29:55 INFO ResourceUtils: ==============================================================
+25/01/10 19:29:55 INFO SparkContext: Submitted application: Atalanta stc data gen
+25/01/10 19:29:55 INFO ResourceProfile: Default ResourceProfile created, executor resources: Map(cores -> name: cores, amount: 1, script: , vendor: , memory -> name: memory, amount: 1024, script: , vendor: , offHeap -> name: offHeap, amount: 0, script: , vendor: ), task resources: Map(cpus -> name: cpus, amount: 1.0)
+25/01/10 19:29:55 INFO ResourceProfile: Limiting resource is cpus at 1 tasks per executor
+25/01/10 19:29:55 INFO ResourceProfileManager: Added ResourceProfile id: 0
+25/01/10 19:29:55 INFO SecurityManager: Changing view acls to: 185,rupesh_raghavan
+25/01/10 19:29:55 INFO SecurityManager: Changing modify acls to: 185,rupesh_raghavan
+25/01/10 19:29:55 INFO SecurityManager: Changing view acls groups to: 
+25/01/10 19:29:55 INFO SecurityManager: Changing modify acls groups to: 
+25/01/10 19:29:55 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users with view permissions: 185, rupesh_raghavan; groups with view permissions: EMPTY; users with modify permissions: 185, rupesh_raghavan; groups with modify permissions: EMPTY
+25/01/10 19:29:55 INFO Utils: Successfully started service 'sparkDriver' on port 7078.
+25/01/10 19:29:56 INFO SparkEnv: Registering MapOutputTracker
+25/01/10 19:29:56 INFO SparkEnv: Registering BlockManagerMaster
+25/01/10 19:29:56 INFO BlockManagerMasterEndpoint: Using org.apache.spark.storage.DefaultTopologyMapper for getting topology informatio
+n
+25/01/10 19:29:56 INFO BlockManagerMasterEndpoint: BlockManagerMasterEndpoint up
+25/01/10 19:29:56 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+25/01/10 19:29:56 INFO DiskBlockManager: Created local directory at /var/data/spark-4e3a1ec3-2846-4b51-a4df-fed0ef123713/blockmgr-7a72bca7-dd83-427e-a16c-f05f9118bdaf
+25/01/10 19:29:56 INFO MemoryStore: MemoryStore started with capacity 2.2 GiB
+25/01/10 19:29:56 INFO SparkEnv: Registering OutputCommitCoordinator
+25/01/10 19:29:56 INFO JettyUtils: Start Jetty 0.0.0.0:4040 for SparkUI
+25/01/10 19:29:56 INFO Utils: Successfully started service 'SparkUI' on port 4040.
+25/01/10 19:29:56 INFO DriverPluginContainer: Initialized driver component for plugin com.apple.spark.callhome.plugins.CallHomeSparkPlugin.
+25/01/10 19:29:56 INFO SparkKubernetesClientFactory: Auto-configuring K8S client using current context from users K8S config file
+25/01/10 19:29:57 INFO ExecutorPodsAllocator: Going to request 2 executors from Kubernetes for ResourceProfile Id: 0, target: 2, known: 0, sharedSlotFromPendingPods: 2147483647.
+25/01/10 19:29:57 INFO ExecutorPodsAllocator: Found 0 reusable PVCs from 0 PVCs
+25/01/10 19:29:57 INFO KubernetesClientUtils: Spark configuration files loaded from Some(/opt/spark/conf) : log4j2.properties
+25/01/10 19:29:58 INFO KubernetesClientUtils: Spark configuration files loaded from Some(/opt/spark/conf) : log4j2.properties
+25/01/10 19:29:58 INFO BasicExecutorFeatureStep: Adding decommission script to lifecycle
+25/01/10 19:29:58 INFO Utils: Successfully started service 'org.apache.spark.network.netty.NettyBlockTransferService' on port 7079.
+25/01/10 19:29:58 INFO NettyBlockTransferService: Server created on ranger-job-5d14809451b19c8e-driver-svc.spark-app-003.svc 240.59.219.0:7079
+25/01/10 19:29:58 INFO BlockManager: Using org.apache.spark.storage.RandomBlockReplicationPolicy for block replication policy
+25/01/10 19:29:58 INFO BlockManagerMaster: Registering BlockManager BlockManagerId(driver, ranger-job-5d14809451b19c8e-driver-svc.spark-app-003.svc, 7079, None)
+25/01/10 19:29:58 INFO BlockManagerMasterEndpoint: Registering block manager ranger-job-5d14809451b19c8e-driver-svc.spark-app-003.svc:7079 with 2.2 GiB RAM, BlockManagerId(driver, ranger-job-5d14809451b19c8e-driver-svc.spark-app-003.svc, 7079, None)
+25/01/10 19:29:58 INFO BlockManagerMaster: Registered BlockManager BlockManagerId(driver, ranger-job-5d14809451b19c8e-driver-svc.spark-app-003.svc, 7079, None)
+25/01/10 19:29:58 INFO BlockManager: Initialized BlockManager: BlockManagerId(driver, ranger-job-5d14809451b19c8e-driver-svc.spark-app-003.svc, 7079, None)
+25/01/10 19:29:58 INFO KubernetesClientUtils: Spark configuration files loaded from Some(/opt/spark/conf) : log4j2.properties
+25/01/10 19:29:58 INFO BasicExecutorFeatureStep: Adding decommission script to lifecycle
+25/01/10 19:30:01 INFO RollingEventLogFilesWriter: Logging events to s3a://sparkhistory-prod/eventlog/eventlog_v2_spark-0066fd3d2dca48d08f56ceda6c8fcada/events_1_spark-0066fd3d2dca48d08f56ceda6c8fcada.zstd
+25/01/10 19:30:01 WARN S3ABlockOutputStream: Application invoked the Syncable API against stream writing to eventlog/eventlog_v2_spark-0066fd3d2dca48d08f56ceda6c8fcada/events_1_spark-0066fd3d2dca48d08f56ceda6c8fcada.zstd. This is unsupported
+25/01/10 19:30:01 INFO SparkContext: Registered acs spark runtime listener com.apple.spark.callhome.listener.SparkCallHomeListenerV2
+25/01/10 19:30:01 INFO SparkContext: Registered listener io.openlineage.spark.agent.OpenLineageSparkListener
+25/01/10 19:30:04 INFO KubernetesClusterSchedulerBackend$KubernetesDriverEndpoint: No executor found for 240.59.120.48:57982
+25/01/10 19:30:04 INFO KubernetesClusterSchedulerBackend$KubernetesDriverEndpoint: No executor found for 240.59.16.84:35086
+25/01/10 19:30:05 INFO KubernetesClusterSchedulerBackend$KubernetesDriverEndpoint: Registered executor NettyRpcEndpointRef(spark-client://Executor) (240.59.16.84:47306) with ID 2,  ResourceProfileId 0
+25/01/10 19:30:05 INFO KubernetesClusterSchedulerBackend$KubernetesDriverEndpoint: Registered executor NettyRpcEndpoint
+Ref(spark-client://Executor) (240.59.120.48:46688) with ID 1,  ResourceProfileId 0
+25/01/10 19:30:05 INFO KubernetesClusterSchedulerBackend: SchedulerBackend is ready for scheduling beginning after reached minRegisteredResourcesRatio: 0.8
+25/01/10 19:30:05 INFO BlockManagerMasterEndpoint: Registering block manager 240.59.16.84:39785 with 413.9 MiB RAM, BlockManagerId(2, 240.59.16.84, 39785, None)
+25/01/10 19:30:05 INFO BlockManagerMasterEndpoint: Registering block manager 240.59.120.48:38181 with 413.9 MiB RAM, BlockManagerId(1, 240.59.120.48, 38181, None)
+25/01/10 19:30:05 INFO SharedState: Setting hive.metastore.warehouse.dir ('null') to the value of spark.sql.warehouse.dir.
+25/01/10 19:30:05 INFO SharedState: Warehouse path is 's3a://og50-hms-s3-01/warehouse'.
+25/01/10 19:30:08 INFO InMemoryFileIndex: It took 1516 ms to list leaf files for 1 paths.
+25/01/10 19:30:09 INFO SparkContext: Starting job: parquet at NativeMethodAccessorImpl.java:0
+25/01/10 19:30:09 INFO DAGScheduler: Got job 0 (parquet at NativeMethodAccessorImpl.java:0) with 1 output partitions
+25/01/10 19:30:09 INFO DAGScheduler: Final stage: ResultStage 0 (parquet at NativeMethodAccessorImpl.java:0)
+25/01/10 19:30:09 INFO DAGScheduler: Parents of final stage: List()
+25/01/10 19:30:09 INFO DAGScheduler: Missing parents: List()
+25/01/10 19:30:09 INFO DAGScheduler: Submitting ResultStage 0 (MapPartitionsRDD[1] at parquet at NativeMethodAccessorImpl.java:0), which has no missing parents
+25/01/10 19:30:09 INFO RddExecutionContext: Config field is not HadoopMapRedWriteConfigUtil or HadoopMapReduceWriteConfigUtil, it's org.apache.spark.rdd.RDD$$Lambda$2094/0x000000084121f040
+25/01/10 19:30:09 INFO RddExecutionContext: Found job conf from RDD Configuration: core-default.xml, core-site.xml, mapred-default.xml, mapred-site.xml, yarn-default.xml, yarn-site.xml, hdfs-default.xml, hdfs-rbf-default.xml, hdfs-site.xml, hdfs-rbf-site.xml
+25/01/10 19:30:09 INFO RddExecutionContext: Found output path s3a://aiml-siri-perception-default/unstructured/atalanta_data_mining/fr_fr_v2/test/meta_data/partition=0 from RDD MapPartitionsRDD[1] at parquet at NativeMethodAccessorImpl.java:0
+25/01/10 19:30:09 INFO MemoryStore: Block broadcast_0 stored as values in memory (estimated size 115.1 KiB, free 2.2 GiB)
+25/01/10 19:30:09 INFO MemoryStore: Block broadcast_0_piece0 stored as bytes in memory (estimated size 27.0 KiB, free 2.2 GiB)
+25/01/10 19:30:09 INFO BlockManagerInfo: Added broadcast_0_piece0 in memory on ranger-job-5d14809451b19c8e-driver-svc.spark-app-003.svc:7079 (size: 27.0 KiB, free: 2.2 GiB)
+25/01/10 19:30:09 INFO SparkContext: Created broadcast 0 from broadcast at DAGScheduler.scala:1541
+25/01/10 19:30:09 INFO DAGScheduler: Submitting 1 missing tasks from ResultStage 0 (MapPartitionsRDD[1] at parquet at NativeMethodAccessorImpl.java:0) (first 15 tasks are for partitions Vector(0))
+25/01/10 19:30:09 INFO TaskSchedulerImpl: Adding task set 0.0 with 1 tasks resource profile 0
+25/01/10 19:30:09 INFO TaskSetManager: Starting task 0.0 in stage 0.0 (TID 0) (240.59.16.84, executor 2, partition 0, PROCESS_LOCAL, 7649 bytes) 
+25/01/10 19:30:09 ERROR EventEmitter: Could not emit lineage w/ exception
+io.openlineage.client.OpenLineageClientException: java.net.UnknownHostException: marquez-siri-prod.aws.sea.g.apple.com: Name or service not known
+	at io.openlineage.client.transports.HttpTransport.emit(HttpTransport.java:128) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.client.transports.HttpTransport.emit(HttpTransport.java:111) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.client.OpenLineageClient.emit(OpenLineageClient.java:46) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.agent.EventEmitter.emit(EventEmitter.java:62) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.agent.lifecycle.RddExecutionContext.start(RddExecutionContext.java:230) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.
+0-aiml-datainfra]
+	at io.openlineage.spark.agent.OpenLineageSparkListener.lambda$onJobStart$10(OpenLineageSparkListener.java:193) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at java.util.Optional.ifPresent(Optional.java:183) ~[?:?]
+	at io.openlineage.spark.agent.OpenLineageSparkListener.onJobStart(OpenLineageSparkListener.java:189) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at org.apache.spark.scheduler.SparkListenerBus.doPostEvent(SparkListenerBus.scala:37) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.SparkListenerBus.doPostEvent$(SparkListenerBus.scala:28) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.AsyncEventQueue.doPostEvent(AsyncEventQueue.scala:37) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.AsyncEventQueue.doPostEvent(AsyncEventQueue.scala:37) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.util.ListenerBus.postToAll(ListenerBus.scala:117) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.util.ListenerBus.postToAll$(ListenerBus.scala:101) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.AsyncEventQueue.super$postToAll(AsyncEventQueue.scala:105) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+
+	at org.apache.spark.scheduler.AsyncEventQueue.$anonfun$dispatch$1(AsyncEventQueue.scala:105) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at scala.runtime.java8.JFunction0$mcJ$sp.apply(JFunction0$mcJ$sp.java:23) ~[scala-library-2.12.17.jar:?]
+	at scala.util.DynamicVariable.withValue(DynamicVariable.scala:62) ~[scala-library-2.12.17.jar:?]
+	at org.apache.spark.scheduler.AsyncEventQueue.org$apache$spark$scheduler$AsyncEventQueue$$dispatch(AsyncEventQueue.scala:100) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.AsyncEventQueue$$anon$2.$anonfun$run$1(AsyncEventQueue.scala:96) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.util.Utils$.tryOrStopSparkContext(Utils.scala:1471) [spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.AsyncEventQueue$$anon$2.run(AsyncEventQueue.scala:96) [spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+Caused by: java.net.UnknownHostException: marquez-siri-prod.aws.sea.g.apple.com: Name or service not known
+	at java.net.Inet6AddressImpl.lookupAllHostAddr(Native Method) ~[?:?]
+	at java.net.InetAddress$PlatformNameService.lookupAllHostAddr(InetAddress.java:930) ~[?:?]
+	at java.net.InetAddress.getAddressesFromNameService(InetAddress.java:1543) ~[?:?]
+	at java.net.InetAddress$NameServiceAddresses.get(InetAddress.java:848) ~[?:?]
+	at java.net.InetAddress.getAllByName0(InetAddress.java:1533) ~[?:?]
+	at java.net.InetAddress.getAllByName(InetAddress.java:1386) ~[?:?]
+	at java.net.InetAddress.getAllByName(InetAddress.java:1307) ~[?:?]
+	at io.openlineage.spark.shaded.org.apache.http.impl.conn.SystemDefaultDnsResolver.resolve(SystemDefaultDnsResolver.java:45) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.shaded.org.apache.http.impl.conn.DefaultHttpClientConnectionOperator.connect(DefaultHttpClientConnectionOperator.java:112) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.shaded.org.apache.http.impl.conn.PoolingHttpClientConnectionManager.connect(PoolingHttpClientConnectionManager.java:376) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+
+	at io.openlineage.spark.shaded.org.apache.http.impl.execchain.MainClientExec.establishRoute(MainClientExec.java:393) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.shaded.org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:236) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.shaded.org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:186) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.shaded.org.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:89) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.shaded.org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:110) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.shaded.org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.shaded.org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+
+	at io.openlineage.spark.shaded.org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:108) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.client.transports.HttpTransport.emit(HttpTransport.java:123) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	... 21 more
+25/01/10 19:30:10 INFO BlockManagerInfo: Added broadcast_0_piece0 in memory on 240.59.16.84:39785 (size: 27.0 KiB, free: 413.9 MiB)
+25/01/10 19:30:14 INFO TaskSetManager: Finished task 0.0 in stage 0.0 (TID 0) in 4614 ms on 240.59.16.84 (executor 2) (1/1)
+25/01/10 19:30:14 INFO TaskSchedulerImpl: Removed TaskSet 0.0, whose tasks have all completed, from pool 
+25/01/10 19:30:14 INFO DAGScheduler: ResultStage 0 (parquet at NativeMethodAccessorImpl.java:0) finished in 4.787 s
+25/01/10 19:30:14 INFO DAGScheduler: Job 0 is finished. Cancelling potential speculative or zombie tasks for this job
+25/01/10 19:30:14 INFO TaskSchedulerImpl: Killing all running tasks in stage 0: Stage finished
+25/01/10 19:30:14 INFO DAGScheduler: Job 0 finished: parquet at NativeMethodAccessorImpl.java:0, took 4.851646 s
+25/01/10 19:30:14 ERROR EventEmitter: Could not emit lineage w/ exception
+io.openlineage.client.OpenLineageClientException: java.net.UnknownHostException: marquez-siri-prod.aws.sea.g.apple.com
+	at io.openlineage.client.transports.HttpTransport.emit(HttpTransport.java:128) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.client.transports.HttpTransport.emit(HttpTransport.java:111) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.client.OpenLineageClient.emit(OpenLineageClient.java:46) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.agent.EventEmitter.emit(EventEmitter.java:62) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.agent.lifecycle.RddExecutionContext.end(RddExecutionContext.java:257) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.agent.OpenLineageSparkListener.onJobEnd(OpenLineageSparkListener.java:218) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at org.apache.spark.scheduler.SparkListenerBus.doPostEvent(SparkListenerBus.scala:39) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+
+	at org.apache.spark.scheduler.SparkListenerBus.doPostEvent$(SparkListenerBus.scala:28) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.AsyncEventQueue.doPostEvent(AsyncEventQueue.scala:37) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.AsyncEventQueue.doPostEvent(AsyncEventQueue.scala:37) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.util.ListenerBus.postToAll(ListenerBus.scala:117) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.util.ListenerBus.postToAll$(ListenerBus.scala:101) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.AsyncEventQueue.super$postToAll(AsyncEventQueue.scala:105) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.AsyncEventQueue.$anonfun$dispatch$1(AsyncEventQueue.scala:105) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at scala.runtime.java8.JFunction0$mcJ$sp.apply(JFunction0$mcJ$sp.java:23) ~[scala-library-2.12.17.jar:?]
+	at scala.util.DynamicVariable.withValue(DynamicVariable.scala:62) ~[scala-library-2.12.17.jar:?]
+	at org.apache.spark.scheduler.AsyncEventQueue.org$apache$spark$scheduler$AsyncEventQueue$$dispatch(AsyncEventQueue.scala:100) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.AsyncEventQueue$$anon$2.$anonfun$run$1(AsyncEventQueue.scala:96) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.util.Utils$.tryOrStopSparkContext(Utils.scala:1471) [spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.AsyncEventQueue$$anon$2.run(AsyncEventQueue.scala:96) [spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+Caused by: java.net.UnknownHostException: marquez-siri-prod.aws.sea.g.apple.com
+	at java.net.InetAddress$CachedAddresses.get(InetAddress.java:797) ~[?:?]
+	at java.net.InetAddress.getAllByName0(InetAddress.java:1533) ~[?:?]
+	at java.net.InetAddress.getAllByName(InetAddress.java:1386) ~[?:?]
+	at java.net.InetAddress.getAllByName(InetAddress.java:1307) ~[?:?]
+
+	at io.openlineage.spark.shaded.org.apache.http.impl.conn.SystemDefaultDnsResolver.resolve(SystemDefaultDnsResolver.java:45) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.shaded.org.apache.http.impl.conn.DefaultHttpClientConnectionOperator.connect(DefaultHttpClientConnectionOperator.java:112) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.shaded.org.apache.http.impl.conn.PoolingHttpClientConnectionManager.connect(PoolingHttpClientConnectionManager.java:376) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.shaded.org.apache.http.impl.execchain.MainClientExec.establishRoute(MainClientExec.java:393) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.shaded.org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:236) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.shaded.org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:186) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.shaded.org.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:89) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+
+	at io.openlineage.spark.shaded.org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:110) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.shaded.org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.shaded.org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.shaded.org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:108) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.client.transports.HttpTransport.emit(HttpTransport.java:123) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	... 19 more
+25/01/10 19:30:14 INFO BlockManagerInfo: Removed broadcast_0_piece0 on ranger-job-5d14809451b19c8e-driver-svc.spark-app-003.svc:7079 in memory (size: 27.0 KiB, free: 2.2 GiB)
+25/01/10 19:30:14 INFO BlockManagerInfo: Removed broadcast_0_piece0 on 240.59.16.84:39785 in memory (size: 27.0 KiB, free: 413.9 MiB)
+
+25/01/10 19:30:16 INFO CatalogUtil: Loading custom FileIO implementation: org.apache.iceberg.aws.s3.S3FileIO
+25/01/10 19:30:16 INFO HiveConf: Found configuration file null
+25/01/10 19:30:16 INFO metastore: Trying to connect to metastore with URI thrift://hms-batch-siri-prod-1.aws.sea.g.apple.com:9083
+25/01/10 19:30:16 INFO metastore: Opened a connection to metastore, current connections: 1
+25/01/10 19:30:16 WARN ShellBasedUnixGroupsMapping: unable to return groups for user rupesh_raghavan
+org.apache.hadoop.security.ShellBasedUnixGroupsMapping$PartialGroupNameException: The user name 'rupesh_raghavan' is not found. id: 'rupesh_raghavan': no such user
+id: 'rupesh_raghavan': no such user
+
+	at org.apache.hadoop.security.ShellBasedUnixGroupsMapping.resolvePartialGroupNames(ShellBasedUnixGroupsMapping.java:294) ~[hadoop-client-api-3.3.4.3-apple.jar:?]
+	at org.apache.hadoop.security.ShellBasedUnixGroupsMapping.getUnixGroups(ShellBasedUnixGroupsMapping.java:207) ~[hadoop-client-api-3.3.4.3-apple.jar:?]
+
+	at org.apache.hadoop.security.ShellBasedUnixGroupsMapping.getGroups(ShellBasedUnixGroupsMapping.java:97) ~[hadoop-client-api-3.3.4.3-apple.jar:?]
+	at org.apache.hadoop.security.JniBasedUnixGroupsMappingWithFallback.getGroups(JniBasedUnixGroupsMappingWithFallback.java:51) ~[hadoop-client-api-3.3.4.3-apple.jar:?]
+	at org.apache.hadoop.security.Groups$GroupCacheLoader.fetchGroupList(Groups.java:387) ~[hadoop-client-api-3.3.4.3-apple.jar:?]
+	at org.apache.hadoop.security.Groups$GroupCacheLoader.load(Groups.java:321) ~[hadoop-client-api-3.3.4.3-apple.jar:?]
+	at org.apache.hadoop.security.Groups$GroupCacheLoader.load(Groups.java:270) ~[hadoop-client-api-3.3.4.3-apple.jar:?]
+	at org.apache.hadoop.thirdparty.com.google.common.cache.LocalCache$LoadingValueReference.loadFuture(LocalCache.java:3529) ~[hadoop-client-runtime-3.3.4.3-apple.jar:1.1.1]
+	at org.apache.hadoop.thirdparty.com.google.common.cache.LocalCache$Segment.loadSync(LocalCache.java:2278) ~[hadoop-client-runtime-3.3.4.3-apple.jar:1.1.1]
+	at org.apache.hadoop.thirdparty.com.google.common.cache.LocalCache$Segment.lockedGetOrLoad(LocalCache.java:2155) ~[hadoop-client-runtime-3.3.4.3-apple.jar:1.1.1]
+	at org.apache.hadoop.thirdparty.com.google.common.cache.LocalCache$Segment.get(LocalCache.java:2045) ~[hadoop-client-runtime-3.3.4.3-apple.jar:1.1.1]
+	at org.apache.hadoop.thirdparty.com.google.common.cache.LocalCache.get(LocalCache.java:3962) ~[hadoop-client-runtime-3.3.4.3-apple.jar:1.1.1]
+	at org.apache.hadoop.thirdparty.com.google.common.cache.LocalCache.getOrLoad(LocalCache.java:3985) ~[hadoop-client-runtime-3.3.4.3-apple.jar:1.1.1]
+	at org.apache.hadoop.thirdparty.com.google.common.cache.LocalCache$LocalLoadingCache.get(LocalCache.java:4946) ~[hadoop-client-runtime-3.3.4.3-apple.jar:1.1.1]
+	at org.apache.hadoop.security.Groups.getGroups(Groups.java:228) ~[hadoop-client-api-3.3.4.3-apple.jar:?]
+	at org.apache.hadoop.security.UserGroupInformation.getGroups(UserGroupInformation.java:1734) ~[hadoop-client-api-3.3.4.3-apple.jar:?]
+	at org.apache.hadoop.security.UserGroupInformation.getGroupNames(UserGroupInformation.java:1722) ~[hadoop-client-api-3.3.4.3-apple.jar:?]
+	at org.apache.hadoop.hive.metastore.HiveMetaStoreClient.open(HiveMetaStoreClient.java:506) ~[hive-metastore-2.3.9.6-apple.jar:2.3.9.6-apple]
+	at org.apache.hadoop.hive.metastore.HiveMetaStoreClient.<init>(HiveMetaStoreClient.java:256) ~[hive-metastore-2.3.9.6-apple.jar:2.3.9.6-apple]
+
+	at jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method) ~[?:?]
+	at jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:62) ~[?:?]
+	at jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45) ~[?:?]
+	at java.lang.reflect.Constructor.newInstance(Constructor.java:490) ~[?:?]
+	at org.apache.hadoop.hive.metastore.MetaStoreUtils.newInstance(MetaStoreUtils.java:1764) ~[hive-metastore-2.3.9.6-apple.jar:2.3.9.6-apple]
+	at org.apache.hadoop.hive.metastore.RetryingMetaStoreClient.<init>(RetryingMetaStoreClient.java:83) ~[hive-metastore-2.3.9.6-apple.jar:2.3.9.6-apple]
+	at org.apache.hadoop.hive.metastore.RetryingMetaStoreClient.getProxy(RetryingMetaStoreClient.java:133) ~[hive-metastore-2.3.9.6-apple.jar:2.3.9.6-apple]
+	at org.apache.hadoop.hive.metastore.RetryingMetaStoreClient.getProxy(RetryingMetaStoreClient.java:104) ~[hive-metastore-2.3.9.6-apple.jar:2.3.9.6-apple]
+	at org.apache.hadoop.hive.metastore.RetryingMetaStoreClient.getProxy(RetryingMetaStoreClient.java:97) ~[hive-metastore-2.3.9.6-apple.jar:2.3.9.6-apple]
+	at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:?]
+	at jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62) ~[?:?]
+	at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[?:?]
+	at java.lang.reflect.Method.invoke(Method.java:566) ~[?:?]
+	at org.apache.iceberg.common.DynMethods$UnboundMethod.invokeChecked(DynMethods.java:60) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.common.DynMethods$UnboundMethod.invoke(DynMethods.java:72) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.common.DynMethods$StaticMethod.invoke(DynMethods.java:185) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.hive.HiveClientPool.newClient(HiveClientPool.java:63) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.hive.HiveClientPool.newClient(HiveClientPool.java:34) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.ClientPoolImpl.get(ClientPoolImpl.java:125) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.ClientPoolImpl.run(ClientPoolImpl.java:56) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.ClientPoolImpl.run(ClientPoolImpl.java:51) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.hive.CachedClientPool.run(CachedClientPool.java:122) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.hive.HiveTableOperations.doRefresh(HiveTableOperations.java:167) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.BaseMetastoreTableOperations.refresh(BaseMetastoreTableOperations.java:103) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.BaseMetastoreTableOperations.current(BaseMetastoreTableOperations.java:86) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.BaseMetastoreCatalog.loadTable(BaseMetastoreCatalog.java:47) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+
+	at org.apache.iceberg.shaded.com.github.benmanes.caffeine.cache.BoundedLocalCache.lambda$doComputeIfAbsent$14(BoundedLocalCache.java:2406) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at java.util.concurrent.ConcurrentHashMap.compute(ConcurrentHashMap.java:1908) ~[?:?]
+	at org.apache.iceberg.shaded.com.github.benmanes.caffeine.cache.BoundedLocalCache.doComputeIfAbsent(BoundedLocalCache.java:2404) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.shaded.com.github.benmanes.caffeine.cache.BoundedLocalCache.computeIfAbsent(BoundedLocalCache.java:2387) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.shaded.com.github.benmanes.caffeine.cache.LocalCache.computeIfAbsent(LocalCache.java:108) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.shaded.com.github.benmanes.caffeine.cache.LocalManualCache.get(LocalManualCache.java:62) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.CachingCatalog.loadTable(CachingCatalog.java:166) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.spark.SparkCatalog.load(SparkCatalog.java:757) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.iceberg.spark.SparkCatalog.loadTable(SparkCatalog.java:168) ~[iceberg-spark-runtime-3.4_2.12-1.3.0.5-apple-aiml-7.jar:1.3.0.5-apple-aiml-7]
+	at org.apache.spark.sql.connector.catalog.CatalogV2Util$.getTable(CatalogV2Util.scala:355) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.connector.catalog.CatalogV2Util$.loadTable(CatalogV2Util.scala:336) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+
+	at org.apache.spark.sql.catalyst.analysis.Analyzer$ResolveRelations$.$anonfun$resolveRelation$3(Analyzer.scala:1270) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at scala.Option.orElse(Option.scala:447) ~[scala-library-2.12.17.jar:?]
+	at org.apache.spark.sql.catalyst.analysis.Analyzer$ResolveRelations$.$anonfun$resolveRelation$1(Analyzer.scala:1269) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at scala.Option.orElse(Option.scala:447) ~[scala-library-2.12.17.jar:?]
+	at org.apache.spark.sql.catalyst.analysis.Analyzer$ResolveRelations$.org$apache$spark$sql$catalyst$analysis$Analyzer$ResolveRelations$$resolveRelation(Analyzer.scala:1261) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.analysis.Analyzer$ResolveRelations$$anonfun$apply$14.applyOrElse(Analyzer.scala:1124) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.analysis.Analyzer$ResolveRelations$$anonfun$apply$14.applyOrElse(Analyzer.scala:1088) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+
+	at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper.$anonfun$resolveOperatorsUpWithPruning$3(AnalysisHelper.scala:138) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.trees.CurrentOrigin$.withOrigin(TreeNode.scala:104) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper.$anonfun$resolveOperatorsUpWithPruning$1(AnalysisHelper.scala:138) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$.allowInvokingTransformsInAnalyzer(AnalysisHelper.scala:323) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper.resolveOperatorsUpWithPruning(AnalysisHelper.scala:134) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper.resolveOperatorsUpWithPruning$(AnalysisHelper.scala:130) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.plans.logical.LogicalPlan.resolveOperatorsUpWithPruning(LogicalPlan.scala:31) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.analysis.Analyzer$ResolveRelations$.apply(Analyzer.scala:1088) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.analysis.Analyzer$ResolveRelations$.apply(Analyzer.scala:1047) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.rules.RuleExecutor.$anonfun$execute$2(RuleExecutor.scala:222) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at scala.collection.LinearSeqOptimized.foldLeft(LinearSeqOptimized.scala:126) ~[scala-library-2.12.17.jar:?]
+	at scala.collection.LinearSeqOptimized.foldLeft$(LinearSeqOptimized.scala:122) ~[scala-library-2.12.17.jar:?]
+	at scala.collection.immutable.List.foldLeft(List.scala:91) ~[scala-library-2.12.17.jar:?]
+	at org.apache.spark.sql.catalyst.rules.RuleExecutor.$anonfun$execute$1(RuleExecutor.scala:219) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.rules.RuleExecutor.$anonfun$execute$1$adapted(RuleExecutor.scala:211) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+
+	at scala.collection.immutable.List.foreach(List.scala:431) ~[scala-library-2.12.17.jar:?]
+	at org.apache.spark.sql.catalyst.rules.RuleExecutor.execute(RuleExecutor.scala:211) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.analysis.Analyzer.org$apache$spark$sql$catalyst$analysis$Analyzer$$executeSameContext(Analyzer.scala:228) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.analysis.Analyzer.$anonfun$execute$1(Analyzer.scala:224) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.analysis.AnalysisContext$.withNewAnalysisContext(Analyzer.scala:173) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.analysis.Analyzer.execute(Analyzer.scala:224) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.analysis.Analyzer.execute(Analyzer.scala:188) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.rules.RuleExecutor.$anonfun$executeAndTrack$1(RuleExecutor.scala:182) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.QueryPlanningTracker$.withTracker(QueryPlanningTracker.scala:88) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.rules.RuleExecutor.executeAndTrack(RuleExecutor.scala:182) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.analysis.Analyzer.$anonfun$executeAndCheck$1(Analyzer.scala:209) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$.markInAnalyzer(AnalysisHelper.scala:330) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.analysis.Analyzer.executeAndCheck(Analyzer.scala:208) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.execution.QueryExecution.$anonfun$analyzed$1(QueryExecution.scala:76) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.QueryPlanningTracker.measurePhase(QueryPlanningTracker.scala:111) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$2(QueryExecution.scala:202) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.execution.QueryExecution$.withInternalError(QueryExecution.scala:526) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$1(QueryExecution.scala:202) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:827) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.execution.QueryExecution.executePhase(QueryExecution.scala:201) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.execution.QueryExecution.analyzed$lzycompute(QueryExecution.scala:76) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.execution.QueryExecution.analyzed(QueryExecution.scala:74) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.execution.QueryExecution.assertAnalyzed(QueryExecution.scala:66) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+
+	at org.apache.spark.sql.Dataset$.$anonfun$ofRows$1(Dataset.scala:89) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:827) [spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.Dataset$.ofRows(Dataset.scala:87) [spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.DataFrameReader.table(DataFrameReader.scala:608) [spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.SparkSession.table(SparkSession.scala:601) [spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:?]
+	at jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62) ~[?:?]
+	at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[?:?]
+	at java.lang.reflect.Method.invoke(Method.java:566) ~[?:?]
+	at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244) [py4j-0.10.9.7.jar:?]
+	at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:374) [py4j-0.10.9.7.jar:?]
+	at py4j.Gateway.invoke(Gateway.java:282) [py4j-0.10.9.7.jar:?]
+	at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132) [py4j-0.10.9.7.jar:?]
+
+	at py4j.commands.CallCommand.execute(CallCommand.java:79) [py4j-0.10.9.7.jar:?]
+	at py4j.ClientServerConnection.waitForCommands(ClientServerConnection.java:182) [py4j-0.10.9.7.jar:?]
+	at py4j.ClientServerConnection.run(ClientServerConnection.java:106) [py4j-0.10.9.7.jar:?]
+	at java.lang.Thread.run(Thread.java:829) [?:?]
+25/01/10 19:30:16 INFO metastore: Connected to metastore.
+25/01/10 19:30:16 INFO BaseMetastoreTableOperations: Refreshing table metadata from new version: s3a://aiml-prod-data-warehouse-default/warehouse/ml_eng_prod.db/uids_turn/metadata/25492-7c3fcf8f-8e0a-42fa-a7be-77ad6c4a2022.metadata.json
+25/01/10 19:30:19 INFO BaseMetastoreCatalog: Table loaded by catalog: iceberg.ml_eng_prod.uids_turn
+25/01/10 19:30:20 INFO AuthzUtils$: Retrieved identifier objects for planNode:InsertIntoHadoopFsRelationCommand => identifier:None : table:None : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:20 INFO AuthzUtils$: Retrieved identifier objects for planNode:Project => identifier:None : table:None : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:20 INFO AuthzUtils$: Retrieved identifier objects for planNode:Join => identifier:None : table:None : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:20 INFO AuthzUtils$: Retrieved identifier objects for planNode:Aggregate => identifier:None : table:None : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:20 INFO AuthzUtils$: Retrieved identifier objects for planNode:LogicalRelation => identifier:None : table:None : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:20 INFO AuthzUtils$: Retrieved identifier objects for planNode:Project => identifier:None : table:None : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:20 INFO AuthzUtils$: Retrieved identifier objects for planNode:Filter => identifier:None : table:None : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:20 INFO AuthzUtils$: Retrieved identifier objects for planNode:Filter => identifier:None : table:None : tableName:None : tableMeta:None : namespace:None : databaseName:None
+
+25/01/10 19:30:20 INFO AuthzUtils$: Retrieved identifier objects for planNode:DataSourceV2Relation => identifier:Some(ml_eng_prod.uids_turn) : table:Some(iceberg.ml_eng_prod.uids_turn) : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:20 INFO AuthzUtils$: identifier[org.apache.spark.sql.connector.catalog.IdentifierImpl]
+25/01/10 19:30:20 INFO AuthzUtils$: table:[org.apache.iceberg.spark.source.SparkTable]
+25/01/10 19:30:20 WARN package: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
+25/01/10 19:30:20 INFO SparkRangerAuthorizationExtension: Plan InsertIntoHadoopFsRelationCommand with identifiers Map(1989011365 -> ml_eng_prod.uids_turn): InsertIntoHadoopFsRelationCommand s3a://aiml-prod-artifacts/spark-test/stc_fr_fr_v2/test/meta_data, false, [partition#30], Parquet, [compression=snappy, __partition_columns=["partition"], path=s3a://aiml-prod-artifacts/spark-test/stc_fr_fr_v2/test/meta_data/], Overwrite, [date, utterance_id, audio_codec, invocation_source, data_sharing_optin_state, ui_cancelled_reason, word_count, system_locale, siri_input_locale, device_type, device_os, voice_gender, voice_accent, country_code, utterance, asr_confidence, utterance_duration_sec, signal_to_noise_ratio_decibels, executed_domain, loc_latitude, loc_longitude, category, device_hash, conditions, speaker_id, trigger_times_sec, labels, enrollment_count, hs_count, js_count, partition, stc_outcome]
++- Project [date#0, utterance_id#1, audio_codec#2, invocation_source#3, data_sharing_optin_state#4, ui_cancelled_reason#5, word_count#6, system_locale#7, siri_input_locale#8, device_type#9, device_os#10, voice_gender#11, voice_accent#12, country_code#13, utterance#14, asr_confidence#15L, utterance_duration_sec#16, signal_to_noise_ratio_decibels#17, executed_domain#18, loc_latitude#19, loc_longitude#20, category#21, device_hash#22, conditions#23, speaker_id#24, trigger_times_sec#25, labels#26, enrollment_count#27L, hs_count#28L, js_count#29L, partition#30, stc_outcome#393]
+   +- Join Inner, (utterance_id#1 = orch_request_id#248)
+
+      :- Aggregate [conditions#23, speaker_id#24, signal_to_noise_ratio_decibels#17, device_os#10, ui_cancelled_reason#5, trigger_times_sec#25, loc_longitude#20, partition#30, device_hash#22, device_type#9, country_code#13, data_sharing_optin_state#4, executed_domain#18, date#0, labels#26, js_count#29L, asr_confidence#15L, enrollment_count#27L, loc_latitude#19, hs_count#28L, category#21, utterance_duration_sec#16, word_count#6, utterance#14, audio_codec#2, system_locale#7, siri_input_locale#8, voice_accent#12, utterance_id#1, invocation_source#3, voice_gender#11], [date#0, utterance_id#1, audio_codec#2, invocation_source#3, data_sharing_optin_state#4, ui_cancelled_reason#5, word_count#6, system_locale#7, siri_input_locale#8, device_type#9, device_os#10, voice_gender#11, voice_accent#12, country_code#13, utterance#14, asr_confidence#15L, utterance_duration_sec#16, signal_to_noise_ratio_decibels#17, executed_domain#18, loc_latitude#19, loc_longitude#20, category#21, device_hash#22, conditions#23, speaker_id#24, trigger_times_sec#25, labels#26, enrollment_count#27L, hs_count#28L, js_count#29L, partition#30]
+      :  +- Relation [date#0,utterance_id#1,audio_codec#2,invocation_source#3,data_sharing_optin_state#4,ui_cancelled_reason#5,word_count#6,system_locale#7,siri_input_locale#8,device_type#9,device_os#10,voice_gender#11,voice_accent#12,country_code#13,utterance#14,asr_confidence#15L,utterance_duration_sec#16,signal_to_noise_ratio_decibels#17,executed_domain#18,loc_latitude#19,loc_longitude#20,category#21,device_hash#22,conditions#23,speaker_id#24,trigger_times_sec#25,labels#26,enrollment_count#27L,hs_count#28L,js_count#29L,partition#30] parquet
+      +- Project [stc_outcome#393, orch_request_id#248]
+         +- Filter ((Contains(device_type#122, iPhone) AND (Contains(build_id#75, 21) OR Contains(build_id#75, 22))) AND ((siri_input_locale_id#293 = FR-FR) AND Contains(invocation_type#202, HARDWARE_BUTTON)))
+            +- Filter ((date#108 >= 2024-07-15) AND (date#108 <= 2024-12-15))
+               +- RelationV2[asr_id#63, asr_id_ctx#64, asr_location#65, asr_location_ctx#66, asr_rc_cancelled_reason#67, asr_rc_cancelled_reason_ctx#68, assistant_id#69, assistant_id_ctx#70, audio_duration_ms#71, audio_duration_ms_ctx#72, audio_duration_ns#73L, audio_duration_ns_ctx#74, build_id#75, build_id_ctx#76, build_universal_rank#77, build_universal_rank_ctx#78, bundle_id#79, bundle_id_ctx#80, button_tap_type#81, button_tap_type_ctx#82, orch_cancelled_reason#83, orch_cancelled_reason_ctx#84, cdm_request_context_is_tap_to_edit#85, cdm_request_context_is_tap_to_edit_ctx#86, child_turn_ids#87, clustered_intent#88, clustered_intent_ctx#89, combined_dialogidentifier_cleaned#90, combined_dialogidentifier_cleaned_ctx#91, combined_dialogphase#92, combined_dialogphase_ctx#93, combined_speakeasy_category#94, combined_speakeasy_category_ctx#95, completionstatus#96, completionstatus_ctx#97, continuous_listening_enabled#98, continuous_listening_enabled_ctx#99, conversation_id#100, conversation_id_ctx#101, country_code#102, country_code_ctx#103, data_sharing_opt_in_state#104, data_sharing_opt_in_state_ctx#105, data_sharing_optin_state#106, data_sharing_optin_state_ctx#107, date#108, date_ctx#109, delegated_user_dialog_act#110, delegated_user_dialog_act_ctx#111, delegated_userdialogact_rewritten_utterance#112, delegated_userdialogact_rewritten_utterance_ctx#113, device_family_name#114, device_family_name_ctx#115, device_interface_family_name#116, device_interface_family_name_ctx#117, device_interface_id#118, device_interface_id_ctx#119, device_power#120, device_power_ctx#121, device_type#122, device_type_ctx#123, device_type_fuzzy_match#124, device_type_fuzzy_match_ctx#125, direct_action#126, dismissal_reason#127, dismissal_reason_ctx#128, displayed_siri_dialog_output#129, displayed_siri_dialog_output_ctx#130, domain_type#131, domain_type_ctx#132, domain_verb_synthesize#133, domain_verb_synthesize_ctx#134, dwell_secs#135, dwell_secs_ctx#136, ... 333 more fields] iceberg.ml_eng_prod.uids_turn iceberg.ml_eng_prod.uids_turn
+
+25/01/10 19:30:20 INFO S
+parkRangerAuthorizationExtension: Checking for serviceadmin privileges for ml_eng_prod.uids_turn
+25/01/10 19:30:20 INFO SparkRangerAuthorizationExtension: Checking for serviceadmin privileges for Array(ml_eng_prod)
+
+25/01/10 19:30:20 INFO RangerPluginConfig: PolicyEngineOptions: { evaluatorType: auto, evaluateDelegateAdminOnly: false, disableContextEnrichers: false, disableCustomConditions: false, disableTagPolicyEvaluation: false, enableTagEnricherWithLocalRefresher: false, disableTrieLookupPrefilter: false, optimizeTrieForRetrieval: false, cacheAuditResult: false }
+25/01/10 19:30:20 INFO AuditProviderFactory: AuditProviderFactory: creating..
+25/01/10 19:30:20 INFO AuditProviderFactory: AuditProviderFactory: initializing..
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: ranger.plugin.spark.policy.cache.dir=target/test-classes
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: xasecure.audit.is.enabled=true
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: ranger.plugin.spark.access.cluster.type=standalone
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: ranger.plugin.spark.plugin.password=UnprivilegedUserP4ss
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: ranger.plugin.spark.env=prod-oss
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: ranger.plugin.spark.urlauth.filesystem.schemes=hdfs:,file:.,wasb:,adl:,alluxio:
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: ranger.plugin.spark.rangerGroups.useDirectAPI=true
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: xasecure.audit.destination.solr.basic.auth.enabled=false
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: ranger.plugin.spark.policy.rest.url=https://ranger-siri-prod-1.aws.sea.g.apple.com
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: ranger.plugin.spark.use.rangerGroups=true
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: xasecure.audit.provider.summary.interval.ms=1000
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: xasecure.spark.update.xapolicies.on.grant.revoke=true
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: ranger.plugin.spark.unmappedPlanNodesAs=QUERY
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: xasecure.audit.destination.db=false
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: ranger.plugin.spark.ranger.is_secure=false
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: xasecure.audit.destination.solr=true
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: ranger.plugin.spark.access.cluster.name=local
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: ranger.plugin.spark.policy.pollIntervalMs=15000
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: xasecure.audit.provider.summary.enabled=true
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: ranger.plugin.spark.policy.source.impl=com.apple.aiml.spark.security.AdminRESTClient
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: xasecure.audit.destination.solr.urls=https://solr-siri-prod-1.aws.sea.g.apple.com/solr/ranger_audits
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: ranger.plugin.spark.plugin.user=rangerusersync
+25/01/10 19:30:20 INFO AuditProviderFactory: AUDIT PROPERTY: ranger.plugin.spark.rangerGroups.pollIntervalMs=300000
+25/01/10 19:30:20 INFO AuditProviderFactory: Audit destination xasecure.audit.destination.solr is set to true
+25/01/10 19:30:20 INFO AuditDestination: AuditDestination() enter
+25/01/10 19:30:20 INFO SolrAuditDestination: init() called
+25/01/10 19:30:20 INFO BaseAuditHandler: BaseAuditProvider.init()
+25/01/10 19:30:20 INFO BaseAuditHandler: propPrefix=xasecure.audit.destination.solr
+
+25/01/10 19:30:20 INFO BaseAuditHandler: Using providerName from property prefix. providerName=solr
+25/01/10 19:30:20 INFO BaseAuditHandler: providerName=solr
+25/01/10 19:30:20 INFO SolrAuditDestination: ==>SolrAuditDestination.init()
+25/01/10 19:30:20 INFO SolrAuditDestination: In solrAuditDestination.init() : JAAS Configuration set as [null]
+25/01/10 19:30:20 WARN SolrAuditDestination: No Client JAAS config present in solr audit config. Ranger Audit to Kerberized Solr will fail...
+25/01/10 19:30:20 INFO SolrAuditDestination: Loading SolrClient JAAS config from Ranger audit config if present...
+25/01/10 19:30:20 INFO SolrAuditDestination: In solrAuditDestination.init() (finally) : JAAS Configuration set as [null]
+25/01/10 19:30:20 INFO SolrAuditDestination: <==SolrAuditDestination.init()
+25/01/10 19:30:20 INFO SolrAuditDestination: Solr zkHosts=null, solrURLs=https://solr-siri-prod-1.aws.sea.g.apple.com/solr/ranger_audits, collectionName=ranger_audits
+25/01/10 19:30:20 INFO SolrAuditDestination: Connecting to Solr using URLs=[https://solr-siri-prod-1.aws.sea.g.apple.com/solr/ranger_audits]
+25/01/10 19:30:20 WARN Krb5HttpClientBuilder: spark_ranger.org.apache.solr.client.solrj.impl.Krb5HttpClientBuilder is configured without specifying system property 'java.security.auth.login.config'
+25/01/10 19:30:20 INFO AuditProviderFactory: xasecure.audit.destination.solr.queue is not set. Setting queue to batch for solr
+25/01/10 19:30:20 INFO AuditProviderFactory: queue for solr is batch
+25/01/10 19:30:20 INFO AuditQueue: BaseAuditProvider.init()
+25/01/10 19:30:20 INFO BaseAuditHandler: BaseAuditProvider.init()
+25/01/10 19:30:20 INFO BaseAuditHandler: propPrefix=xasecure.audit.destination.solr.batch
+25/01/10 19:30:20 INFO BaseAuditHandler: providerName=batch
+25/01/10 19:30:20 INFO AuditQueue: File spool is disabled for batch
+25/01/10 19:30:20 INFO AuditProviderFactory: Using v3 audit configuration
+25/01/10 19:30:20 INFO AuditProviderFactory: AuditSummaryQueue is enabled
+25/01/10 19:30:20 INFO AuditQueue: BaseAuditProvider.init()
+25/01/10 19:30:20 INFO BaseAuditHandler: BaseAuditProvider.init()
+25/01/10 19:30:20 INFO BaseAuditHandler: propPrefix=xasecure.audit.provider
+25/01/10 19:30:20 INFO BaseAuditHandler: providerName=summary
+25/01/10 19:30:20 INFO AuditQueue: File spool is disabled for summary
+25/01/10 19:30:20 INFO AuditSummaryQueue: maxSummaryInterval=1000, name=summary
+25/01/10 19:30:20 INFO AuditQueue: BaseAuditProvider.init()
+25/01/10 19:30:20 INFO BaseAuditHandler: BaseAuditProvider.init()
+25/01/10 19:30:20 INFO BaseAuditHandler: propPrefix=xasecure.audit.provider.async
+25/01/10 19:30:20 INFO BaseAuditHandler: providerName=async
+25/01/10 19:30:20 INFO AuditQueue: File spool is disabled for async
+25/01/10 19:30:20 INFO AuditProviderFactory: Starting audit queue spark.async
+25/01/10 19:30:20 INFO AuditBatchQueue: Creating ArrayBlockingQueue with maxSize=1048576
+25/01/10 19:30:20 INFO AuditProviderFactory: RangerAsyncAuditCleanup: Waiting to audit cleanup start signal
+25/01/10 19:30:20 INFO RangerBasePlugin: Created PolicyRefresher Thread(PolicyRefresher(serviceName=hive)-155)
+
+25/01/10 19:30:21 INFO RangerRolesProvider: RangerRolesProvider(serviceName=hive): found updated version. lastKnownRoleVersion=-1; newVersion=150
+25/01/10 19:30:21 INFO PolicyRefresher: PolicyRefresher(serviceName=hive): found updated version. lastKnownVersion=-1; newVersion=324
+25/01/10 19:30:21 INFO RangerPolicyRepository: This policy engine contains 9 policy evaluators
+25/01/10 19:30:21 INFO RangerPolicyRepository: This policy engine contains 52 policy evaluators
+25/01/10 19:30:21 INFO RangerSparkPlugin$: Policy cache directory successfully set to /opt/spark/work-dir/target/test-classes
+25/01/10 19:30:21 INFO AuthzUtils$: Retrieved identifier objects for planNode:DataSourceV2Relation => identifier:Some(ml_eng_prod.uids_turn) : table:Some(iceberg.ml_eng_prod.uids_turn) : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:21 INFO AuthzUtils$: identifier[org.apache.spark.sql.connector.catalog.IdentifierImpl]
+25/01/10 19:30:21 INFO AuthzUtils$: table:[org.apache.iceberg.spark.source.SparkTable]
+25/01/10 19:30:21 INFO AuthzUtils$: Identifiers from plan: Map(1989011365 -> ml_eng_prod.uids_turn)
+25/01/10 19:30:21 INFO AuthzUtils$: Retrieved identifier objects for planNode:DataSourceV2Relation => identifier:Some(ml_eng_prod.uids_turn) : table:Some(iceberg.ml_eng_prod.uids_turn) : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:21 INFO AuthzUtils$: identifier[org.apache.spark.sql.connector.catalog.IdentifierImpl]
+25/01/10 19:30:21 INFO AuthzUtils$: table:[org.apache.iceberg.spark.source.SparkTable]
+25/01/10 19:30:21 INFO AuthzUtils$: TableIdentifier from Identifier: `ml_eng_prod`.`uids_turn`
+25/01/10 19:30:21 ERROR SparkRangerAuthorizationExtension: *** Permission denied: user [rupesh_raghavan] does not have [UPDATE] privilege on [ml_eng_prod/uids_turn/stc_outcome,orch_request_id,device_type,build_id,build_id,siri_input_locale_id,invocation_type,date,date] ***
+Traceback (most recent call last):
+  File "/tmp/spark-caca5617-3d7c-44c1-8b6b-a97eec4ba25a/atalanta_stc_update.py", line 73, in <module>
+    ).parquet(test_meta_parquet_path).explain(mode="extended")
+  File "/opt/spark/python/lib/pyspark.zip/pyspark/sql/readwriter.py", line 1656, in parquet
+  File "/opt/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+  File "/opt/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 169, in deco
+  File "/opt/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 326, in get_return_value
+py4j.protocol.Py4JJavaError: An error occurred while calling o183.parquet.
+: com.apple.aiml.spark.security.SparkAccessControlException: Permission denied: user [rupesh_raghavan] does not have [UPDATE] privilege on [ml_eng_prod/uids_turn/stc_outcome,orch_request_id,device_type,build_id,build_id,siri_input_locale_id,invocation_type,date,date]
+	at com.apple.aiml.spark.security.RangerSparkAuthorizer$.$anonfun$checkPrivileges$6(RangerSparkAuthorizer.scala:161)
+	at com.apple.aiml.spark.security.RangerSparkAuthorizer$.$anonfun$checkPrivileges$6$adapted(RangerSparkAuthorizer.scala:157)
+
+	at scala.collection.Iterator.foreach(Iterator.scala:943)
+	at scala.collection.Iterator.foreach$(Iterator.scala:943)
+	at scala.collection.AbstractIterator.foreach(Iterator.scala:1431)
+	at scala.collection.IterableLike.foreach(IterableLike.scala:74)
+	at scala.collection.IterableLike.foreach$(IterableLike.scala:73)
+	at scala.collection.AbstractIterable.foreach(Iterable.scala:56)
+	at com.apple.aiml.spark.security.RangerSparkAuthorizer$.$anonfun$checkPrivileges$3(RangerSparkAuthorizer.scala:157)
+	at com.apple.aiml.spark.security.RangerSparkAuthorizer$.$anonfun$checkPrivileges$3$adapted(RangerSparkAuthorizer.scala:128)
+	at scala.collection.mutable.ResizableArray.foreach(ResizableArray.scala:62)
+	at scala.collection.mutable.ResizableArray.foreach$(ResizableArray.scala:55)
+	at scala.collection.mutable.ArrayBuffer.foreach(ArrayBuffer.scala:49)
+	at com.apple.aiml.spark.security.RangerSparkAuthorizer$.checkPrivileges(RangerSparkAuthorizer.scala:128)
+	at org.apache.spark.sql.catalyst.optimizer.SparkRangerAuthorizationExtension.$anonfun$apply$1(SparkRangerAuthorizationExtension.scala:115)
+	at scala.util.Try$.apply(Try.scala:213)
+	at org.apache.spark.sql.catalyst.optimizer.SparkRangerAuthorizationExtension.apply(SparkRangerAuthorizationExtension.scala:51)
+	at org.apache.spark.sql.catalyst.optimizer.SparkRangerAuthorizationExtension.apply(SparkRangerAuthorizationExtension.scala:26)
+	at org.apache.spark.sql.catalyst.rules.RuleExecutor.$anonfun$execute$2(RuleExecutor.scala:222)
+	at scala.collection.LinearSeqOptimized.foldLeft(LinearSeqOptimized.scala:126)
+	at scala.collection.LinearSeqOptimized.foldLeft$(LinearSeqOptimized.scala:122)
+	at scala.collection.immutable.List.foldLeft(List.scala:91)
+	at org.apache.spark.sql.catalyst.rules.RuleExecutor.$anonfun$execute$1(RuleExecutor.scala:219)
+	at org.apache.spark.sql.catalyst.rules.RuleExecutor.$anonfun$execute$1$adapted(RuleExecutor.scala:211)
+	at scala.collection.immutable.List.foreach(List.scala:431)
+	at org.apache.spark.sql.catalyst.rules.RuleExecutor.execute(RuleExecutor.scala:211)
+	at org.apache.spark.sql.catalyst.rules.RuleExecutor.$anonfun$executeAndTrack$1(RuleExecutor.scala:182)
+	at org.apache.spark.sql.catalyst.QueryPlanningTracker$.withTracker(QueryPlanningTracker.scala:88)
+	at org.apache.spark.sql.catalyst.rules.RuleExecutor.executeAndTrack(RuleExecutor.scala:182)
+	at org.apache.spark.sql.execution.QueryExecution.$anonfun$optimizedPlan$1(QueryExecution.scala:143)
+	at org.apache.spark.sql.catalyst.QueryPlanningTracker.measurePhase(QueryPlanningTracker.scala:111)
+	at org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$2(QueryExecution.scala:202)
+	at org.apache.spark.sql.execution.QueryExecution$.withInternalError(QueryExecution.scala:526)
+	at org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$1(QueryExecution.scala:202)
+
+	at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:827)
+	at org.apache.spark.sql.execution.QueryExecution.executePhase(QueryExecution.scala:201)
+	at org.apache.spark.sql.execution.QueryExecution.optimizedPlan$lzycompute(QueryExecution.scala:139)
+	at org.apache.spark.sql.execution.QueryExecution.optimizedPlan(QueryExecution.scala:135)
+	at org.apache.spark.sql.execution.QueryExecution.assertOptimized(QueryExecution.scala:153)
+	at org.apache.spark.sql.execution.QueryExecution.executedPlan$lzycompute(QueryExecution.scala:171)
+	at org.apache.spark.sql.execution.QueryExecution.executedPlan(QueryExecution.scala:168)
+	at org.apache.spark.sql.execution.QueryExecution.simpleString(QueryExecution.scala:221)
+	at org.apache.spark.sql.execution.QueryExecution.org$apache$spark$sql$execution$QueryExecution$$explainString(QueryExecution.scala:266)
+	at org.apache.spark.sql.execution.QueryExecution.explainString(QueryExecution.scala:235)
+	at org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId$6(SQLExecution.scala:112)
+
+	at org.apache.spark.sql.execution.SQLExecution$.withSQLConfPropagated(SQLExecution.scala:195)
+	at org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId$1(SQLExecution.scala:103)
+	at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:827)
+	at org.apache.spark.sql.execution.SQLExecution$.withNewExecutionId(SQLExecution.scala:65)
+	at org.apache.spark.sql.execution.QueryExecution$$anonfun$eagerlyExecuteCommands$1.applyOrElse(QueryExecution.scala:98)
+	at org.apache.spark.sql.execution.QueryExecution$$anonfun$eagerlyExecuteCommands$1.applyOrElse(QueryExecution.scala:94)
+	at org.apache.spark.sql.catalyst.trees.TreeNode.$anonfun$transformDownWithPruning$1(TreeNode.scala:512)
+	at org.apache.spark.sql.catalyst.trees.CurrentOrigin$.withOrigin(TreeNode.scala:104)
+	at org.apache.spark.sql.catalyst.trees.TreeNode.transformDownWithPruning(TreeNode.scala:512)
+	at org.apache.spark.sql.catalyst.plans.logical.LogicalPlan.org$apache$spark$sql$catalyst$plans$logical$AnalysisHelper$$super$transformDownWithPruning(LogicalPlan.scala:31)
+	at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper.transformDownWithPruning(AnalysisHelper.scala:267)
+	at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper.transformDownWithPruning$(AnalysisHelper.scala:263)
+	at org.apache.spark.sql.catalyst.plans.logical.LogicalPlan.transformDownWithPruning(LogicalPlan.scala:31)
+	at org.apache.spark.sql.catalyst.plans.logical.LogicalPlan.transformDownWithPruning(LogicalPlan.scala:31)
+
+	at org.apache.spark.sql.catalyst.trees.TreeNode.transformDown(TreeNode.scala:488)
+	at org.apache.spark.sql.execution.QueryExecution.eagerlyExecuteCommands(QueryExecution.scala:94)
+	at org.apache.spark.sql.execution.QueryExecution.commandExecuted$lzycompute(QueryExecution.scala:81)
+	at org.apache.spark.sql.execution.QueryExecution.commandExecuted(QueryExecution.scala:79)
+	at org.apache.spark.sql.execution.QueryExecution.assertCommandExecuted(QueryExecution.scala:133)
+	at org.apache.spark.sql.DataFrameWriter.runCommand(DataFrameWriter.scala:856)
+	at org.apache.spark.sql.DataFrameWriter.saveToV1Source(DataFrameWriter.scala:387)
+	at org.apache.spark.sql.DataFrameWriter.saveInternal(DataFrameWriter.scala:360)
+
+	at org.apache.spark.sql.DataFrameWriter.save(DataFrameWriter.scala:239)
+	at org.apache.spark.sql.DataFrameWriter.parquet(DataFrameWriter.scala:789)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
+	at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:374)
+	at py4j.Gateway.invoke(Gateway.java:282)
+	at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
+	at py4j.commands.CallCommand.execute(CallCommand.java:79)
+	at py4j.ClientServerConnection.waitForCommands(ClientServerConnection.java:182)
+	at py4j.ClientServerConnection.run(ClientServerConnection.java:106)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+
+25/01/10 19:30:21 INFO SparkContext: SparkContext is stopping with exitCode 0.
+25/01/10 19:30:21 INFO SparkUI: Stopped Spark web UI at http://ranger-job-5d14809451b19c8e-driver-svc.spark-app-003.svc:4040
+25/01/10 19:30:21 INFO KubernetesClusterSchedulerBackend: Shutting down all executors
+25/01/10 19:30:21 INFO AuthzUtils$: Retrieved identifier objects for planNode:InsertIntoHadoopFsRelationCommand => identifier:None : table:None : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:21 INFO KubernetesClusterSchedulerBackend$KubernetesDriverEndpoint: Asking each executor to shut down
+25/01/10 19:30:21 INFO AuthzUtils$: Retrieved identifier objects for planNode:Project => identifier:None : table:None : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:21 INFO AuthzUtils$: Retrieved identifier objects for planNode:Join => identifier:None : table:None : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:21 INFO AuthzUtils$: Retrieved identifier objects for planNode:Aggregate => identifier:None : table:None : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:21 INFO AuthzUtils$: Retrieved identifier objects for planNode:LogicalRelation => identifier:None : table:None : tableName:None : tableMeta:None : namespace:None : databaseName:None
+
+25/01/10 19:30:21 INFO AuthzUtils$: Retrieved identifier objects for planNode:Project => identifier:None : table:None : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:21 INFO AuthzUtils$: Retrieved identifier objects for planNode:Filter => identifier:None : table:None : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:21 INFO AuthzUtils$: Retrieved identifier objects for planNode:Filter => identifier:None : table:None : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:21 INFO AuthzUtils$: Retrieved identifier objects for planNode:DataSourceV2Relation => identifier:Some(ml_eng_prod.uids_turn) : table:Some(iceberg.ml_eng_prod.uids_turn) : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:21 INFO AuthzUtils$: identifier[org.apache.spark.sql.connector.catalog.IdentifierImpl]
+
+25/01/10 19:30:21 INFO AuthzUtils$: table:[org.apache.iceberg.spark.source.SparkTable]
+25/01/10 19:30:21 INFO SparkRangerAuthorizationExtension: Plan InsertIntoHadoopFsRelationCommand with identifiers Map(1989011365 -> ml_eng_prod.uids_turn): InsertIntoHadoopFsRelationCommand s3a://aiml-prod-artifacts/spark-test/stc_fr_fr_v2/test/meta_data, false, [partition#30], Parquet, [compression=snappy, __partition_columns=["partition"], path=s3a://aiml-prod-artifacts/spark-test/stc_fr_fr_v2/test/meta_data/], Overwrite, [date, utterance_id, audio_codec, invocation_source, data_sharing_optin_state, ui_cancelled_reason, word_count, system_locale, siri_input_locale, device_type, device_os, voice_gender, voice_accent, country_code, utterance, asr_confidence, utterance_duration_sec, signal_to_noise_ratio_decibels, executed_domain, loc_latitude, loc_longitude, category, device_hash, conditions, ... 8 more fields]
++- Project [date#0, utterance_id#1, audio_codec#2, invocation_source#3, data_sharing_optin_state#4, ui_cancelled_reason#5, word_count#6, system_locale#7, siri_input_locale#8, device_type#9, device_os#10, voice_gender#11, voice_accent#12, country_code#13, utterance#14, asr_confidence#15L, utterance_duration_sec#16, signal_to_noise_ratio_decibels#17, executed_domain#18, loc_latitude#19, loc_longitude#20, category#21, device_hash#22, conditions#23, ... 8 more fields]
+   +- Join Inner, (utterance_id#1 = orch_request_id#248)
+
+      :- Aggregate [conditions#23, speaker_id#24, signal_to_noise_ratio_decibels#17, device_os#10, ui_cancelled_reason#5, trigger_times_sec#25, loc_longitude#20, partition#30, device_hash#22, device_type#9, country_code#13, data_sharing_optin_state#4, executed_domain#18, date#0, labels#26, js_count#29L, asr_confidence#15L, enrollment_count#27L, loc_latitude#19, hs_count#28L, category#21, utterance_duration_sec#16, word_count#6, utterance#14, ... 7 more fields], [date#0, utterance_id#1, audio_codec#2, invocation_source#3, data_sharing_optin_state#4, ui_cancelled_reason#5, word_count#6, system_locale#7, siri_input_locale#8, device_type#9, device_os#10, voice_gender#11, voice_accent#12, country_code#13, utterance#14, asr_confidence#15L, utterance_duration_sec#16, signal_to_noise_ratio_decibels#17, executed_domain#18, loc_latitude#19, loc_longitude#20, category#21, device_hash#22, conditions#23, ... 7 more fields]
+      :  +- Relation [date#0,utterance_id#1,audio_codec#2,invocation_source#3,data_sharing_optin_state#4,ui_cancelled_reason#5,word_count#6,system_locale#7,siri_input_locale#8,device_type#9,device_os#10,voice_gender#11,voice_accent#12,country_code#13,utterance#14,asr_confidence#15L,utterance_duration_sec#16,signal_to_noise_ratio_decibels#17,executed_domain#18,loc_latitude#19,loc_longitude#20,category#21,device_hash#22,conditions#23,... 7 more fields] parquet
+      +- Project [stc_outcome#393, orch_request_id#248]
+         +- Filter ((Contains(device_type#122, iPhone) AND (Contains(build_id#75, 21) OR Contains(build_id#75, 22))) AND ((siri_input_locale_id#293 = FR-FR) AND Contains(invocation_type#202, HARDWARE_BUTTON)))
+            +- Filter ((date#108 >= 2024-07-15) AND (date#108 <= 2024-12-15))
+               +- RelationV2[asr_id#63, asr_id_ctx#64, asr_location#65, asr_location_ctx#66, asr_rc_cancelled_reason#67, asr_rc_cancelled_reason_ctx#68, assistant_id#69, assistant_id_ctx#70, audio_duration_ms#71, audio_duration_ms_ctx#72, audio_duration_ns#73L, audio_duration_ns_ctx#74, build_id#75, build_id_ctx#76, build_universal_rank#77, build_universal_rank_ctx#78, bundle_id#79, bundle_id_ctx#80, button_tap_type#81, button_tap_type_ctx#82, orch_cancelled_reason#83, orch_cancelled_reason_ctx#84, cdm_request_context_is_tap_to_edit#85, cdm_request_context_is_tap_to_edit_ctx#86, ... 383 more fields] iceberg.ml_eng_prod.uids_turn iceberg.ml_eng_prod.uids_turn
+
+25/01/10 19:30:21 INFO SparkRangerAuthorizationExtension: Checking for serviceadmin privileges for ml_eng_prod.uids_turn
+25/01/10 19:30:21 INFO SparkRangerAuthorizationExtension: Checking for serviceadmin privileges for Array(ml_eng_prod)
+25/01/10 19:30:21 INFO AuthzUtils$: Retrieved identifier objects for planNode:DataSourceV2Relation => identifier:Some(ml_eng_prod.uids_turn) : table:Some(iceberg.ml_eng_prod.uids_turn) : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:21 INFO AuthzUtils$: identifier[org.apache.spark.sql.connector.catalog.IdentifierImpl]
+
+25/01/10 19:30:21 INFO AuthzUtils$: table:[org.apache.iceberg.spark.source.SparkTable]
+25/01/10 19:30:21 INFO AuthzUtils$: Identifiers from plan: Map(1989011365 -> ml_eng_prod.uids_turn)
+25/01/10 19:30:21 INFO AuthzUtils$: Retrieved identifier objects for planNode:DataSourceV2Relation => identifier:Some(ml_eng_prod.uids_turn) : table:Some(iceberg.ml_eng_prod.uids_turn) : tableName:None : tableMeta:None : namespace:None : databaseName:None
+25/01/10 19:30:21 INFO AuthzUtils$: identifier[org.apache.spark.sql.connector.catalog.IdentifierImpl]
+25/01/10 19:30:21 INFO AuthzUtils$: table:[org.apache.iceberg.spark.source.SparkTable]
+25/01/10 19:30:21 INFO AuthzUtils$: TableIdentifier from Identifier: `ml_eng_prod`.`uids_turn`
+25/01/10 19:30:21 ERROR SparkRangerAuthorizationExtension: *** Permission denied: user [rupesh_raghavan] does not have [UPDATE] privilege on [ml_eng_prod/uids_turn/stc_outcome,orch_request_id,device_type,build_id,build_id,siri_input_locale_id,invocation_type,date,date] ***
+25/01/10 19:30:21 ERROR AsyncEventQueue: Listener OpenLineageSparkListener threw an exception
+com.apple.aiml.spark.security.SparkAccessControlException: Permission denied: user [rupesh_raghavan] does not have [UPDATE] privilege on [ml_eng_prod/uids_turn/stc_outcome,orch_request_id,device_type,build_id,build_id,siri_input_locale_id,invocation_type,date,date]
+	at com.apple.aiml.spark.security.RangerSparkAuthorizer$.$anonfun$checkPrivileges$6(RangerSparkAuthorizer.scala:161) ~[ranger-spark-3.4.0_2.12.jar:?]
+	at com.apple.aiml.spark.security.RangerSparkAuthorizer$.$anonfun$checkPrivileges$6$adapted(RangerSparkAuthorizer.scala:157) ~[ranger-spark-3.4.0_2.12.jar:?]
+	at scala.collection.Iterator.foreach(Iterator.scala:943) ~[scala-library-2.12.17.jar:?]
+	at scala.collection.Iterator.foreach$(Iterator.scala:943) ~[scala-library-2.12.17.jar:?]
+	at scala.collection.AbstractIterator.foreach(Iterator.scala:1431) ~[scala-library-2.12.17.jar:?]
+
+	at scala.collection.IterableLike.foreach(IterableLike.scala:74) ~[scala-library-2.12.17.jar:?]
+	at scala.collection.IterableLike.foreach$(IterableLike.scala:73) ~[scala-library-2.12.17.jar:?]
+	at scala.collection.AbstractIterable.foreach(Iterable.scala:56) ~[scala-library-2.12.17.jar:?]
+	at com.apple.aiml.spark.security.RangerSparkAuthorizer$.$anonfun$checkPrivileges$3(RangerSparkAuthorizer.scala:157) ~[ranger-spark-3.4.0_2.12.jar:?]
+	at com.apple.aiml.spark.security.RangerSparkAuthorizer$.$anonfun$checkPrivileges$3$adapted(RangerSparkAuthorizer.scala:128) ~[ranger-spark-3.4.0_2.12.jar:?]
+	at scala.collection.mutable.ResizableArray.foreach(ResizableArray.scala:62) ~[scala-library-2.12.17.jar:?]
+	at scala.collection.mutable.ResizableArray.foreach$(ResizableArray.scala:55) ~[scala-library-2.12.17.jar:?]
+	at scala.collection.mutable.ArrayBuffer.foreach(ArrayBuffer.scala:49) ~[scala-library-2.12.17.jar:?]
+	at com.apple.aiml.spark.security.RangerSparkAuthorizer$.checkPrivileges(RangerSparkAuthorizer.scala:128) ~[ranger-spark-3.4.0_2.12.jar:?]
+
+	at org.apache.spark.sql.catalyst.optimizer.SparkRangerAuthorizationExtension.$anonfun$apply$1(SparkRangerAuthorizationExtension.scala:115) ~[ranger-spark-3.4.0_2.12.jar:?]
+	at scala.util.Try$.apply(Try.scala:213) ~[scala-library-2.12.17.jar:?]
+	at org.apache.spark.sql.catalyst.optimizer.SparkRangerAuthorizationExtension.apply(SparkRangerAuthorizationExtension.scala:51) ~[ranger-spark-3.4.0_2.12.jar:?]
+	at org.apache.spark.sql.catalyst.optimizer.SparkRangerAuthorizationExtension.apply(SparkRangerAuthorizationExtension.scala:26) ~[ranger-spark-3.4.0_2.12.jar:?]
+	at org.apache.spark.sql.catalyst.rules.RuleExecutor.$anonfun$execute$2(RuleExecutor.scala:222) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at scala.collection.LinearSeqOptimized.foldLeft(LinearSeqOptimized.scala:126) ~[scala-library-2.12.17.jar:?]
+	at scala.collection.LinearSeqOptimized.foldLeft$(LinearSeqOptimized.scala:122) ~[scala-library-2.12.17.jar:?]
+	at scala.collection.immutable.List.foldLeft(List.scala:91) ~[scala-library-2.12.17.jar:?]
+	at org.apache.spark.sql.catalyst.
+rules.RuleExecutor.$anonfun$execute$1(RuleExecutor.scala:219) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.rules.RuleExecutor.$anonfun$execute$1$adapted(RuleExecutor.scala:211) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at scala.collection.immutable.List.foreach(List.scala:431) ~[scala-library-2.12.17.jar:?]
+	at org.apache.spark.sql.catalyst.rules.RuleExecutor.execute(RuleExecutor.scala:211) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.rules.RuleExecutor.$anonfun$executeAndTrack$1(RuleExecutor.scala:182) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.QueryPlanningTracker$.withTracker(QueryPlanningTracker.scala:88) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.rules.RuleExecutor.executeAndTrack(RuleExecutor.scala:182) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.execution.QueryExecution.$anonfun$optimizedPlan$1(QueryExecution.scala:143) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.catalyst.QueryPlanningTracker.measurePhase(QueryPlanningTracker.scala:111) ~[spark-catalyst_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$2(QueryExecution.scala:202) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.execution.QueryExecution$.withInternalError(QueryExecution.scala:526) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$1(QueryExecution.scala:202) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:827) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.execution.QueryExecution.executePhase(QueryExecution.scala:201) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.execution.QueryExecution.optimizedPlan$lzycompute(QueryExecution.scala:139) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.sql.execution.QueryExecution.optimizedPlan(QueryExecution.scala:135) ~[spark-sql_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at io.openlineage.spark.agent.filters.EventFilterUtils.lambda$getLogicalPlan$2(EventFilterUtils.java:43) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at java.util.Optional.map(Optional.java:265) ~[?:?]
+	at io.openlineage.spark.agent.filters.EventFilterUtils.getLogicalPlan(EventFilterUtils.java:43) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.agent.filters.DatabricksEventFilter.isSerializeFromObject(DatabricksEventFilter.java:65) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.agent.filters.DatabricksEventFilter.isDisabled(DatabricksEventFilter.java:39) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.agent.filters.EventFilterUtils.lambda$isDisabled$0(EventFilterUtils.java:34) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:176) ~[?:?]
+	at java.util.Spliterators$ArraySpliterator.tryAdvance(Spliterators.java:958) ~[?:?]
+	at java.util.stream.ReferencePipeline.forEachWithCancel(ReferencePipeline.java:127) ~[?:?]
+	at java.util.stream.AbstractPipeline.copyIntoWithCancel(AbstractPipeline.java:502) ~[?:?]
+	at java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:488) ~[?:?]
+	at java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:474) ~[?:?]
+	at java.util.stream.FindOps$FindOp.evaluateSequential(FindOps.java:150) ~[?:?]
+	at java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234) ~[?:?]
+	at java.util.stream.Ref
+erencePipeline.findAny(ReferencePipeline.java:548) ~[?:?]
+	at io.openlineage.spark.agent.filters.EventFilterUtils.isDisabled(EventFilterUtils.java:35) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.agent.lifecycle.SparkSQLExecutionContext.end(SparkSQLExecutionContext.java:109) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.agent.OpenLineageSparkListener.lambda$sparkSQLExecEnd$1(OpenLineageSparkListener.java:133) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at java.util.Optional.ifPresent(Optional.java:183) ~[?:?]
+	at io.openlineage.spark.agent.OpenLineageSparkListener.sparkSQLExecEnd(OpenLineageSparkListener.java:133) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at io.openlineage.spark.agent.OpenLineageSparkListener.onOtherEvent(OpenLineageSparkListener.java:117) ~[openlineage-spark-1.5.0.0-aiml-datainfra.jar:1.5.0.0-aiml-datainfra]
+	at org.apache.spark.scheduler.SparkListenerBus.doPostEvent(SparkListenerBus.scala:100) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.SparkListenerBus.doPostEvent$(SparkListenerBus.scala:28) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.AsyncEventQueue.doPostEvent(AsyncEventQueue.scala:37) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.AsyncEventQueue.doPostEvent(AsyncEventQueue.scala:37) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.util.ListenerBus.postToAll(ListenerBus.scala:117) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.util.ListenerBus.postToAll$(ListenerBus.scala:101) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.AsyncEventQueue.super$postToAll(AsyncEventQueue.scala:105) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.AsyncEventQueue.$anonfun$dispatch$1(AsyncEventQueue.scala:105) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at scala.runtime.java8.JFunction0$mcJ$sp.apply(JFunction0$mcJ$sp.java:23) ~[scala-library-2.12.17.jar:?]
+	at scala.util.DynamicVariable.withValue(DynamicVariable.scala:62) ~[scala-library-2.12.17.jar:?]
+	at org.apache.spark.scheduler.AsyncEventQueue.org$apache$spark$scheduler$AsyncEventQueue$$dispatch(AsyncEventQueue.scala:100) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.AsyncEventQueue$$anon$2.$anonfun$run$1(AsyncEventQueue.scala:96) ~[spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.util.Utils$.tryOrStopSparkContext(Utils.scala:1471) [spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+	at org.apache.spark.scheduler.AsyncEventQueue$$anon$2.run(AsyncEventQueue.scala:96) [spark-core_2.12-3.4.0.53-apple-aiml.jar:3.4.0.53-apple-aiml]
+25/01/10 19:30:21 INFO ExecutorPodsWatchSnapshotSource: Kubernetes client has been closed.
+25/01/10 19:30:23 INFO MapOutputTrackerMasterEndpoint: MapOutputTrackerMasterEndpoint stopped!
+25/01/10 19:30:23 INFO MemoryStore: MemoryStore cleared
+25/01/10 19:30:23 INFO BlockManager: BlockManager stopped
+25/01/10 19:30:23 INFO BlockManagerMaster: BlockManagerMaster stopped
+25/01/10 19:30:23 INFO OutputCommitCoordinator$OutputCommitCoordinatorEndpoint: OutputCommitCoordinator stopped!
+25/01/10 19:30:23 INFO SparkContext: Successfully stopped SparkContext
+Exception in thread "main" java.lang.reflect.UndeclaredThrowableException
+	at org.apache.hadoop.security.UserGroupInformation.doAs(UserGroupInformation.java:1894)
+	at org.apache.spark.deploy.SparkHadoopUtil.runAsSparkUser(SparkHadoopUtil.scala:63)
+	at org.apache.spark.deploy.SparkSubmit.doRunMain$1(SparkSubmit.scala:169)
+	at org.apache.spark.deploy.SparkSubmit.submit(SparkSubmit.scala:215)
+	at org.apache.spark.deploy.SparkSubmit.doSubmit(SparkSubmit.scala:91)
+	at org.apache.spark.deploy.SparkSubmit$$anon$2.
+doSubmit(SparkSubmit.scala:1112)
+	at org.apache.spark.deploy.SparkSubmit$.main(SparkSubmit.scala:1121)
+	at org.apache.spark.deploy.SparkSubmit.main(SparkSubmit.scala)
+Caused by: org.apache.spark.SparkUserAppException: User application exited with 1
+	at org.apache.spark.deploy.PythonRunner$.main(PythonRunner.scala:104)
+	at org.apache.spark.deploy.PythonRunner.main(PythonRunner.scala)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.apache.spark.deploy.JavaMainApplication.start(SparkApplication.scala:52)
+	at org.apache.spark.deploy.SparkSubmit.org$apache$spark$deploy$SparkSubmit$$runMain(SparkSubmit.scala:1021)
+	at org.apache.spark.deploy.SparkSubmit.$anonfun$submit$2(SparkSubmit.scala:169)
+	at org.apache.spark.deploy.SparkHadoopUtil$$anon$1.run(SparkHadoopUtil.scala:64)
+	at org.apache.spark.deploy.SparkHadoopUtil$$anon$1.run(SparkHadoopUtil.scala:63)
+	at java.base/java.security.AccessController.doPrivileged(Native Method)
+	at java.base/javax.security.auth.Subject.doAs(Subject.java:423)
+	at org.apache.hadoop.security.UserGroupInformation.doAs(UserGroupInformation.java:1878)
+	... 7 more
+25/01/10 19:30:23 INFO ShutdownHookManager: Shutdown hook called
+25/01/10 19:30:23 INFO ShutdownHookManager: Deleting directory /tmp/spark-caca5617-3d7c-44c1-8b6b-a97eec4ba25a
+25/01/10 19:30:23 INFO ShutdownHookManager: Deleting directory /var/data/spark-4e3a1ec3-2846-4b51-a4df-fed0ef123713/spark-4951ab93-ee51-4ea5-b5c5-a58ed54ae659/pyspark-0c425c78-6154-4c43-9abe-934486d68ae5
+25/01/10 19:30:23 INFO ShutdownHookManager: Deleting directory /var/data/spark-4e3a1ec3-2846-4b51-a4df-fed0ef123713/spark-4951ab93-ee51-4ea5-b5c5-a58ed54ae659
+25/01/10 19:30:23 INFO AuditProviderFactory: ==> JVMShutdownHook.run()
+25/01/10 19:30:23 INFO AuditProviderFactory: JVMShutdownHook: Signalling async audit cleanup to start.
+25/01/10 19:30:23 INFO AuditProviderFactory: JVMShutdownHook: Waiting up to 30 seconds for audit cleanup to finish.
+25/01/10 19:30:23 INFO AuditProviderFactory: RangerAsyncAuditCleanup: Starting cleanup
+25/01/10 19:30:23 INFO AuditBatchQueue: Exiting consumerThread. Queue=spark.async.summary.batch, dest=spark.async.summary.batch.solr
+25/01/10 19:30:23 INFO AuditBatchQueue: Calling to stop consumer. name=spark.async.summary.batch, consumer.name=spark.async.summary.batch.solr
+25/01/10 19:30:23 INFO BaseAuditHandler: Audit Status Log: name=spark.async.summary.batch.solr, interval=03.172 seconds, events=16, succcessCount=16, totalEvents=16, totalSuccessCount=16
+25/01/10 19:30:23 INFO BaseAuditHandler: Audit Status Log: name=spark.async.summary.batch, finalDestination=spark.async.summary.batch.solr, interval=03.122 seconds, events=40, succcessCount=16, totalEvents=40, totalSuccessCount=16
+25/01/10 19:30:23 INFO AuditBatchQueue: Exiting consumerThread.run() method. name=spark.async.summary.batch
+25/01/10 19:30:24 INFO AuditAsyncQueue: Stop called. name=spark.async
+25/01/10 19:30:24 INFO AuditAsyncQueue: Interrupting consumerThread. name=spark.async, consumer=spark.async.summary
+25/01/10 19:30:24 INFO AuditProviderFactory: RangerAsyncAuditCleanup: Done cleanup
+25/01/10 19:30:24 INFO AuditProviderFactory: RangerAsyncAuditCleanup: Waiting to audit cleanup start signal
+25/01/10 19:30:24 INFO AuditProviderFactory: JVMShutdownHook: Audit cleanup finished after 1001 milli seconds
+25/01/10 19:30:24 INFO AuditAsyncQueue: Caught exception in consumer thread. Shutdown might be in progress
+25/01/10 19:30:24 INFO AuditProviderFactory: JVMShutdownHook: Interrupting ranger async audit cleanup thread
+25/01/10 19:30:24 INFO AuditProviderFactory: <== JVMShutdownHook.run()
+25/01/10 19:30:24 INFO AuditAsyncQueue: Exiting polling loop. name=spark.async
+25/01/10 19:30:24 INFO AuditAsyncQueue: Calling to stop consumer. name=spark.async, consumer.na
+me=spark.async.summary
+25/01/10 19:30:24 INFO AuditProviderFactory: RangerAsyncAuditCleanup: Interrupted while waiting for audit startCleanup signal!  Exiting the thread...
+java.lang.InterruptedException: null
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer.doAcquireSharedInterruptibly(AbstractQueuedSynchronizer.java:1040) ~[?:?]
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer.acquireSharedInterruptibly(AbstractQueuedSynchronizer.java:1345) ~[?:?]
+	at java.util.concurrent.Semaphore.acquire(Semaphore.java:318) ~[?:?]
+	at org.apache.ranger.audit.provider.AuditProviderFactory$RangerAsyncAuditCleanup.run(AuditProviderFactory.java:499) [ranger-spark-3.4.0_2.12.jar:?]
+	at java.lang.Thread.run(Thread.java:829) [?:?]
+25/01/10 19:30:24 INFO AuditSummaryQueue: Stop called. name=spark.async.summary
+25/01/10 19:30:24 INFO AuditSummaryQueue: Interrupting consumerThread. name=spark.async.summary, consumer=spark.async.summary.batch
+25/01/10 19:30:24 INFO AuditAsyncQueue: Exiting consumerThread.run() method. name=spark.async
+25/01/10 19:30:24 INFO AuditSummaryQueue: Caught exception in consumer thread. Shutdown might be in progress
+25/01/10 19:30:24 INFO AuditSummaryQueue: Exiting polling loop. name=spark.async.summary
+25/01/10 19:30:24 INFO AuditSummaryQueue: Calling to stop consumer. name=spark.async.summary, consumer.name=spark.async.summary.batch
+25/01/10 19:30:24 INFO AuditBatchQueue: Stop called. name=spark.async.summary.batch
+25/01/10 19:30:24 INFO AuditBatchQueue: Interrupting consumerThread. name=spark.async.summary.batch, consumer=spark.async.summary.batch.solr
+25/01/10 19:30:24 INFO AuditSummaryQueue: Exiting consumerThread.run() method. name=spark.async.summary
+25/01/10 19:30:24 INFO MetricsSystemImpl: Stopping s3a-file-system metrics system...
+25/01/10 19:30:24 INFO MetricsSystemImpl: s3a-file-system metrics system stopped.
+25/01/10 19:30:24 INFO MetricsSystemImpl: s3a-file-system metrics system shutdown complete.
+
+

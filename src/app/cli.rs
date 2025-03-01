@@ -4,8 +4,9 @@ use crate::lancevectordb;
 use crate::pgvectordb::run_embedding::run_embedding_load;
 use crate::pgvectordb::VectorDbConfig;
 use crate::pgvectordb::{pg_vector, query_vector};
-use anyhow::Context;
 use anyhow::Result;
+use anyhow::{Context, Ok};
+use hyper::client::connect::HttpInfo;
 use hyper::client::HttpConnector;
 use hyper::Client as HttpClient;
 use log::info;
@@ -105,7 +106,16 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             let http_client = HttpClient::new();
             let embed_url = format!("{}/{}", url, "api/embed");
 
-            rt.block_on(lancevectordb::run_v2(
+            rt.block_on(check_connection(&format!("{}/{}", url, "api/version")))
+                .context("Failed to check connection")?;
+
+            // rt.block_on(check_client(
+            //     &http_client,
+            //     &format!("{}/{}", url, "api/version"),
+            // ))
+            // .context("Failed to check client")?;
+
+            rt.block_on(lancevectordb::run_embedding_pipeline(
                 path,
                 chunk_size,
                 &embed_url,
@@ -180,6 +190,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
 
             // Initialize the http client outside the thread // TODO wrap in Arc<Mutex>
             let http_client: HttpClient<HttpConnector> = HttpClient::new();
+            // do a check to see if client is up
 
             // Initialize the database
             let mut db = rt
@@ -234,6 +245,23 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
         Commands::Version { version } => {
             info!("Version: {}", version);
         }
+    }
+
+    Ok(())
+}
+
+async fn check_connection(url: &str) -> Result<()> {
+    let client = HttpClient::new();
+    // let uri = hyper::Uri::from_static(&url);
+    let uri = url.parse::<hyper::Uri>()?;
+
+    let res = client.get(uri).await?;
+    if res.status().is_success() {
+        res.extensions().get::<HttpInfo>().map(|info| {
+            info!("remote addr = {}", info.remote_addr());
+        });
+    } else {
+        anyhow::bail!(anyhow::anyhow!("Failed to connect to the server {}", url));
     }
 
     Ok(())

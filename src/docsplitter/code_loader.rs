@@ -1,5 +1,5 @@
-use crate::embedder::config::EmbedRequest;
 use crate::app::constants::EMBEDDING_MODEL;
+use crate::embedder::config::EmbedRequest;
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
@@ -10,10 +10,10 @@ use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::Path;
 use std::path::PathBuf;
-use text_splitter::{Characters, ChunkConfig, CodeSplitter, CodeSplitterError};
-use tree_sitter_language::LanguageFn;
-use tokio::sync::RwLock;
 use std::sync::Arc;
+use text_splitter::{Characters, ChunkConfig, CodeSplitter, CodeSplitterError};
+use tokio::sync::RwLock;
+use tree_sitter_language::LanguageFn;
 
 #[derive(Debug, PartialEq)]
 enum Language {
@@ -202,8 +202,7 @@ async fn split_file_into_chunks(
 
     debug!(
         "File Extension: {:?} Is Supported File {:}",
-        language,
-        is_supported
+        language, is_supported
     );
 
     if !is_supported {
@@ -229,12 +228,12 @@ async fn split_file_into_chunks(
         return Ok(chunks);
     }
 
-    if is_supported && language != Language::Text  && language != Language::SPARKLOG {
+    if is_supported && language != Language::Text && language != Language::SPARKLOG {
         let splitter = CodeSplitter::new(
             get_language_from_file_extension(language).context("Unsupported file extension")?,
             chunk_config,
         )
-            .context("Failed to create code splitter")?;
+        .context("Failed to create code splitter")?;
 
         let code_chunks = splitter.chunks(&content);
 
@@ -251,7 +250,7 @@ async fn split_file_into_chunks(
 
         return Ok(chunks);
     }
-    
+
     if is_supported && language == Language::SPARKLOG {
         return process_spark_log_file(file_path, chunk_config).await;
     }
@@ -307,16 +306,16 @@ fn get_language_from_file_extension(language: Language) -> Result<LanguageFn> {
 
 async fn process_spark_log_file(
     file_path: &PathBuf,
-    chunk_config : ChunkConfig<Characters>,
+    chunk_config: ChunkConfig<Characters>,
 ) -> Result<Vec<FileChunk>> {
     let file = File::open(file_path).context("Failed to open file")?;
     let mut reader = BufReader::new(file);
     let mut content = String::new();
     reader.read_to_string(&mut content)?;
-    
+
     // remove lines without error or exception
     let error_lines = capture_context_lines(&content, 20);
-    
+
     let splitter = text_splitter::TextSplitter::new(chunk_config);
     let chunks = splitter
         .chunks(&error_lines)
@@ -354,7 +353,7 @@ fn capture_context_lines(content: &str, num_lines: usize) -> String {
             }
         }
     }
-    
+
     debug!("Error Lines: {}", result.join("\n"));
 
     result.join("\n")
