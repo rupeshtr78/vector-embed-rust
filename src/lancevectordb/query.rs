@@ -1,11 +1,11 @@
 use crate::app::constants::CHAT_API_URL;
 use crate::embedder;
 use crate::embedder::config::EmbedRequest;
+use ::hyper::Client as HttpClient;
 use anyhow::{anyhow, Context, Result};
 use arrow_array::{Array, StringArray};
 use futures::StreamExt;
 use hyper::client::HttpConnector;
-use ::hyper::Client as HttpClient;
 use lancedb::arrow::SendableRecordBatchStream;
 use lancedb::query::ExecutableQuery;
 use lancedb::query::IntoQueryVector;
@@ -87,7 +87,7 @@ pub async fn query_vector_table(
             .refine_factor(20)
             .nprobes(10)
             .postfilter()
-            .only_if("_distance > 0.3 AND _distance < 1")
+            // .only_if("_distance > 0.3 AND _distance < 1")
             .select(lancedb::query::Select::Columns(vec![
                 "_distance".to_string(),
                 "id".to_string(),
@@ -102,7 +102,7 @@ pub async fn query_vector_table(
     } else {
         let stream = table
             .query()
-            .only_if("metadata IS NOT NULL")
+            .only_if("metadata like scratch".to_string())
             .select(lancedb::query::Select::Columns(vec![
                 "id".to_string(),
                 "metadata".to_string(),

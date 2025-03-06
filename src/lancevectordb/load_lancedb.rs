@@ -8,6 +8,7 @@ use arrow_array::{Int32Array, RecordBatch, RecordBatchIterator};
 use arrow_schema::Schema as ArrowSchema;
 use arrow_schema::TimeUnit;
 use arrow_schema::{DataType, Field};
+use lancedb::index::scalar::FtsIndexBuilder;
 use lancedb::index::Index;
 use lancedb::{Connection, Table};
 use std::sync::Arc;
@@ -277,12 +278,56 @@ pub async fn create_index_on_embedding(
         .create_index(&column, index)
         .execute()
         .await
-        .context("Failed to create an index")?;
+        .with_context(|| {
+            format!(
+                "Failed to create an index on table: {:?} column: {:?}",
+                table_name, column
+            )
+        })?;
 
     log::info!(
-        "Created index on table: {:?} column: {:?}",
+        "Created inverted index on table: {:?} column: {:?}",
         table_name,
         column
+    );
+
+    Ok(())
+}
+
+/// Create an inverted index on the specified column for full-text search
+/// Arguments:
+/// - db: &mut Connection
+/// - table_name: &str
+/// - column: Vec<&str>
+/// Returns:
+/// - Result<(), Box<dyn Error>>
+pub async fn create_inverted_index(
+    db: &mut Connection,
+    table_name: &str,
+    columns: Vec<&str>,
+) -> Result<()> {
+    let table = db
+        .open_table(table_name)
+        .execute()
+        .await
+        .with_context(|| format!("Failed to open table: {:?}", table_name))?;
+
+    // columns &["metadata", "content"]
+    table
+        .create_index(&columns, Index::FTS(FtsIndexBuilder::default()))
+        .execute()
+        .await
+        .with_context(|| {
+            format!(
+                "Failed to create an inverted index on table: {:?} column: {:?}",
+                table_name, columns
+            )
+        })?;
+
+    log::info!(
+        "Created inverted index on table: {:?} column: {:?}",
+        table_name,
+        columns
     );
 
     Ok(())
