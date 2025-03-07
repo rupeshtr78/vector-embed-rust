@@ -83,9 +83,10 @@ pub async fn query_vector_table(
             .nearest_to(query_vector) // Find the nearest vectors to the query vector
             .context("Failed to select nearest vector")?
             // .distance_range(lower_bound, upper_bound) // bug in DataFusion library
-            .distance_type(lancedb::DistanceType::L2)
-            .refine_factor(20)
-            .nprobes(10)
+            .distance_type(lancedb::DistanceType::Cosine)
+            .refine_factor(10)
+            .limit(20)
+            .nprobes(40) // default is 20
             .postfilter()
             // .only_if("_distance > 0.3 AND _distance < 1")
             .select(lancedb::query::Select::Columns(vec![
@@ -102,7 +103,7 @@ pub async fn query_vector_table(
     } else {
         let stream = table
             .query()
-            .only_if("metadata like scratch".to_string())
+            .only_if("content IS NOT NULL".to_string())
             .select(lancedb::query::Select::Columns(vec![
                 "id".to_string(),
                 "metadata".to_string(),
@@ -111,7 +112,7 @@ pub async fn query_vector_table(
             .limit(1000)
             .execute()
             .await
-            .context("Failed to execute query and fetch records")?;
+            .context("Failed to execute whole query and fetch records")?;
 
         batches = stream.collect::<Vec<_>>().await;
     }

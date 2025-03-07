@@ -12,6 +12,8 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 mod chat_config;
+#[allow(dead_code)]
+mod model_options;
 mod prompt_template;
 
 /// Run the chatbot
@@ -72,8 +74,9 @@ pub async fn run_chat(
         .await
         .context("Failed to get ai chat response")?;
 
-    if let Some(m) = response
-        .get_message() { println!("AI Response: {}", m.get_content()) }
+    if let Some(m) = response.get_message() {
+        println!("AI Response: {}", m.get_content())
+    }
 
     Ok(response)
 }
@@ -116,13 +119,15 @@ pub async fn run_chat_with_history(
 
         let chat_url = format!("{}/{}", CHAT_API_URL, "api/chat");
 
+        let options = model_options::OptionsBuilder::new().num_ctx(128000).build();
+
         let chat_request = chat_config::ChatRequest::new(
             AI_MODEL.to_string(),
             chat_url,
             CHAT_API_KEY.to_string(),
             false,
             CHAT_RESPONSE_FORMAT.to_string(),
-            None,
+            Some(options),
             prompt,
         );
 
