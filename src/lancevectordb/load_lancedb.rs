@@ -250,6 +250,13 @@ pub async fn create_record_batch(
 }
 
 /// Create an index on the embedding column
+/// IVF_PQ Index: LanceDB also supports the IVF_PQ (Inverted File with Product Quantization) index,
+/// which divides the dataset into partitions and applies product quantization for efficient vector compression.
+/// This index type is used for performing ANN searches in LanceDB.
+/// Approximate Nearest Neighbor (ANN)
+/// LanceDB does not automatically create the ANN index.
+/// need to explicitly create the index with the appropriate index type
+/// (e.g., IVF_HNSW_SQ)
 /// Arguments:
 /// - db: &mut Connection
 /// - table_name: &str

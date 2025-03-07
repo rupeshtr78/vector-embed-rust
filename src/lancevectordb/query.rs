@@ -83,9 +83,10 @@ pub async fn query_vector_table(
             .nearest_to(query_vector) // Find the nearest vectors to the query vector
             .context("Failed to select nearest vector")?
             // .distance_range(lower_bound, upper_bound) // bug in DataFusion library
-            .distance_type(lancedb::DistanceType::L2)
-            .refine_factor(20)
-            .nprobes(10)
+            .distance_type(lancedb::DistanceType::Cosine)
+            .refine_factor(10)
+            .limit(20)
+            .nprobes(40) // default is 20
             .postfilter()
             // .only_if("_distance > 0.3 AND _distance < 1")
             .select(lancedb::query::Select::Columns(vec![

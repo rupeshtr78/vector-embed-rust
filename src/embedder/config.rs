@@ -6,7 +6,7 @@ use tokio::sync::RwLock;
 pub struct EmbedRequest {
     pub model: String,
     pub input: Vec<String>,
-    pub metadata: Option<String>, // TODO - add metadata hashmap column JSONB
+    pub metadata: Option<String>, // TODO - add metadata hashmap column JSON
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
