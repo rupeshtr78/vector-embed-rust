@@ -1,3 +1,4 @@
+use crate::chat::model_options::Options;
 use anyhow::Result;
 use anyhow::{anyhow, Context};
 use hyper::client::HttpConnector;
@@ -83,6 +84,7 @@ struct ChatBody {
     pub messages: Vec<ChatMessage>,
     stream: bool,
     format: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     options: Option<Options>,
 }
 
@@ -99,12 +101,12 @@ impl ChatRequest {
         let mut messages = Vec::new();
         let system_message = ChatMessage::new(ChatRole::System, prompt.system_message);
         messages.push(system_message);
-        
+
         for content in prompt.content.clone().into_iter().flatten() {
-                    let user_content = ChatMessage::new(ChatRole::User, content.get_content().to_string());
-                    messages.push(user_content);
-                }
-        
+            let user_content = ChatMessage::new(ChatRole::User, content.get_content().to_string());
+            messages.push(user_content);
+        }
+
         let user_prompt = ChatMessage::new(ChatRole::User, prompt.prompt);
         messages.push(user_prompt);
 
@@ -129,6 +131,7 @@ impl ChatRequest {
         };
 
         let body = serde_json::to_string(&chat_body).context("Failed to serialize ChatBody")?;
+        debug!("Chat Body: {:?}", body);
 
         Ok(body)
     }
@@ -167,7 +170,7 @@ pub async fn ai_chat(
     if response.status() != 200 {
         return Err(anyhow!("Failed to get response: {}", response.status()));
     }
-    debug!("Response: {:?}", response.status());
+    debug!("Chat Response Status: {:?}", response.status());
 
     // Parse the response body
     let body = body::to_bytes(response).await?;
@@ -199,106 +202,5 @@ pub struct ChatResponse {
 impl ChatResponse {
     pub fn get_message(&self) -> Option<&ChatMessage> {
         Some(&self.message)
-    }
-}
-
-/// Options is a struct that represents the options for the chat request
-// @TODO: Add options support
-#[allow(dead_code)]
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Options {
-    num_keep: i32,
-    seed: i32,
-    num_predict: i32,
-    top_k: i32,
-    top_p: f32,
-    min_p: f32,
-    typical_p: f32,
-    repeat_last_n: i32,
-    temperature: f32,
-    repeat_penalty: f32,
-    presence_penalty: f32,
-    frequency_penalty: f32,
-    mirostat: i32,
-    mirostat_tau: f32,
-    mirostat_eta: f32,
-    penalize_newline: bool,
-    stop: Vec<String>,
-    numa: bool,
-    num_ctx: i32,
-    num_batch: i32,
-    num_gpu: i32,
-    main_gpu: i32,
-    low_vram: bool,
-    vocab_only: bool,
-    use_mmap: bool,
-    use_mlock: bool,
-    num_thread: i32,
-}
-
-#[allow(dead_code)]
-impl Options {
-    fn new(
-        num_keep: i32,
-        seed: i32,
-        num_predict: i32,
-        top_k: i32,
-        top_p: f32,
-        min_p: f32,
-        typical_p: f32,
-        repeat_last_n: i32,
-        temperature: f32,
-        repeat_penalty: f32,
-        presence_penalty: f32,
-        frequency_penalty: f32,
-        mirostat: i32,
-        mirostat_tau: f32,
-        mirostat_eta: f32,
-        penalize_newline: bool,
-        stop: Vec<String>,
-        numa: bool,
-        num_ctx: i32,
-        num_batch: i32,
-        num_gpu: i32,
-        main_gpu: i32,
-        low_vram: bool,
-        vocab_only: bool,
-        use_mmap: bool,
-        use_mlock: bool,
-        num_thread: i32,
-    ) -> Options {
-        Options {
-            num_keep,
-            seed,
-            num_predict,
-            top_k,
-            top_p,
-            min_p,
-            typical_p,
-            repeat_last_n,
-            temperature,
-            repeat_penalty,
-            presence_penalty,
-            frequency_penalty,
-            mirostat,
-            mirostat_tau,
-            mirostat_eta,
-            penalize_newline,
-            stop,
-            numa,
-            num_ctx,
-            num_batch,
-            num_gpu,
-            main_gpu,
-            low_vram,
-            vocab_only,
-            use_mmap,
-            use_mlock,
-            num_thread,
-        }
-    }
-
-    fn to_json(&self) -> String {
-        serde_json::to_string(self).unwrap()
     }
 }
