@@ -58,6 +58,7 @@ impl<'a> EmbedRequest {
     }
 
     /// Create a new EmbedRequest not thread safe
+    #[allow(non_snake_case)]
     pub fn NewEmbedRequest(
         model: &str,
         input: Vec<&str>,
