@@ -7,6 +7,7 @@ pub struct EmbedRequest {
     pub model: String,
     pub input: Vec<String>,
     pub metadata: Option<String>, // TODO - add metadata hashmap column JSON
+    pub chunk_number: Option<i32>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
@@ -37,10 +38,12 @@ impl<'a> EmbedRequest {
     }
 
     /// Create a new EmbedRequest thread safe Arc
+    #[allow(non_snake_case)]
     pub fn NewArcEmbedRequest(
         model: &String,
         input: &Vec<String>,
         metadata: &String,
+        chunk_number: Option<i32>,
     ) -> std::sync::Arc<RwLock<EmbedRequest>> {
         let input: Vec<String> = input.iter().map(|s| s.to_string()).collect();
         let model = model.to_string();
@@ -48,19 +51,25 @@ impl<'a> EmbedRequest {
             model,
             input,
             metadata: Some(metadata.to_string()),
+            chunk_number,
         };
 
         std::sync::Arc::new(RwLock::new(data))
     }
 
     /// Create a new EmbedRequest not thread safe
-    pub fn NewEmbedRequest(model: &str, input: Vec<&str>) -> EmbedRequest {
+    pub fn NewEmbedRequest(
+        model: &str,
+        input: Vec<&str>,
+        chunk_number: Option<i32>,
+    ) -> EmbedRequest {
         let input: Vec<String> = input.iter().map(|s| s.to_string()).collect();
         let model = model.to_string();
         EmbedRequest {
             model,
             input,
             metadata: None,
+            chunk_number,
         }
     }
 
@@ -69,6 +78,7 @@ impl<'a> EmbedRequest {
             model: "".to_string(),
             input: vec![],
             metadata: None,
+            chunk_number: None,
         }
     }
 }
@@ -113,4 +123,3 @@ impl EmbedResponse {
         serde_json::from_str(json)
     }
 }
-

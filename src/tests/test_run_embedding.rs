@@ -1,12 +1,12 @@
 #[cfg(test)]
 mod test_fetch_embedding {
-    use crate::embedder::config::{EmbedRequest};
     use crate::app::constants::EMBEDDING_MODEL;
     use crate::app::constants::EMBEDDING_URL;
+    use crate::embedder::config::EmbedRequest;
     use crate::embedder::fetch_embedding;
+    use anyhow::Context;
     use hyper::Client;
     use std::sync::Arc;
-    use anyhow::Context;
     use tokio::sync::RwLock;
 
     #[tokio::test]
@@ -17,11 +17,15 @@ mod test_fetch_embedding {
             model: EMBEDDING_MODEL.to_string(),
             input: vec!["test_input".to_string()],
             metadata: None,
+            chunk_number: None,
         }));
         let http_client = Client::new();
 
         // Run the function
-        let result = fetch_embedding(url, &embed_data, &http_client).await.context("Failed to fetch embedding").unwrap();
+        let result = fetch_embedding(url, &embed_data, &http_client)
+            .await
+            .context("Failed to fetch embedding")
+            .unwrap();
 
         // Assertions
         assert!(!result.model.is_empty(), "Model should not be empty");
@@ -44,11 +48,15 @@ mod test_fetch_embedding {
             model: EMBEDDING_MODEL.to_string(),
             input: vec!["test_input".to_string()],
             metadata: None,
+            chunk_number: None,
         }));
         let http_client = Client::new();
 
         // Run the function
-        let result = fetch_embedding(url, &embed_data, &http_client).await.context("Failed to fetch embedding").unwrap();
+        let result = fetch_embedding(url, &embed_data, &http_client)
+            .await
+            .context("Failed to fetch embedding")
+            .unwrap();
 
         // Assertions
         assert!(
@@ -69,11 +77,15 @@ mod test_fetch_embedding {
             model: EMBEDDING_MODEL.to_string(),
             input: vec![], // Empty input
             metadata: None,
+            chunk_number: None,
         }));
         let http_client = Client::new();
 
         // Run the function
-        let result = fetch_embedding(url, &embed_data, &http_client).await.context("Failed to fetch embedding").unwrap();
+        let result = fetch_embedding(url, &embed_data, &http_client)
+            .await
+            .context("Failed to fetch embedding")
+            .unwrap();
 
         // Assertions
         assert!(!result.model.is_empty(), "Model should not be empty");

@@ -1,11 +1,11 @@
 use crate::app::constants::CHAT_API_URL;
 use crate::embedder;
 use crate::embedder::config::EmbedRequest;
-use ::hyper::Client as HttpClient;
 use anyhow::{anyhow, Context, Result};
 use arrow_array::{Array, StringArray};
 use futures::StreamExt;
 use hyper::client::HttpConnector;
+use ::hyper::Client as HttpClient;
 use lancedb::arrow::SendableRecordBatchStream;
 use lancedb::query::ExecutableQuery;
 use lancedb::query::IntoQueryVector;
@@ -44,7 +44,7 @@ pub async fn run_query(
     let url = format!("{}/{}", CHAT_API_URL, "api/embed");
 
     let query_request_arc =
-        EmbedRequest::NewArcEmbedRequest(&embed_model, input_list, &"".to_string());
+        EmbedRequest::NewArcEmbedRequest(&embed_model, input_list, &"".to_string(), None);
     let query_response = embedder::fetch_embedding(&url, &query_request_arc, http_client)
         .await
         .context("Failed to fetch embedding")?;
@@ -91,7 +91,7 @@ pub async fn query_vector_table(
             // .only_if("_distance > 0.3 AND _distance < 1")
             .select(lancedb::query::Select::Columns(vec![
                 "_distance".to_string(),
-                "id".to_string(),
+                "chunk_number".to_string(),
                 "metadata".to_string(),
                 "content".to_string(),
             ]))
