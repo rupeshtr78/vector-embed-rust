@@ -74,6 +74,7 @@ impl<'a> EmbedRequest {
         }
     }
 
+    #[allow(non_snake_case)]
     pub fn EmptyEmbedRequest() -> EmbedRequest {
         EmbedRequest {
             model: "".to_string(),
@@ -109,6 +110,7 @@ impl EmbedResponse {
         self.model.clone()
     }
 
+    #[allow(non_snake_case)]
     pub fn EmptyEmbedResponse() -> EmbedResponse {
         EmbedResponse {
             model: "".to_string(),
@@ -116,10 +118,12 @@ impl EmbedResponse {
         }
     }
 
+    #[allow(non_snake_case)]
     pub fn NewEmbedResponse(model: String, embeddings: Vec<Vec<f32>>) -> EmbedResponse {
         EmbedResponse { model, embeddings }
     }
 
+    #[allow(non_snake_case)]
     pub fn NewEmbedResponseFromJson(json: &str) -> Result<EmbedResponse, serde_json::Error> {
         serde_json::from_str(json)
     }
