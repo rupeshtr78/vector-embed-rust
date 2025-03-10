@@ -82,11 +82,9 @@ pub async fn query_vector_table(
 
     if !whole_query {
         let stream = query_nearest_vector(query_vector, &table).await?;
-
         batches = stream.collect::<Vec<_>>().await;
     } else {
         let stream = query_all_content(table).await?;
-
         batches = stream.collect::<Vec<_>>().await;
     }
     
@@ -99,7 +97,6 @@ pub async fn query_vector_table(
 fn get_content_from_batch(batches: Vec<lancedb::error::Result<RecordBatch>>) -> Result<Vec<String>> {
     for batch in batches {
         let batch: arrow_array::RecordBatch = batch.context("Failed to get RecordBatch")?;
-        // println!("Batch: {:?}", batch);
 
         let schema = batch.schema(); // Bind schema to a variable
         for i in 0..batch.num_columns() {
