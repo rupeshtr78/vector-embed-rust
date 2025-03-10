@@ -3,7 +3,7 @@ use crate::embedder;
 use crate::embedder::config::EmbedRequest;
 use anyhow::{anyhow, Context, Result};
 use arrow_array::{Array, StringArray};
-use arrow_array::{Int32Array, RecordBatch, StringArrayType};
+use arrow_array::{Int32Array, RecordBatch};
 use arrow_schema::DataType::{Int32, Utf8};
 use arrow_schema::SchemaRef;
 use futures::StreamExt;
@@ -23,7 +23,10 @@ use log::{debug, error, info};
 /// - input_list: &Vec<String>
 /// - vector_table: String
 /// - db_config: VectorDbConfig
-/// Returns: ()
+/// - http_client: &HttpClient<HttpConnector>
+/// - whole_query: bool
+/// Returns:
+/// - Result<Vec<String>>
 pub async fn run_query(
     db: &mut Connection,
     embed_model: String,
@@ -86,16 +89,43 @@ pub async fn query_vector_table(
         let stream = query_nearest_vector(query_vector, &table).await?;
         batches = stream.collect::<Vec<_>>().await;
     } else {
-        let stream = query_all_content(table).await?;
+        let stream = query_all_content(&table).await?;
         batches = stream.collect::<Vec<_>>().await;
     }
 
     debug!("Number of batches retrieved from query: {}", &batches.len());
     let content = get_data_from_batch(&batches, "content")
         .context("Failed to get content from record batch")?;
-    //
-    let _ = get_data_from_batch(&batches, "chunk_number")
+
+    // @TODO: Chunk based query POC remove
+    let chunks = get_data_from_batch(&batches, "chunk_number")
         .context("Failed to get chunk number from record batch")?;
+
+    // chunks remove duplicates
+    let chunks_unique: Vec<String> = chunks
+        .into_iter()
+        .filter(|x| x != "NULL")
+        .collect::<Vec<_>>()
+        .into_iter()
+        .collect::<std::collections::HashSet<_>>()
+        .into_iter()
+        .collect();
+
+    debug!("Unique chunks retrieved from query: {:?}", &chunks_unique);
+
+    let chunk_content = query_content_based_on_chunks(&table, chunks_unique)
+        .await
+        .context("Failed to query content based on chunks")?;
+
+    let chunk_batch = chunk_content.collect::<Vec<_>>().await;
+    debug!(
+        "Number of batches retrieved from chunk query: {}",
+        &chunk_batch.len()
+    );
+    let chunk_data = get_data_from_batch(&chunk_batch, "content")
+        .context("Failed to get content from record batch")?;
+
+    debug!("Chunk Data: {:?}", &chunk_data);
 
     Ok(content)
 }
@@ -172,10 +202,10 @@ fn get_column_data_from_batch(
     Ok(Vec::new())
 }
 
-async fn query_all_content(table: Table) -> Result<SendableRecordBatchStream> {
+async fn query_all_content(table: &Table) -> Result<SendableRecordBatchStream> {
     let stream = table
         .query()
-        .only_if("content IS NOT NULL".to_string())
+        .only_if("content IS NOT NULL")
         .select(lancedb::query::Select::Columns(vec![
             "id".to_string(),
             "metadata".to_string(),
@@ -209,8 +239,37 @@ async fn query_nearest_vector(
             "metadata".to_string(),
             "content".to_string(),
         ]))
+        .only_if("content IS NOT NULL")
         .execute()
         .await
         .context("Failed to execute query and fetch records")?;
+    Ok(stream)
+}
+
+async fn query_content_based_on_chunks(
+    table: &Table,
+    chunks: Vec<String>,
+) -> Result<SendableRecordBatchStream> {
+    // chunk_number in  ["5", "3", "8", "14", "1", "10", "7", "6", "4"]
+
+    let stream = table
+        .query()
+        .only_if(format!(
+            "chunk_number in ({})",
+            chunks
+                .iter()
+                .map(|s| s.parse::<i32>().unwrap_or(0).to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        ))
+        .select(lancedb::query::Select::Columns(vec![
+            "id".to_string(),
+            "metadata".to_string(),
+            "content".to_string(),
+        ]))
+        .limit(1000)
+        .execute()
+        .await
+        .context("Failed to execute chunk based query and fetch records")?;
     Ok(stream)
 }
