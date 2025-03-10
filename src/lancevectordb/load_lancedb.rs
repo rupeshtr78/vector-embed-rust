@@ -24,6 +24,7 @@ pub struct TableSchema {
     pub model: Arc<Field>,
     pub vector: Arc<Field>,
     pub created_at: Arc<Field>,
+    pub chunk_number: Arc<Field>,
 }
 
 impl TableSchema {
@@ -47,6 +48,7 @@ impl TableSchema {
                 DataType::Timestamp(TimeUnit::Second, None),
                 false,
             )),
+            chunk_number: Arc::new(Field::new("chunk_number", DataType::Int32, true)),
         }
     }
 
@@ -58,6 +60,7 @@ impl TableSchema {
             Arc::clone(&self.vector),
             Arc::clone(&self.model),
             Arc::clone(&self.created_at),
+            Arc::clone(&self.chunk_number),
         ])
     }
 
@@ -82,6 +85,7 @@ impl TableSchema {
                 Arc::new(TimestampSecondArray::from_iter_values(
                     (0..256).map(|_| chrono::Utc::now().timestamp()),
                 )),
+                Arc::new(Int32Array::from_iter_values((0..256).map(|_| 0))),
             ],
         )
         .context("Failed to create a RecordBatch")
@@ -149,7 +153,8 @@ pub async fn insert_embeddings(
     let record_iter = vec![records].into_iter().map(std::result::Result::Ok);
     let record_batch = RecordBatchIterator::new(record_iter, arrow_schema);
 
-    let mut writer = table.merge_insert(&["content", "metadata", "vector", "model"]);
+    let mut writer =
+        table.merge_insert(&["content", "metadata", "vector", "model", "chunk_number"]);
     // add merge options to writer
     writer.when_not_matched_insert_all();
 
@@ -233,6 +238,10 @@ pub async fn create_record_batch(
         (0..len).map(|_| chrono::Utc::now().timestamp()),
     ));
 
+    let chunk_number_array = Arc::new(Int32Array::from_iter_values(
+        (0..len).map(|_| request.chunk_number.unwrap_or(0)),
+    ));
+
     let record_batch = RecordBatch::try_new(
         Arc::new(table_schema.create_schema()),
         vec![
@@ -242,6 +251,7 @@ pub async fn create_record_batch(
             embedding_array,
             model_array,
             created_at_array,
+            chunk_number_array,
         ],
     )
     .context("Failed to create a Embedding Records")?;

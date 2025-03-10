@@ -32,7 +32,7 @@ pub async fn run_embedding_load(
 
     // Arc (Atomic Reference Counted) pointer. It is a thread-safe reference-counting pointer.
     let embed_request_arc =
-        EmbedRequest::NewArcEmbedRequest(&embed_model, input_list, &"".to_string());
+        EmbedRequest::NewArcEmbedRequest(&embed_model, input_list, &"".to_string(), None);
     // let embed_request_arc_clone = Arc::clone(&embed_request_arc);
 
     // Run embedding request in a separate thread

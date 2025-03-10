@@ -1,10 +1,10 @@
 use super::pg_vector;
-use crate::app::constants::{CHAT_API_URL};
+use crate::app::constants::CHAT_API_URL;
 use crate::embedder::config::EmbedRequest;
-use ::hyper::Client as HttpClient;
 use anyhow::Context;
 use anyhow::Result;
 use hyper::client::HttpConnector;
+use ::hyper::Client as HttpClient;
 use log::{debug, error, info};
 use postgres::Client;
 
@@ -37,11 +37,11 @@ pub async fn run_pg_vector_query(
         error!("Query Input is empty");
         return Err(anyhow::anyhow!("Query Input is empty"));
     }
-    
+
     let url = format!("{}/{}", CHAT_API_URL, "api/embed");
 
     let query_request_arc =
-        EmbedRequest::NewArcEmbedRequest(&embed_model, input_list, &"".to_string());
+        EmbedRequest::NewArcEmbedRequest(&embed_model, input_list, &"".to_string(), None);
     let query_response = rt
         .block_on(crate::embedder::fetch_embedding(
             &url,

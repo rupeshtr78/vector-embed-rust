@@ -3,10 +3,10 @@ mod tests {
     use crate::embedder::config::EmbedRequest;
     use crate::embedder::create_embed_request;
 
+    use crate::app::constants::{EMBEDDING_MODEL, EMBEDDING_URL};
     use hyper::{Body, Client, Request, Response};
     use mockall::*;
     use std::error::Error;
-    use crate::app::constants::{EMBEDDING_MODEL, EMBEDDING_URL};
 
     mock! {
         HttpClient {
@@ -22,6 +22,7 @@ mod tests {
             model: EMBEDDING_MODEL.to_string(),
             input: vec!["test_input".to_string()],
             metadata: None,
+            chunk_number: None,
         };
 
         let result = create_embed_request(EMBEDDING_URL, &req, &http_client).await;
@@ -40,6 +41,7 @@ mod tests {
             model: EMBEDDING_MODEL.to_string(),
             input: vec!["test_input".to_string()],
             metadata: None,
+            chunk_number: None,
         };
 
         let result = create_embed_request("http://invalid/aapi/embed", &req, &http_client).await;
@@ -55,6 +57,7 @@ mod tests {
             model: "WRONG_EMBEDDING_MODEL".to_string(),
             input: vec!["test_input".to_string()],
             metadata: None,
+            chunk_number: None,
         };
 
         let result = create_embed_request(EMBEDDING_URL, &req, &http_client).await;
@@ -70,6 +73,7 @@ mod tests {
             model: EMBEDDING_MODEL.to_string(),
             input: vec![], // Empty input
             metadata: None,
+            chunk_number: None,
         };
 
         let result = create_embed_request(EMBEDDING_URL, &req, &http_client).await;

@@ -56,12 +56,6 @@ impl Language {
     }
 }
 
-// impl PartialEq for Language {
-//     fn eq(&self, other: &Self) -> bool {
-//         self == other
-//     }
-// }
-
 pub struct FileChunk {
     content: Vec<String>,
     file_path: PathBuf,
@@ -119,6 +113,7 @@ impl FileChunk {
                     .unwrap_or("None")
                     .to_string(),
             ),
+            chunk_number: Some(self.chunk_number),
         }
     }
 
@@ -194,6 +189,7 @@ async fn split_file_into_chunks(
     let mut content = String::new();
     reader.read_to_string(&mut content)?;
 
+    // Create a chunk config with the specified max chunk size
     let chunk_config = ChunkConfig::new(max_chunk_size)
         .with_overlap(256)
         .context("Failed to create chunk config")?;
