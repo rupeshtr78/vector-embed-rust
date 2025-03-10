@@ -68,6 +68,14 @@ pub async fn run_query(
     Ok(content)
 }
 
+/// Query the vector table
+/// Arguments:
+/// - db: &mut Connection
+/// - table_name: &str
+/// - query_vector: impl IntoQueryVector
+/// - whole_query: bool
+/// Returns:
+/// - Result<Vec<String>>
 pub async fn query_vector_table(
     db: &mut Connection,
     table_name: &str,
@@ -98,7 +106,7 @@ pub async fn query_vector_table(
         .context("Failed to get content from record batch")?;
 
     // @TODO: Chunk based query POC remove
-    let chunks = get_data_from_batch(&batches, "chunk_number")
+    let chunks = get_data_from_batch(&batches, "metadata")
         .context("Failed to get chunk number from record batch")?;
 
     // chunks remove duplicates
@@ -113,7 +121,9 @@ pub async fn query_vector_table(
 
     debug!("Unique chunks retrieved from query: {:?}", &chunks_unique);
 
-    let chunk_content = query_content_based_on_chunks(&table, chunks_unique)
+    // let chunk_poc = vec!["2".to_string(), "3".to_string()];
+
+    let chunk_content = query_content_based_on_metadata(&table, chunks_unique)
         .await
         .context("Failed to query content based on chunks")?;
 
@@ -127,7 +137,7 @@ pub async fn query_vector_table(
 
     debug!("Chunk Data: {:?}", &chunk_data);
 
-    Ok(content)
+    Ok(chunk_data)
 }
 
 fn get_data_from_batch(
@@ -229,7 +239,7 @@ async fn query_nearest_vector(
         // .distance_range(lower_bound, upper_bound) // bug in DataFusion library
         .distance_type(lancedb::DistanceType::Cosine)
         .refine_factor(10)
-        .limit(20)
+        .limit(30)
         .nprobes(40) // default is 20
         .postfilter()
         // .only_if("_distance > 0.3 AND _distance < 1")
@@ -246,6 +256,7 @@ async fn query_nearest_vector(
     Ok(stream)
 }
 
+#[allow(dead_code)]
 async fn query_content_based_on_chunks(
     table: &Table,
     chunks: Vec<String>,
@@ -259,6 +270,35 @@ async fn query_content_based_on_chunks(
             chunks
                 .iter()
                 .map(|s| s.parse::<i32>().unwrap_or(0).to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        ))
+        .select(lancedb::query::Select::Columns(vec![
+            "id".to_string(),
+            "metadata".to_string(),
+            "content".to_string(),
+        ]))
+        .limit(1000)
+        .execute()
+        .await
+        .context("Failed to execute chunk based query and fetch records")?;
+    Ok(stream)
+}
+
+#[allow(dead_code)]
+async fn query_content_based_on_metadata(
+    table: &Table,
+    metadata: Vec<String>,
+) -> Result<SendableRecordBatchStream> {
+    // metadata in  ["mod.rs", "cli.rs", "commands.rs", "constants.rs", "main.rs", "lib.rs", "chat_config.rs"]
+
+    let stream = table
+        .query()
+        .only_if(format!(
+            "metadata IN ({})",
+            metadata
+                .iter()
+                .map(|m| format!("'{}'", m))
                 .collect::<Vec<_>>()
                 .join(", ")
         ))
