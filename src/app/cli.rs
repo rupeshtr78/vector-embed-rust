@@ -213,8 +213,8 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
 
             let context = content.join(" ");
 
-            let system_prompt = "template/rag_prompt.txt";
-            // let system_prompt = "template/software-engineer.txt";
+            // let system_prompt = "template/rag_prompt.txt";
+            let system_prompt = "template/software-engineer.txt";
             // let system_prompt = "template/spark_prompt.txt";
             rt.block_on(crate::chat::run_chat_with_history(
                 system_prompt,
