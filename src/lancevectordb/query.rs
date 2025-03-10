@@ -2,8 +2,10 @@ use crate::app::constants::CHAT_API_URL;
 use crate::embedder;
 use crate::embedder::config::EmbedRequest;
 use anyhow::{anyhow, Context, Result};
-use arrow_array::RecordBatch;
 use arrow_array::{Array, StringArray};
+use arrow_array::{Int32Array, RecordBatch, StringArrayType};
+use arrow_schema::DataType::{Int32, Utf8};
+use arrow_schema::SchemaRef;
 use futures::StreamExt;
 use hyper::client::HttpConnector;
 use ::hyper::Client as HttpClient;
@@ -88,43 +90,14 @@ pub async fn query_vector_table(
         batches = stream.collect::<Vec<_>>().await;
     }
 
-    debug!("Number of batches from query: {}", &batches.len());
+    debug!("Number of batches retrieved from query: {}", &batches.len());
     let content = get_data_from_batch(&batches, "content")
         .context("Failed to get content from record batch")?;
     //
-    // let _ = get_data_from_batch(&batches, "chunk_number")
-    //     .context("Failed to get chunk number from record batch")?;
+    let _ = get_data_from_batch(&batches, "chunk_number")
+        .context("Failed to get chunk number from record batch")?;
 
     Ok(content)
-}
-
-fn get_content_from_batch(
-    batches: Vec<lancedb::error::Result<RecordBatch>>,
-) -> Result<Vec<String>> {
-    for batch in batches {
-        let batch: RecordBatch = batch.context("Failed to get RecordBatch")?;
-
-        let schema = batch.schema(); // Bind schema to a variable
-        for i in 0..batch.num_columns() {
-            let column = batch.column(i);
-            let column_name = schema.field(i).name(); // Now this is safe
-
-            debug!("Column {:?}: {:?}", column_name, column);
-
-            if column_name == "content" {
-                let content_array = column
-                    .as_any()
-                    .downcast_ref::<StringArray>()
-                    .context("Failed to downcast to StringArray")?;
-                let content =
-                    get_content(content_array).context("Failed to get content from lancedb")?;
-                return Ok(content);
-            }
-        }
-    }
-
-    error!("No content found in the batch");
-    Ok(Vec::new())
 }
 
 fn get_data_from_batch(
@@ -136,28 +109,62 @@ fn get_data_from_batch(
         // iterate over references to the elements:
         let batch_ref = batch
             .as_ref()
-            .map_err(|e| anyhow!("Failed to get RecordBatch"))
-            .context("Failed to get RecordBatch")?;
+            .map_err(|e| anyhow!(format!("Failed to get RecordBatch: {}", e)))?;
         let schema = batch_ref.schema(); // Bind schema to a variable
 
-        for i in 0..batch_ref.num_columns() {
-            let column = batch_ref.column(i);
-            let column_name = schema.field(i).name(); // Now this is safe
+        let content = get_column_data_from_batch(table_column, batch_ref, schema);
+        if content.is_ok() {
+            return content;
+        }
+    }
 
-            if column_name == table_column {
-                let content_array = column
-                    .as_any()
-                    .downcast_ref::<StringArray>()
-                    .context("Failed to downcast to StringArray")?;
+    Ok(Vec::new())
+}
 
-                debug!("Column {:?}: {:?}", &column_name, &content_array);
+fn get_column_data_from_batch(
+    table_column: &str,
+    batch_ref: &RecordBatch,
+    schema: SchemaRef,
+) -> Result<Vec<String>> {
+    for i in 0..batch_ref.num_columns() {
+        let column = batch_ref.column(i);
+        let column_name = schema.field(i).name();
+        let data_type = schema.field(i).data_type();
 
-                let content = content_array
-                    .iter()
-                    .filter_map(|s| s.map(|s| s.to_string()))
-                    .collect::<Vec<String>>();
-                return Ok(content);
-            }
+        if column_name == table_column {
+            let content = match data_type {
+                Utf8 => {
+                    let content_array = column
+                        .as_any()
+                        .downcast_ref::<StringArray>()
+                        .context("Failed to downcast to StringArray")?;
+
+                    let content = content_array
+                        .iter()
+                        .map(|opt| opt.map_or_else(|| "NULL".to_string(), |s| s.to_string()))
+                        .collect::<Vec<String>>();
+                    debug!("Fetched Content: {:?} {:?}", column_name, content);
+                    content
+                }
+                Int32 => {
+                    let content_array = column
+                        .as_any()
+                        .downcast_ref::<Int32Array>()
+                        .context("Failed to downcast to Int32Array")?;
+
+                    let content = content_array
+                        .iter()
+                        .map(|opt| opt.map_or_else(|| "NULL".to_string(), |s| s.to_string()))
+                        .collect::<Vec<_>>();
+
+                    debug!("Fetched Content: {:?} {:?}", column_name, content);
+                    content
+                }
+                _ => {
+                    return Err(anyhow!("Unsupported column type: {:?}", data_type));
+                }
+            };
+            return Ok(content);
         }
     }
 
@@ -206,13 +213,4 @@ async fn query_nearest_vector(
         .await
         .context("Failed to execute query and fetch records")?;
     Ok(stream)
-}
-
-pub fn get_content(batch: &StringArray) -> Result<Vec<String>> {
-    let mut content_vec = Vec::new();
-    for i in 0..batch.len() {
-        let content = batch.value(i);
-        content_vec.push(content.to_string());
-    }
-    Ok(content_vec)
 }
