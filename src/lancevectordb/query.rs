@@ -2,6 +2,7 @@ use crate::app::constants::CHAT_API_URL;
 use crate::embedder;
 use crate::embedder::config::EmbedRequest;
 use anyhow::{anyhow, Context, Result};
+use arrow_array::RecordBatch;
 use arrow_array::{Array, StringArray};
 use futures::StreamExt;
 use hyper::client::HttpConnector;
@@ -12,7 +13,6 @@ use lancedb::query::IntoQueryVector;
 use lancedb::query::QueryBase;
 use lancedb::{Connection, Table};
 use log::{debug, error, info};
-use arrow_array::RecordBatch;
 
 /// Run the query to get the nearest embeddings
 /// Arguments:
@@ -87,16 +87,22 @@ pub async fn query_vector_table(
         let stream = query_all_content(table).await?;
         batches = stream.collect::<Vec<_>>().await;
     }
-    
-    debug!("Number of batches from query: {}", batches.len());
-    let content = get_content_from_batch(batches).context("Failed to get content from record batch")?;
+
+    debug!("Number of batches from query: {}", &batches.len());
+    let content = get_data_from_batch(&batches, "content")
+        .context("Failed to get content from record batch")?;
+    //
+    // let _ = get_data_from_batch(&batches, "chunk_number")
+    //     .context("Failed to get chunk number from record batch")?;
 
     Ok(content)
 }
 
-fn get_content_from_batch(batches: Vec<lancedb::error::Result<RecordBatch>>) -> Result<Vec<String>> {
+fn get_content_from_batch(
+    batches: Vec<lancedb::error::Result<RecordBatch>>,
+) -> Result<Vec<String>> {
     for batch in batches {
-        let batch: arrow_array::RecordBatch = batch.context("Failed to get RecordBatch")?;
+        let batch: RecordBatch = batch.context("Failed to get RecordBatch")?;
 
         let schema = batch.schema(); // Bind schema to a variable
         for i in 0..batch.num_columns() {
@@ -116,7 +122,45 @@ fn get_content_from_batch(batches: Vec<lancedb::error::Result<RecordBatch>>) -> 
             }
         }
     }
-    
+
+    error!("No content found in the batch");
+    Ok(Vec::new())
+}
+
+fn get_data_from_batch(
+    batches: &Vec<lancedb::error::Result<RecordBatch>>,
+    table_column: &str,
+) -> Result<Vec<String>> {
+    for batch in batches {
+        // to avoid moving the elements and instead borrow them,
+        // iterate over references to the elements:
+        let batch_ref = batch
+            .as_ref()
+            .map_err(|e| anyhow!("Failed to get RecordBatch"))
+            .context("Failed to get RecordBatch")?;
+        let schema = batch_ref.schema(); // Bind schema to a variable
+
+        for i in 0..batch_ref.num_columns() {
+            let column = batch_ref.column(i);
+            let column_name = schema.field(i).name(); // Now this is safe
+
+            if column_name == table_column {
+                let content_array = column
+                    .as_any()
+                    .downcast_ref::<StringArray>()
+                    .context("Failed to downcast to StringArray")?;
+
+                debug!("Column {:?}: {:?}", &column_name, &content_array);
+
+                let content = content_array
+                    .iter()
+                    .filter_map(|s| s.map(|s| s.to_string()))
+                    .collect::<Vec<String>>();
+                return Ok(content);
+            }
+        }
+    }
+
     error!("No content found in the batch");
     Ok(Vec::new())
 }
@@ -137,7 +181,10 @@ async fn query_all_content(table: Table) -> Result<SendableRecordBatchStream> {
     Ok(stream)
 }
 
-async fn query_nearest_vector(query_vector: impl IntoQueryVector + Sized, table: &Table) -> Result<SendableRecordBatchStream> {
+async fn query_nearest_vector(
+    query_vector: impl IntoQueryVector + Sized,
+    table: &Table,
+) -> Result<SendableRecordBatchStream> {
     let stream: SendableRecordBatchStream = table
         .query()
         .nearest_to(query_vector) // Find the nearest vectors to the query vector
