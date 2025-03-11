@@ -148,8 +148,8 @@ pub async fn run_chat_with_history(
             history.push(Some(chat_history));
 
             // Parse the JSON string into a serde_json::Value
-            let json_value: Value =
-                serde_json::from_str(content).context("Failed to parse JSON")?;
+            let json_value: Value = serde_json::from_str(content)
+                .with_context(|| format!("Failed to parse JSON: {}", content))?;
 
             // Pretty-print the JSON with indentation
             let pretty_json =

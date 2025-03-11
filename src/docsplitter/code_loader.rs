@@ -192,7 +192,8 @@ async fn split_file_into_chunks(
     // Create a chunk config with the specified max chunk size
     let chunk_config = ChunkConfig::new(max_chunk_size)
         .with_overlap(256)
-        .context("Failed to create chunk config")?;
+        .context("Failed to create chunk config")?
+        .with_trim(true);
 
     let (language, is_supported) = is_supported_file(file_path);
 

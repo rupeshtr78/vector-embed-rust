@@ -66,7 +66,7 @@ pub enum Commands {
         path: String,
         // chunk size
         #[clap(short, long)]
-        #[clap(default_value = "1024")]
+        #[clap(default_value = "2048")]
         chunk_size: usize,
     },
     /// Query the Lance Vector Database
@@ -88,6 +88,10 @@ pub enum Commands {
         #[clap(short, long)]
         #[clap(default_value = "false")]
         whole_query: String,
+        /// specify if the additional file context default is false
+        #[clap(short, long)]
+        #[clap(default_value = "false")]
+        file_context: String,
     },
     /// Query the Lance Vector Database and chat with the AI
     RagQuery {
@@ -108,6 +112,10 @@ pub enum Commands {
         #[clap(short, long)]
         #[clap(default_value = "false")]
         whole_query: String,
+        /// specify if the additional file context default is false
+        #[clap(short, long)]
+        #[clap(default_value = "false")]
+        file_context: String,
     },
     /// Chat with the AI
     Generate {
@@ -181,7 +189,7 @@ impl Commands {
             None
         }
     }
-    
+
     pub fn fetch_args_from_cli(input: String, prompt_message: &str) -> String {
         if input.is_empty() {
             fetch_value(prompt_message)
@@ -253,15 +261,16 @@ pub fn build_args() -> Commands {
     //         }
     //     }
     // }
-    
-    args.cmd.map_or_else(|| {
-        info!("No subcommand provided. Use --help for more information.");
-        Commands::Version {
-            version: VERSION.to_string(),
-        }
-    }, |cmd: Commands| cmd)
-    
-       
+
+    args.cmd.map_or_else(
+        || {
+            info!("No subcommand provided. Use --help for more information.");
+            Commands::Version {
+                version: VERSION.to_string(),
+            }
+        },
+        |cmd: Commands| cmd,
+    )
 }
 
 /// quick and dirty way to test the command line arguments
@@ -323,6 +332,7 @@ pub fn dbg_cmd() {
             table,
             database,
             whole_query,
+            file_context,
         } => {
             println!("Lance Query command");
             println!("Query: {:?}", input);
@@ -330,6 +340,7 @@ pub fn dbg_cmd() {
             println!("Table: {:?}", table);
             println!("Database: {:?}", database);
             println!("Whole Query: {:?}", whole_query);
+            println!("File Context: {:?}", file_context);
         }
         Commands::RagQuery {
             input,
@@ -337,6 +348,7 @@ pub fn dbg_cmd() {
             table,
             database,
             whole_query,
+            file_context: file_query,
         } => {
             println!("Lance Query command");
             let cli_input = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
@@ -345,6 +357,7 @@ pub fn dbg_cmd() {
             println!("Table: {:?}", table);
             println!("Database: {:?}", database);
             println!("Whole Query: {:?}", whole_query);
+            println!("File Query: {:?}", file_query);
         }
         Commands::Generate { prompt } => {
             println!("Chat command");
@@ -361,9 +374,12 @@ pub fn dbg_cmd() {
 /// A `String` containing the value provided by the user or from the argument.
 fn fetch_value(prompt_message: &str) -> String {
     print!("{}", prompt_message);
-    io::stdout().flush().map_err(|e| e.to_string()).unwrap_or_else(|e| {
-        panic!("Failed to flush stdout: {}", e);
-    });
+    io::stdout()
+        .flush()
+        .map_err(|e| e.to_string())
+        .unwrap_or_else(|e| {
+            panic!("Failed to flush stdout: {}", e);
+        });
     let mut input = String::new();
     io::stdin()
         .read_line(&mut input)
