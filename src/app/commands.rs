@@ -88,6 +88,10 @@ pub enum Commands {
         #[clap(short, long)]
         #[clap(default_value = "false")]
         whole_query: String,
+        /// specify if the additional file context default is false
+        #[clap(short, long)]
+        #[clap(default_value = "false")]
+        file_context: String,
     },
     /// Query the Lance Vector Database and chat with the AI
     RagQuery {
@@ -108,6 +112,10 @@ pub enum Commands {
         #[clap(short, long)]
         #[clap(default_value = "false")]
         whole_query: String,
+        /// specify if the additional file context default is false
+        #[clap(short, long)]
+        #[clap(default_value = "false")]
+        file_context: String,
     },
     /// Chat with the AI
     Generate {
@@ -324,6 +332,7 @@ pub fn dbg_cmd() {
             table,
             database,
             whole_query,
+            file_context,
         } => {
             println!("Lance Query command");
             println!("Query: {:?}", input);
@@ -331,6 +340,7 @@ pub fn dbg_cmd() {
             println!("Table: {:?}", table);
             println!("Database: {:?}", database);
             println!("Whole Query: {:?}", whole_query);
+            println!("File Context: {:?}", file_context);
         }
         Commands::RagQuery {
             input,
@@ -338,6 +348,7 @@ pub fn dbg_cmd() {
             table,
             database,
             whole_query,
+            file_context: file_query,
         } => {
             println!("Lance Query command");
             let cli_input = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
@@ -346,6 +357,7 @@ pub fn dbg_cmd() {
             println!("Table: {:?}", table);
             println!("Database: {:?}", database);
             println!("Whole Query: {:?}", whole_query);
+            println!("File Query: {:?}", file_query);
         }
         Commands::Generate { prompt } => {
             println!("Chat command");

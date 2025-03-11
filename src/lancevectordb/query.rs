@@ -34,6 +34,7 @@ pub async fn run_query(
     vector_table: &str,
     http_client: &HttpClient<HttpConnector>,
     whole_query: bool,
+    file_context: bool,
 ) -> Result<Vec<String>> {
     // colog::init();
 
@@ -59,7 +60,7 @@ pub async fn run_query(
     let query_vector = query_response.embeddings[0].clone();
 
     // query the vector table
-    let content = query_vector_table(db, vector_table, query_vector, whole_query)
+    let content = query_vector_table(db, vector_table, query_vector, whole_query, file_context)
         .await
         .context("Failed to query table")?;
 
@@ -68,19 +69,23 @@ pub async fn run_query(
     Ok(content)
 }
 
-/// Query the vector table
-/// Arguments:
-/// - db: &mut Connection
-/// - table_name: &str
-/// - query_vector: impl IntoQueryVector
-/// - whole_query: bool
-/// Returns:
-/// - Result<Vec<String>>
+/// Queries a vector table in the database, either fetching all content or querying the nearest vectors.
+///
+/// # Arguments
+/// * `db` - A mutable reference to the database connection.
+/// * `table_name` - The name of the table to query.
+/// * `query_vector` - The vector to query against the table.
+/// * `whole_query` - If true, fetches all content from the table. If false, queries the nearest vectors.
+/// * `file_context` - If true, fetches the entire file context for the nearest vectors.
+///
+/// # Returns
+/// A `Result` containing a vector of strings representing the queried content, or an error if the operation fails.
 pub async fn query_vector_table(
     db: &mut Connection,
     table_name: &str,
     query_vector: impl IntoQueryVector,
     whole_query: bool,
+    file_context: bool,
 ) -> Result<Vec<String>> {
     let table = db
         .open_table(table_name)
@@ -88,59 +93,66 @@ pub async fn query_vector_table(
         .await
         .context("Failed to open a table")?;
 
-    // let lower_bound = Some(0.5);
-    // let upper_bound = Some(1.5);
-
     let batches;
 
-    if !whole_query {
-        let stream = query_nearest_vector(query_vector, &table).await?;
-        batches = stream.collect::<Vec<_>>().await;
-    } else {
+    if whole_query {
         let stream = query_all_content(&table).await?;
         batches = stream.collect::<Vec<_>>().await;
+        let content = get_content_from_stream(&batches, "content")
+            .context("Failed to get content from record batch")?;
+
+        Ok(content)
+    } else {
+        let stream = query_nearest_vector(query_vector, &table).await?;
+        batches = stream.collect::<Vec<_>>().await;
+        match file_context {
+            true => {
+                // Fetch the whole file context
+                let files = get_content_from_stream(&batches, "metadata")
+                    .context("Failed to get file names from metadata")?;
+
+                // files remove duplicates
+                let files_unique: Vec<String> = files
+                    .into_iter()
+                    .filter(|x| x != "NULL")
+                    .collect::<std::collections::HashSet<_>>()
+                    .into_iter()
+                    .collect();
+
+                debug!("Unique file names after deduplication: {:?}", &files_unique);
+
+                // query the content based on file names
+                let file_content = query_content_based_on_metadata(&table, files_unique)
+                    .await
+                    .context("Failed to query content based on file name metadata")?;
+
+                // convert the stream to a vector
+                let file_batch = file_content.collect::<Vec<_>>().await;
+                // debug!("File Batch: {:?}", &file_batch); // add if required
+                // get the content from the record batch
+                let file_data = get_content_from_stream(&file_batch, "content")
+                    .context("Failed to get content from record batch")?;
+                // debug!("Chunk Data: {:?}", &file_data); // add if required
+                Ok(file_data)
+            }
+            false => {
+                debug!("Number of batches retrieved from query: {}", &batches.len());
+                let content = get_content_from_stream(&batches, "content")
+                    .context("Failed to get content from record batch")?;
+
+                Ok(content)
+            }
+        }
     }
-
-    debug!("Number of batches retrieved from query: {}", &batches.len());
-    let content = get_data_from_batch(&batches, "content")
-        .context("Failed to get content from record batch")?;
-
-    // @TODO: Chunk based query POC remove
-    let chunks = get_data_from_batch(&batches, "metadata")
-        .context("Failed to get chunk number from record batch")?;
-
-    // chunks remove duplicates
-    let chunks_unique: Vec<String> = chunks
-        .into_iter()
-        .filter(|x| x != "NULL")
-        .collect::<Vec<_>>()
-        .into_iter()
-        .collect::<std::collections::HashSet<_>>()
-        .into_iter()
-        .collect();
-
-    debug!("Unique chunks retrieved from query: {:?}", &chunks_unique);
-
-    // let chunk_poc = vec!["2".to_string(), "3".to_string()];
-
-    let chunk_content = query_content_based_on_metadata(&table, chunks_unique)
-        .await
-        .context("Failed to query content based on chunks")?;
-
-    let chunk_batch = chunk_content.collect::<Vec<_>>().await;
-    debug!(
-        "Number of batches retrieved from chunk query: {}",
-        &chunk_batch.len()
-    );
-    let chunk_data = get_data_from_batch(&chunk_batch, "content")
-        .context("Failed to get content from record batch")?;
-
-    debug!("Chunk Data: {:?}", &chunk_data);
-
-    Ok(chunk_data)
 }
 
-fn get_data_from_batch(
+/// Get content from the record stream based on the column name for example "metadata" has the file names
+/// Arguments:
+/// - batches: &Vec<lancedb::error::Result<RecordBatch>>
+/// - table_column: &str
+/// Returns:
+/// - Result<Vec<String>>
+fn get_content_from_stream(
     batches: &Vec<lancedb::error::Result<RecordBatch>>,
     table_column: &str,
 ) -> Result<Vec<String>> {
@@ -161,6 +173,13 @@ fn get_data_from_batch(
     Ok(Vec::new())
 }
 
+/// Helper function to Get list of metadata from the record batch based on the column name returns a list of chunks or file names
+/// Arguments:
+/// - table_column: &str
+/// - batch_ref: &RecordBatch
+/// - schema: SchemaRef
+/// Returns:
+/// - Result<Vec<String>>
 fn get_column_data_from_batch(
     table_column: &str,
     batch_ref: &RecordBatch,
@@ -212,6 +231,8 @@ fn get_column_data_from_batch(
     Ok(Vec::new())
 }
 
+/// Queries all content from the table, selecting the id, metadata, and content columns.
+/// Returns a stream of record batches containing the queried data.
 async fn query_all_content(table: &Table) -> Result<SendableRecordBatchStream> {
     let stream = table
         .query()
@@ -228,6 +249,13 @@ async fn query_all_content(table: &Table) -> Result<SendableRecordBatchStream> {
     Ok(stream)
 }
 
+/// Queries the nearest vector to the given query vector.
+/// Returns a stream of record batches containing the queried data.
+/// Arguments:
+/// - query_vector: impl IntoQueryVector + Sized
+/// - table: &Table
+/// Returns:
+/// - Result<SendableRecordBatchStream>
 async fn query_nearest_vector(
     query_vector: impl IntoQueryVector + Sized,
     table: &Table,
@@ -285,6 +313,12 @@ async fn query_content_based_on_chunks(
     Ok(stream)
 }
 
+/// Query content based on metadata selects all the records with the given metadata
+/// Arguments:
+/// - table: &Table
+/// - metadata: Vec<String>
+/// Returns:
+/// - Result<SendableRecordBatchStream>
 #[allow(dead_code)]
 async fn query_content_based_on_metadata(
     table: &Table,
