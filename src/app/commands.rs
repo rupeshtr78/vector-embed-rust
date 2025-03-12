@@ -209,7 +209,7 @@ impl Commands {
 }
 
 impl LogLevel {
-    // map loglevel to log::LevelFilter
+    /// map loglevel enum to log::LevelFilter
     pub fn get_log_level_filter(&self) -> log::LevelFilter {
         match self {
             LogLevel::Debug => log::LevelFilter::Debug,
@@ -249,7 +249,7 @@ pub fn build_args() -> Commands {
             LogLevel::Debug => colog_init(LogLevel::Debug),
         }
     } else {
-        colog_init(LogLevel::Debug);
+        colog_init(LogLevel::Info);
     }
 
     // match args.cmd {

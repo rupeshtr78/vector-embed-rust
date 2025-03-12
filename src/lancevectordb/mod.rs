@@ -4,12 +4,12 @@ use crate::docsplitter::code_loader;
 use crate::embedder::fetch_embedding;
 use ::anyhow::Context;
 use ::anyhow::Result;
-use ::log::debug;
-use ::log::info;
-use ::std::path::PathBuf;
 use hyper::client::HttpConnector;
 use hyper::Client;
 use load_lancedb::TableSchema;
+use ::log::debug;
+use ::log::info;
+use ::std::path::PathBuf;
 
 fn get_file_name(root_dir: &str) -> String {
     let root_path = PathBuf::from(root_dir);
@@ -18,7 +18,7 @@ fn get_file_name(root_dir: &str) -> String {
         || "None".to_string(),
         |s| s.to_str().unwrap_or("None").to_string(),
     );
-    println!("File Name: {}", file_name);
+    debug!("File Name: {}", file_name);
     file_name
 }
 
@@ -32,7 +32,7 @@ fn get_file_name(root_dir: &str) -> String {
 /// # Arguments
 /// * `path` - The path to the codebase
 /// * `chunk_size` - The size of the chunks
-/// * `embed_url` - The URL of the embedder
+/// * `embed_url` - The URL of the embedding API
 /// * `http_client` - The HTTP client
 /// # Returns
 /// * `Result<()>` - The result of the operation

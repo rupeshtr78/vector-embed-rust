@@ -9,7 +9,7 @@ use anyhow::{Context, Ok};
 use hyper::client::connect::HttpInfo;
 use hyper::client::HttpConnector;
 use hyper::Client as HttpClient;
-use log::info;
+use log::{debug, info};
 use postgres::Client;
 use tokio::sync::Mutex;
 
@@ -172,7 +172,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 ))
                 .context("Failed to run query")?;
 
-            println!("Query Response: {:?}", content);
+            debug!("Query Response: {:?}", content);
         }
         Commands::RagQuery {
             input,
@@ -220,7 +220,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 ))
                 .context("Failed to run query")?;
 
-            println!("Query Response: {:?}", content);
+            debug!("Query Response: {:?}", content);
 
             let context = content.join(" ");
 

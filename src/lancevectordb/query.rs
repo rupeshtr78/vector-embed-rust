@@ -41,7 +41,7 @@ pub async fn run_query(
     info!("Starting query");
 
     // let commands = build_args();
-    info!("Length of input list: {}", input_list[0].len());
+    debug!("Length of input list: {}", input_list[0].len());
     // check if list is length one String is length one
     if input_list.len() == 1 && input_list[0].is_empty() {
         error!("Query Input is empty");
