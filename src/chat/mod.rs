@@ -4,10 +4,9 @@ use anyhow::Context;
 use chat_config::ChatResponse;
 use hyper::client::HttpConnector;
 use hyper::Client;
-use log::{debug, error, info};
+use log::{debug, info};
 use serde_json::Value;
 use std::io::Write;
-use std::process::exit;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -29,14 +28,6 @@ pub async fn run_chat(
     client: &Client<HttpConnector>,
 ) -> anyhow::Result<ChatResponse> {
     info!("Starting LLM chat...");
-
-    let paths = [system_prompt];
-    paths.iter().for_each(|path| {
-        if std::fs::metadata(path).is_err() || !std::fs::metadata(path).unwrap().is_file() {
-            error!("File does not exist: {}", path);
-            exit(1);
-        }
-    });
 
     let cm = ChatMessage::new(
         chat_config::ChatRole::User,
@@ -94,15 +85,7 @@ pub async fn run_chat_with_history(
     context: Option<&str>,
     client: &Client<HttpConnector>,
 ) -> anyhow::Result<()> {
-    info!("Starting LLM chat with history...");
-
-    let paths = [system_prompt];
-    paths.iter().for_each(|path| {
-        if std::fs::metadata(path).is_err() || !std::fs::metadata(path).unwrap().is_file() {
-            error!("File does not exist: {}", path);
-            exit(1);
-        }
-    });
+    println!("Starting LLM chat with history...");
 
     let mut history = Vec::new();
     let query_content = ChatMessage::new(

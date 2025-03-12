@@ -68,10 +68,10 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             let embed_model = model.to_string();
             let vector_table = table.to_string();
 
-            info!("Query command is run with below arguments:");
-            info!(" Query: {:?}", input_list);
-            info!(" Model: {:?}", model);
-            info!(" Table: {:?}", table);
+            println!("Query to fetch context is run with below arguments:");
+            println!(" Query: {:?}", input_list);
+            println!(" Model: {:?}", model);
+            println!(" Table: {:?}", table);
 
             let db_config = VectorDbConfig::NewVectorDbConfig(
                 VECTOR_DB_HOST,
@@ -181,6 +181,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             database,
             whole_query,
             file_context,
+            system_prompt,
         } => {
             let input_list = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
             let embed_model = model.to_string();
@@ -192,11 +193,12 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             let file_context: bool = file_context
                 .parse()
                 .context("Failed to parse file_query flag")?;
+            let system_prompt = system_prompt.as_str();
 
-            info!("Query command is run with below arguments:");
-            info!(" Query: {:?}", input_list);
-            info!(" Model: {:?}", model);
-            info!(" Table: {:?}", table);
+            println!("Query command is run with below arguments:");
+            println!(" Query: {:?}", input_list);
+            println!(" Model: {:?}", model);
+            println!(" Table: {:?}", table);
 
             // Initialize the http client outside the thread // TODO wrap in Arc<Mutex>
             let http_client: HttpClient<HttpConnector> = HttpClient::new();
@@ -223,11 +225,11 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             debug!("Query Response: {:?}", content);
 
             let context = content.join(" ");
-
+            // @ TODO: make this a command line argument
             // let system_prompt = "template/rag_prompt.txt";
             // let system_prompt = "template/software-engineer.txt";
             // let system_prompt = "template/spark_prompt.txt";
-            let system_prompt = "template/spark-engineer.txt";
+            // let system_prompt = "template/spark-engineer.txt";
             rt.block_on(crate::chat::run_chat_with_history(
                 system_prompt,
                 input_list.first().unwrap(),
@@ -271,9 +273,9 @@ async fn check_connection(url: &str) -> Result<()> {
 
     let res = client.get(uri).await?;
     if res.status().is_success() {
-        res.extensions().get::<HttpInfo>().map(|info| {
-            info!("remote addr = {}", info.remote_addr());
-        });
+        if let Some(info) = res.extensions().get::<HttpInfo>() {
+            info!("remote addr = {}", info.remote_addr())
+        }
     } else {
         anyhow::bail!(anyhow::anyhow!("Failed to connect to the server {}", url));
     }

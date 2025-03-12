@@ -4,7 +4,7 @@ use hyper::client::HttpConnector;
 use hyper::Client as HttpClient;
 use hyper::{body, Client, Uri};
 use hyper::{Body, Request};
-use log::{debug, info};
+use log::debug;
 use std::str;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -71,7 +71,7 @@ pub async fn create_embed_request(
         .await
         .with_context(|| format!("Failed to send request to {}", &url))?;
 
-    info!("Embedding Response status: {}", response_body.status());
+    debug!("Embedding Response status: {}", response_body.status());
     // let body = hyper::body::to_bytes(response.into_body()).await?;
 
     let response_body = response_body.into_body();

@@ -5,7 +5,7 @@ use anyhow::Context;
 use anyhow::Result;
 use hyper::client::HttpConnector;
 use ::hyper::Client as HttpClient;
-use log::{debug, error, info};
+use log::{debug, error};
 use postgres::Client;
 
 /// Run the query to get the nearest embeddings
@@ -28,7 +28,7 @@ pub async fn run_pg_vector_query(
 ) -> Result<()> {
     // colog::init();
 
-    info!("Starting query");
+    debug!("Starting query");
 
     // let commands = build_args();
     debug!("Length of input list: {}", input_list[0].len());

@@ -2,7 +2,6 @@ use crate::app::constants::CHAT_API_URL;
 use anyhow::{Context, Result};
 use app::cli;
 use app::commands::build_args;
-use log::info;
 
 mod app;
 mod chat;
@@ -12,7 +11,7 @@ mod lancevectordb;
 mod pgvectordb;
 
 fn main() -> Result<()> {
-    info!("Starting");
+    println!("Starting Application");
 
     // app::commands::dbg_cmd(); // Debugging
 
@@ -28,7 +27,7 @@ fn main() -> Result<()> {
 
     cli::cli(commands, rt, CHAT_API_URL).context("Failed to run Command")?;
 
-    info!("Exiting Chatbot");
+    println!("Exiting Chatbot");
 
     Ok(())
 }
