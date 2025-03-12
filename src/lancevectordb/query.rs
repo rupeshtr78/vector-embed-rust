@@ -14,7 +14,7 @@ use lancedb::query::ExecutableQuery;
 use lancedb::query::IntoQueryVector;
 use lancedb::query::QueryBase;
 use lancedb::{Connection, Table};
-use log::{debug, error, info};
+use log::{debug, error};
 
 /// Run the query to get the nearest embeddings
 /// Arguments:
@@ -38,7 +38,7 @@ pub async fn run_query(
 ) -> Result<Vec<String>> {
     // colog::init();
 
-    info!("Starting query");
+    debug!("Starting query");
 
     // let commands = build_args();
     debug!("Length of input list: {}", input_list[0].len());

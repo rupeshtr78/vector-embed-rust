@@ -1,5 +1,4 @@
 use crate::chat::chat_config::ChatMessage;
-use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
 use handlebars::Handlebars;
@@ -19,7 +18,9 @@ impl Prompt {
         contents: &Vec<Option<ChatMessage>>,
         prompt: &str,
     ) -> Result<Prompt> {
-        let system_prompt = get_system_prompt(path).await?;
+        let system_prompt = get_system_prompt(path)
+            .await
+            .context("Failed to get system prompt")?;
         let prompt = Prompt {
             system_message: system_prompt,
             content: contents.clone(),
@@ -36,8 +37,9 @@ impl Prompt {
 /// * `Result<String>` - System prompt
 async fn get_system_prompt(prompt_path: &str) -> Result<String> {
     let path = std::path::Path::new(prompt_path);
-    if !path.exists() || !path.is_file() {
-        return Err(anyhow!("System prompt file does not exist"));
+
+    if std::fs::metadata(path).is_err() || !std::fs::metadata(path).unwrap().is_file() {
+        anyhow::bail!("System prompt file not found: {}", path.display());
     }
 
     let system_prompt = tokio::fs::read_to_string(path)

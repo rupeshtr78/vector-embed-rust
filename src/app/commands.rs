@@ -1,6 +1,8 @@
 use ::std::io::{self, Write};
 
-use crate::app::constants::{EMBEDDING_MODEL, VECTOR_DB_DIM_STR, VECTOR_DB_TABLE, VERSION};
+use crate::app::constants::{
+    EMBEDDING_MODEL, SYSTEM_PROMPT_PATH, VECTOR_DB_DIM_STR, VECTOR_DB_TABLE, VERSION,
+};
 use clap::{Parser, Subcommand, ValueEnum};
 use log::info;
 
@@ -116,6 +118,10 @@ pub enum Commands {
         #[clap(short, long)]
         #[clap(default_value = "false")]
         file_context: String,
+        /// specify if the system prompt is to be used default is false
+        #[clap(short, long)]
+        #[clap(default_value = SYSTEM_PROMPT_PATH)]
+        system_prompt: String,
     },
     /// Chat with the AI
     Generate {
@@ -349,6 +355,7 @@ pub fn dbg_cmd() {
             database,
             whole_query,
             file_context: file_query,
+            system_prompt,
         } => {
             println!("Lance Query command");
             let cli_input = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
@@ -358,6 +365,7 @@ pub fn dbg_cmd() {
             println!("Database: {:?}", database);
             println!("Whole Query: {:?}", whole_query);
             println!("File Query: {:?}", file_query);
+            println!("System Prompt: {:?}", system_prompt);
         }
         Commands::Generate { prompt } => {
             println!("Chat command");
