@@ -223,7 +223,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             debug!("Query Response: {:?}", content);
 
             let context = content.join(" ");
-
+            // @ TODO: make this a command line argument
             // let system_prompt = "template/rag_prompt.txt";
             // let system_prompt = "template/software-engineer.txt";
             // let system_prompt = "template/spark_prompt.txt";
