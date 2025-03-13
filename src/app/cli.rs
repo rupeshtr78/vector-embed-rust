@@ -244,8 +244,10 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }
         Commands::Generate { prompt, ai_model } => {
-            info!("Chat command is run with below arguments:");
-            info!(" Prompt: {:?}", prompt);
+            // let prompt = Commands::fetch_prompt_from_cli(Vec::new(), "Enter prompt: ");
+            println!("Chat command is run with below arguments:");
+            println!(" Prompt: {:?}", prompt);
+            println!(" AI Model: {:?}", ai_model);
 
             let context: Option<&str> = None;
             let client = HttpClient::new();
