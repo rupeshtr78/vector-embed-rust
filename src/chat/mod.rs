@@ -1,4 +1,4 @@
-use crate::app::constants::{AI_MODEL, CHAT_API_KEY, CHAT_API_URL, CHAT_RESPONSE_FORMAT};
+use crate::app::constants::{CHAT_API_KEY, CHAT_API_URL, CHAT_RESPONSE_FORMAT};
 use crate::chat::chat_config::{ai_chat, ChatMessage};
 use anyhow::Context;
 use chat_config::ChatResponse;
@@ -26,6 +26,7 @@ pub async fn run_chat(
     ai_prompt: &str,
     context: Option<&str>,
     client: &Client<HttpConnector>,
+    ai_model: &str,
 ) -> anyhow::Result<ChatResponse> {
     info!("Starting LLM chat...");
 
@@ -48,7 +49,7 @@ pub async fn run_chat(
     let chat_url = format!("{}/{}", CHAT_API_URL, "api/chat");
 
     let chat_request = chat_config::ChatRequest::new(
-        AI_MODEL.to_string(),
+        ai_model,
         chat_url,
         CHAT_API_KEY.to_string(),
         false,
@@ -84,6 +85,7 @@ pub async fn run_chat_with_history(
     initial_prompt: &str,
     context: Option<&str>,
     client: &Client<HttpConnector>,
+    ai_model: &str,
 ) -> anyhow::Result<()> {
     println!("Starting LLM chat with history...");
 
@@ -105,7 +107,7 @@ pub async fn run_chat_with_history(
         let options = model_options::OptionsBuilder::new().num_ctx(128000).build();
 
         let chat_request = chat_config::ChatRequest::new(
-            AI_MODEL.to_string(),
+            ai_model,
             chat_url,
             CHAT_API_KEY.to_string(),
             false,

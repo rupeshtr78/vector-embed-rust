@@ -90,7 +90,7 @@ struct ChatBody {
 
 impl ChatRequest {
     pub(crate) fn new(
-        model: String,
+        model: &str,
         api_url: String,
         api_key: String,
         stream: bool,
@@ -110,6 +110,7 @@ impl ChatRequest {
         let user_prompt = ChatMessage::new(ChatRole::User, prompt.prompt);
         messages.push(user_prompt);
 
+        let model = model.to_string();
         ChatRequest {
             model,
             api_url,

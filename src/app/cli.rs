@@ -177,6 +177,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
         Commands::RagQuery {
             input,
             model,
+            ai_model,
             table,
             database,
             whole_query,
@@ -197,7 +198,8 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
 
             println!("Query command is run with below arguments:");
             println!(" Query: {:?}", input_list);
-            println!(" Model: {:?}", model);
+            println!(" Embedding Model: {:?}", model);
+            println!(" AI Model: {:?}", ai_model);
             println!(" Table: {:?}", table);
 
             // Initialize the http client outside the thread // TODO wrap in Arc<Mutex>
@@ -235,12 +237,13 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 input_list.first().unwrap(),
                 Some(&context),
                 &http_client,
+                &ai_model,
             ))
             .context("Failed to run chat")?;
 
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }
-        Commands::Generate { prompt } => {
+        Commands::Generate { prompt, ai_model } => {
             info!("Chat command is run with below arguments:");
             info!(" Prompt: {:?}", prompt);
 
@@ -253,6 +256,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 &prompt,
                 context,
                 &client,
+                &ai_model,
             ))
             .context("Failed to run chat")?;
 

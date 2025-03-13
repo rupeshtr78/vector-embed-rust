@@ -2,6 +2,7 @@ use ::std::io::{self, Write};
 
 use crate::app::constants::{
     EMBEDDING_MODEL, SYSTEM_PROMPT_PATH, VECTOR_DB_DIM_STR, VECTOR_DB_TABLE, VERSION,
+    AI_MODEL
 };
 use clap::{Parser, Subcommand, ValueEnum};
 use log::info;
@@ -104,6 +105,10 @@ pub enum Commands {
         #[clap(short, long)]
         #[clap(default_value = EMBEDDING_MODEL)]
         model: String,
+        /// Provide the AI model to use for generation
+        #[clap(short, long)]
+        #[clap(default_value = AI_MODEL)]
+        ai_model: String,
         /// Provide the table to use to query
         #[clap(short, long)]
         table: String,
@@ -128,6 +133,10 @@ pub enum Commands {
         /// Prompt for AI
         #[clap(short, long)]
         prompt: String,
+        /// Provide the AI model to use for generation
+        #[clap(short, long)]
+        #[clap(default_value = AI_MODEL)]
+        ai_model: String,
     },
 }
 
@@ -351,6 +360,7 @@ pub fn dbg_cmd() {
         Commands::RagQuery {
             input,
             model,
+            ai_model,
             table,
             database,
             whole_query,
@@ -361,15 +371,17 @@ pub fn dbg_cmd() {
             let cli_input = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
             println!("Query: {:?}", cli_input);
             println!("Model: {:?}", model);
+            println!("AI Model: {:?}", ai_model);
             println!("Table: {:?}", table);
             println!("Database: {:?}", database);
             println!("Whole Query: {:?}", whole_query);
             println!("File Query: {:?}", file_query);
             println!("System Prompt: {:?}", system_prompt);
         }
-        Commands::Generate { prompt } => {
+        Commands::Generate { prompt, ai_model    } => {
             println!("Chat command");
             println!("Prompt: {:?}", prompt);
+            println!("AI Model: {:?}", ai_model);
         }
     }
 }
