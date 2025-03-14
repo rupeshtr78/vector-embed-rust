@@ -16,7 +16,9 @@ fn main() -> Result<()> {
     // app::commands::dbg_cmd(); // Debugging
 
     let commands = build_args();
-    // let url = format!("{}/{}", CHAT_API_URL, "api/embed");
+    // print the commands
+    // println!("{:?}", commands);
+    // commands.print_command();
 
     let rt = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(4)
@@ -25,9 +27,13 @@ fn main() -> Result<()> {
         .build()
         .context("Failed to build runtime")?;
 
+    // start a spinner
+    // let pb = cli::cli_spinner().context("Failed to create spinner")?;
+    // pb.set_message("Generating...");
+
     cli::cli(commands, rt, CHAT_API_URL).context("Failed to run Command")?;
 
-    println!("Exiting Chatbot");
+    // pb.finish_with_message("Finished!");
 
     Ok(())
 }

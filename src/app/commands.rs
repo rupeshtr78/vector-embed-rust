@@ -1,9 +1,10 @@
 use ::std::io::{self, Write};
 
 use crate::app::constants::{
-    EMBEDDING_MODEL, SYSTEM_PROMPT_PATH, VECTOR_DB_DIM_STR, VECTOR_DB_TABLE, VERSION,
-    AI_MODEL
+    AI_MODEL, EMBEDDING_MODEL, SYSTEM_PROMPT_PATH, VECTOR_DB_DIM_STR, VECTOR_DB_TABLE, VERSION,
 };
+use anyhow::Context;
+use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use log::info;
 
@@ -213,12 +214,94 @@ impl Commands {
         }
     }
 
-    pub fn fetch_prompt_from_cli(input: Vec<String>, prompt_message: &str) -> Vec<String> {
+    pub async fn fetch_prompt_from_cli(
+        input: Vec<String>,
+        prompt_message: &str,
+    ) -> Result<Vec<String>> {
         if input.is_empty() {
-            let user_input = fetch_value(prompt_message);
-            vec![user_input]
+            let user_input = fetch_valueV2(prompt_message)
+                .await
+                .with_context(|| format!("Failed to fetch prompt from CLI: {}", prompt_message))?;
+            Ok(vec![user_input])
         } else {
-            input
+            Ok(input)
+        }
+    }
+
+    pub fn print_command(&self) {
+        match self {
+            Commands::PgWrite {
+                input,
+                model,
+                table,
+                dim,
+            } => {
+                println!("Write command");
+                println!("Input: {:?}", input);
+                println!("Model: {:?}", model);
+                println!("Table: {:?}", table);
+                println!("Dimension: {:?}", dim);
+            }
+            Commands::PgQuery {
+                input,
+                model,
+                table,
+            } => {
+                println!("Query command");
+                println!("Query: {:?}", input);
+                println!("Model: {:?}", model);
+                println!("Table: {:?}", table);
+            }
+            Commands::Version { version } => {
+                println!("Version command");
+                println!("Version: {:?}", version);
+            }
+            Commands::Load { path, chunk_size } => {
+                println!("Load command");
+                println!("Path: {:?}", path);
+                println!("Chunk size: {:?}", chunk_size);
+            }
+            Commands::LanceQuery {
+                input,
+                model,
+                table,
+                database,
+                whole_query,
+                file_context,
+            } => {
+                println!("Lance Query command");
+                println!("Query: {:?}", input);
+                println!("Model: {:?}", model);
+                println!("Table: {:?}", table);
+                println!("Database: {:?}", database);
+                println!("Whole Query: {:?}", whole_query);
+                println!("File Context: {:?}", file_context);
+            }
+            Commands::RagQuery {
+                input,
+                model,
+                ai_model,
+                table,
+                database,
+                whole_query,
+                file_context: file_query,
+                system_prompt,
+            } => {
+                println!("Rag Query command");
+                println!("Query: {:?}", input);
+                println!("Model: {:?}", model);
+                println!("AI Model: {:?}", ai_model);
+                println!("Table: {:?}", table);
+                println!("Database: {:?}", database);
+                println!("Whole Query: {:?}", whole_query);
+                println!("File Query: {:?}", file_query);
+                println!("System Prompt: {:?}", system_prompt);
+            }
+            Commands::Generate { prompt, ai_model } => {
+                println!("Chat command");
+                println!("Prompt: {:?}", prompt);
+                println!("AI Model: {:?}", ai_model);
+            }
         }
     }
 }
@@ -288,104 +371,6 @@ pub fn build_args() -> Commands {
     )
 }
 
-/// quick and dirty way to test the command line arguments
-#[allow(dead_code)]
-pub fn dbg_cmd() {
-    // cargo run -- help
-    // cargo run -- write --help
-    // cargo run -- write --input "hello" "world"
-    // cargo run -- write --input "hello","world" --model "nomic-embed-text1" --table "from_rust2" --dim 7681
-    // cargo run -- write --input "dog sound is called bark" --input "cat sounds is called purr" --model "nomic-embed-text"
-    // cargo run -- write --input "dog sound is called bark" --input "cat sounds is called purr" --model "nomic-embed-text" --table "from_rust2" --dim 768
-    // cargo run -- query --input "who is barking" --model "nomic-embed-text" --table "from_rust2"
-    // cargo test --package pg-vector-embed-rust --lib -- tests::pgclient_test::pg_client_tests --show-output
-    let args = Args::parse();
-    println!("Parsed args: {:?}", args);
-    let commands = match args.cmd {
-        Some(command) => command,
-        None => {
-            println!("No subcommand provided. Use --help for more information.");
-            return;
-        }
-    };
-
-    match &commands {
-        Commands::PgWrite {
-            input,
-            model,
-            table,
-            dim,
-        } => {
-            println!("Write command");
-            println!("Input: {:?}", input);
-            println!("Model: {:?}", model);
-            println!("Table: {:?}", table);
-            println!("Dimension: {:?}", dim);
-        }
-        Commands::PgQuery {
-            input,
-            model,
-            table,
-        } => {
-            println!("Query command");
-            println!("Query: {:?}", input);
-            println!("Model: {:?}", model);
-            println!("Table: {:?}", table);
-        }
-        Commands::Version { version } => {
-            println!("Version command");
-            println!("Version: {:?}", version);
-        }
-        Commands::Load { path, chunk_size } => {
-            println!("Load command");
-            println!("Path: {:?}", path);
-            println!("Chunk size: {:?}", chunk_size);
-        }
-        Commands::LanceQuery {
-            input,
-            model,
-            table,
-            database,
-            whole_query,
-            file_context,
-        } => {
-            println!("Lance Query command");
-            println!("Query: {:?}", input);
-            println!("Model: {:?}", model);
-            println!("Table: {:?}", table);
-            println!("Database: {:?}", database);
-            println!("Whole Query: {:?}", whole_query);
-            println!("File Context: {:?}", file_context);
-        }
-        Commands::RagQuery {
-            input,
-            model,
-            ai_model,
-            table,
-            database,
-            whole_query,
-            file_context: file_query,
-            system_prompt,
-        } => {
-            println!("Lance Query command");
-            let cli_input = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
-            println!("Query: {:?}", cli_input);
-            println!("Model: {:?}", model);
-            println!("AI Model: {:?}", ai_model);
-            println!("Table: {:?}", table);
-            println!("Database: {:?}", database);
-            println!("Whole Query: {:?}", whole_query);
-            println!("File Query: {:?}", file_query);
-            println!("System Prompt: {:?}", system_prompt);
-        }
-        Commands::Generate { prompt, ai_model    } => {
-            println!("Chat command");
-            println!("Prompt: {:?}", prompt);
-            println!("AI Model: {:?}", ai_model);
-        }
-    }
-}
-
 /// Generic function to fetch a value from the command line if not provided as an argument.
 ///
 /// # Arguments.
@@ -405,4 +390,34 @@ fn fetch_value(prompt_message: &str) -> String {
         .read_line(&mut input)
         .expect("Failed to read line");
     input.trim().to_string()
+}
+
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
+
+async fn fetch_valueV2(prompt_message: &str) -> Result<String> {
+    // Print the prompt message
+    print!("{}", prompt_message);
+    tokio::io::stdout()
+        .flush()
+        .await
+        .with_context(|| "Failed to flush stdout")?;
+
+    // Create a buffer for reading input
+    let stdin = tokio::io::stdin();
+    let mut reader = tokio::io::BufReader::new(stdin);
+
+    // Get a single line of input
+    let mut input = String::new();
+    reader
+        .read_line(&mut input)
+        .await
+        .with_context(|| "Failed to read line")?;
+
+    // Check if the input is empty
+    if input.trim().is_empty() {
+        return Err(anyhow::anyhow!("Input cannot be empty"));
+    }
+
+    // Return the trimmed input
+    Ok(input.trim().to_string())
 }

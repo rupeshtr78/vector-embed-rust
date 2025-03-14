@@ -4,7 +4,7 @@ use anyhow::Context;
 use chat_config::ChatResponse;
 use hyper::client::HttpConnector;
 use hyper::Client;
-use log::{debug, info};
+use log::debug;
 use serde_json::Value;
 use std::io::Write;
 use std::sync::Arc;
@@ -28,7 +28,7 @@ pub async fn run_chat(
     client: &Client<HttpConnector>,
     ai_model: &str,
 ) -> anyhow::Result<ChatResponse> {
-    info!("Starting LLM chat...");
+    // info!("Starting LLM chat...");
 
     let cm = ChatMessage::new(
         chat_config::ChatRole::User,
@@ -87,7 +87,7 @@ pub async fn run_chat_with_history(
     client: &Client<HttpConnector>,
     ai_model: &str,
 ) -> anyhow::Result<()> {
-    println!("Starting LLM chat with history...");
+    debug!("Starting LLM chat with history...");
 
     let mut history = Vec::new();
     let query_content = ChatMessage::new(

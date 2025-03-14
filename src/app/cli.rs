@@ -9,8 +9,11 @@ use anyhow::{Context, Ok};
 use hyper::client::connect::HttpInfo;
 use hyper::client::HttpConnector;
 use hyper::Client as HttpClient;
+use indicatif::ProgressBar;
+use indicatif::ProgressStyle;
 use log::{debug, info};
 use postgres::Client;
+use std::time::Duration;
 use tokio::sync::Mutex;
 
 pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result<()> {
@@ -134,7 +137,13 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             whole_query,
             file_context,
         } => {
-            let input_list = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
+            // let input_list = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
+            let input_list = rt
+                .block_on(Commands::fetch_prompt_from_cli(
+                    input.clone(),
+                    "Enter query: ",
+                ))
+                .with_context(|| format!("Failed to fetch prompt from CLI: {:?}", input))?;
             let embed_model = model.to_string();
             let vector_table = table.to_string();
             let db_uri = database.to_string();
@@ -184,7 +193,16 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             file_context,
             system_prompt,
         } => {
-            let input_list = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
+            let input_list = rt
+                .block_on(Commands::fetch_prompt_from_cli(
+                    input.clone(),
+                    "Enter query: ",
+                ))
+                .with_context(|| format!("Failed to fetch prompt from CLI: {:?}", input))?;
+
+            info!("Using the RagQuery arguments below:");
+            info!(" Query: {:?}", input_list);
+
             let embed_model = model.to_string();
             let vector_table = table.to_string();
             let db_uri = database.to_string();
@@ -195,12 +213,6 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 .parse()
                 .context("Failed to parse file_query flag")?;
             let system_prompt = system_prompt.as_str();
-
-            println!("Query command is run with below arguments:");
-            println!(" Query: {:?}", input_list);
-            println!(" Embedding Model: {:?}", model);
-            println!(" AI Model: {:?}", ai_model);
-            println!(" Table: {:?}", table);
 
             // Initialize the http client outside the thread // TODO wrap in Arc<Mutex>
             let http_client: HttpClient<HttpConnector> = HttpClient::new();
@@ -245,9 +257,9 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
         }
         Commands::Generate { prompt, ai_model } => {
             // let prompt = Commands::fetch_prompt_from_cli(Vec::new(), "Enter prompt: ");
-            println!("Chat command is run with below arguments:");
-            println!(" Prompt: {:?}", prompt);
-            println!(" AI Model: {:?}", ai_model);
+            // println!("Chat command is run with below arguments:");
+            // println!(" Prompt: {:?}", prompt);
+            // println!(" AI Model: {:?}", ai_model);
 
             let context: Option<&str> = None;
             let client = HttpClient::new();
@@ -287,4 +299,22 @@ async fn check_connection(url: &str) -> Result<()> {
     }
 
     Ok(())
+}
+
+pub fn cli_spinner() -> Result<ProgressBar> {
+    let monkeys = ["🐒", "🐵", "🙈", "🙉", "🙊"];
+
+    let pb = ProgressBar::new(1024);
+
+    let style = ProgressStyle::default_spinner()
+        .tick_strings(&monkeys)
+        .template(" {spinner} {msg}")
+        .with_context(|| "Failed to create progress style")?;
+    pb.set_style(style);
+    pb.enable_steady_tick(Duration::from_millis(100));
+
+    // pb.tick();
+    // pb.inc(1);
+
+    Ok(pb)
 }
