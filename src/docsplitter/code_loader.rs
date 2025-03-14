@@ -326,7 +326,7 @@ async fn process_spark_log_file(
         })
         .collect::<Result<Vec<FileChunk>, CodeSplitterError>>()?;
 
-    return Ok(chunks);
+    Ok(chunks)
 }
 
 fn capture_context_lines(content: &str, num_lines: usize) -> String {
