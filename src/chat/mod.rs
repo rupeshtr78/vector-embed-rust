@@ -102,6 +102,7 @@ pub async fn run_chat_with_history(
             .await
             .context("Failed to create prompt")?;
 
+        // @TODO: Implement ChatModel struct 
         let chat_url = format!("{}/{}", CHAT_API_URL, "api/chat");
 
         let options = model_options::OptionsBuilder::new().num_ctx(128000).build();
