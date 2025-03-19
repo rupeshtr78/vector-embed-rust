@@ -86,6 +86,7 @@ pub async fn run_chat_with_history(
     context: Option<&str>,
     client: &Client<HttpConnector>,
     ai_model: &str,
+    pb: &indicatif::ProgressBar,
 ) -> anyhow::Result<()> {
     debug!("Starting LLM chat with history...");
 
@@ -145,17 +146,24 @@ pub async fn run_chat_with_history(
             println!("AI Response: None");
         }
 
-        // Prompt the user for the next input @TODO: Fix this is not printing the prompt
-        print!("Ask Followup: ");
-        std::io::stdout().flush().expect("Failed to flush stdout");
-        let mut user_input = String::new();
-        std::io::stdin()
-            .read_line(&mut user_input)
-            .expect("Failed to read line");
-        current_prompt = user_input.trim().to_string();
+        // Prompt the user for the next input suspend the progress bar
+        pb.suspend(|| {
+            print!("Ask Followup or type exit to end: ");
+            std::io::stdout().flush().expect("Failed to flush stdout");
+            let mut user_input = String::new();
+            std::io::stdin()
+                .read_line(&mut user_input)
+                .expect("Failed to read line");
+            current_prompt = user_input.trim().to_string();
+        });
 
         if current_prompt.to_lowercase() == "exit" {
+            pb.finish_with_message("Exiting...");
             break;
+        }
+        if current_prompt.is_empty() {
+            println!("Empty input, please try again.");
+            continue;
         }
     }
 

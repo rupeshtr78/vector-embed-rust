@@ -238,6 +238,10 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
 
             debug!("Query Response: {:?}", content);
 
+            // start a spinner @TODO Fix this
+            let pb = cli_spinner().context("Failed to create spinner")?;
+            pb.set_message("Generating...");
+
             let context = content.join(" ");
             // @ TODO: make this a command line argument
             // let system_prompt = "template/rag_prompt.txt";
@@ -250,6 +254,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 Some(&context),
                 &http_client,
                 &ai_model,
+                &pb,
             ))
             .context("Failed to run chat")?;
 
@@ -264,6 +269,10 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             let context: Option<&str> = None;
             let client = HttpClient::new();
 
+            // start a spinner @TODO Fix this
+            let pb = cli_spinner().context("Failed to create spinner")?;
+            pb.set_message("Generating...");
+
             let system_prompt = "template/general_prompt.txt";
             rt.block_on(crate::chat::run_chat(
                 system_prompt,
@@ -274,6 +283,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             ))
             .context("Failed to run chat")?;
 
+            pb.finish_with_message("End of Response!");
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }
         Commands::Version { version } => {
@@ -302,16 +312,33 @@ async fn check_connection(url: &str) -> Result<()> {
 }
 
 pub fn cli_spinner() -> Result<ProgressBar> {
-    let monkeys = ["🐒", "🐵", "🙈", "🙉", "🙊"];
+    // let spin_chars = ["🐒", "🐵", "🙈", "🙉", "🙊"];
+    let bar_chars = [
+        "⠀", "⠁", "⠂", "⠃", "⠄", "⠅", "⠆", "⠇", "⡀", "⡁", "⡂", "⡃", "⡄", "⡅", "⡆", "⡇", "⠈", "⠉",
+        "⠊", "⠋", "⠌", "⠍", "⠎", "⠏", "⡈", "⡉", "⡊", "⡋", "⡌", "⡍", "⡎", "⡏", "⠐", "⠑", "⠒", "⠓",
+        "⠔", "⠕", "⠖", "⠗", "⡐", "⡑", "⡒", "⡓", "⡔", "⡕", "⡖", "⡗", "⠘", "⠙", "⠚", "⠛", "⠜", "⠝",
+        "⠞", "⠟", "⡘", "⡙", "⡚", "⡛", "⡜", "⡝", "⡞", "⡟", "⠠", "⠡", "⠢", "⠣", "⠤", "⠥", "⠦", "⠧",
+        "⡠", "⡡", "⡢", "⡣", "⡤", "⡥", "⡦", "⡧", "⠨", "⠩", "⠪", "⠫", "⠬", "⠭", "⠮", "⠯", "⡨", "⡩",
+        "⡪", "⡫", "⡬", "⡭", "⡮", "⡯", "⠰", "⠱", "⠲", "⠳", "⠴", "⠵", "⠶", "⠷", "⡰", "⡱", "⡲", "⡳",
+        "⡴", "⡵", "⡶", "⡷", "⠸", "⠹", "⠺", "⠻", "⠼", "⠽", "⠾", "⠿", "⡸", "⡹", "⡺", "⡻", "⡼", "⡽",
+        "⡾", "⡿", "⢀", "⢁", "⢂", "⢃", "⢄", "⢅", "⢆", "⢇", "⣀", "⣁", "⣂", "⣃", "⣄", "⣅", "⣆", "⣇",
+        "⢈", "⢉", "⢊", "⢋", "⢌", "⢍", "⢎", "⢏", "⣈", "⣉", "⣊", "⣋", "⣌", "⣍", "⣎", "⣏", "⢐", "⢑",
+        "⢒", "⢓", "⢔", "⢕", "⢖", "⢗", "⣐", "⣑", "⣒", "⣓", "⣔", "⣕", "⣖", "⣗", "⢘", "⢙", "⢚", "⢛",
+        "⢜", "⢝", "⢞", "⢟", "⣘", "⣙", "⣚", "⣛", "⣜", "⣝", "⣞", "⣟", "⢠", "⢡", "⢢", "⢣", "⢤", "⢥",
+        "⢦", "⢧", "⣠", "⣡", "⣢", "⣣", "⣤", "⣥", "⣦", "⣧", "⢨", "⢩", "⢪", "⢫", "⢬", "⢭", "⢮", "⢯",
+        "⣨", "⣩", "⣪", "⣫", "⣬", "⣭", "⣮", "⣯", "⢰", "⢱", "⢲", "⢳", "⢴", "⢵", "⢶", "⢷", "⣰", "⣱",
+        "⣲", "⣳", "⣴", "⣵", "⣶", "⣷", "⢸", "⢹", "⢺", "⢻", "⢼", "⢽", "⢾", "⢿", "⣸", "⣹", "⣺", "⣻",
+        "⣼", "⣽", "⣾", "⣿",
+    ];
 
     let pb = ProgressBar::new(1024);
 
     let style = ProgressStyle::default_spinner()
-        .tick_strings(&monkeys)
-        .template(" {spinner} {msg}")
+        .tick_strings(&bar_chars)
+        .template("{spinner} {red} {msg} ")
         .with_context(|| "Failed to create progress style")?;
     pb.set_style(style);
-    pb.enable_steady_tick(Duration::from_millis(100));
+    pb.enable_steady_tick(Duration::from_millis(40));
 
     // pb.tick();
     // pb.inc(1);

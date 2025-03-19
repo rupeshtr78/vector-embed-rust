@@ -16,7 +16,7 @@ fn main() -> Result<()> {
     // app::commands::dbg_cmd(); // Debugging
 
     let commands = build_args();
-    // print the commands
+    // print the commands for debugging
     // println!("{:?}", commands);
     // commands.print_command();
 
@@ -26,10 +26,6 @@ fn main() -> Result<()> {
         .enable_all()
         .build()
         .context("Failed to build runtime")?;
-
-    // start a spinner
-    // let pb = cli::cli_spinner().context("Failed to create spinner")?;
-    // pb.set_message("Generating...");
 
     cli::cli(commands, rt, CHAT_API_URL).context("Failed to run Command")?;
 

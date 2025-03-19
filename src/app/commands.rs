@@ -395,29 +395,28 @@ fn fetch_value(prompt_message: &str) -> String {
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 
 async fn fetch_valueV2(prompt_message: &str) -> Result<String> {
-    // Print the prompt message
-    print!("{}", prompt_message);
-    tokio::io::stdout()
+    let mut stdout = tokio::io::stdout();
+
+    stdout
+        .write_all(prompt_message.as_bytes())
+        .await
+        .with_context(|| "Failed to write to prompt to stdout")?;
+    stdout
         .flush()
         .await
         .with_context(|| "Failed to flush stdout")?;
 
     // Create a buffer for reading input
     let stdin = tokio::io::stdin();
-    let mut reader = tokio::io::BufReader::new(stdin);
+    let reader = tokio::io::BufReader::new(stdin);
+    let mut lines = reader.lines();
 
-    // Get a single line of input
-    let mut input = String::new();
-    reader
-        .read_line(&mut input)
+    // Read a line from stdin
+    let input = lines
+        .next_line()
         .await
-        .with_context(|| "Failed to read line")?;
+        .with_context(|| "Failed to read line from stdin")?
+        .with_context(|| "No input received")?;
 
-    // Check if the input is empty
-    if input.trim().is_empty() {
-        return Err(anyhow::anyhow!("Input cannot be empty"));
-    }
-
-    // Return the trimmed input
-    Ok(input.trim().to_string())
+    Ok(input)
 }
