@@ -161,23 +161,19 @@ impl ChatRequest {
     }
 
     pub fn get_chat_api_url(&self) -> Result<String> {
-        if self.provider == LLMProvider::OpenAI {
-            Ok(format!("{}/{}", OPEN_AI_URL, OPEN_AI_CHAT_API)) // Adjusted to use only one argument
-        } else if self.provider == LLMProvider::Ollama {
-            Ok(format!("{}/{}", self.api_url, constants::OLLAMA_CHAT_API)) // This is correct
-        } else {
-            Err(anyhow!("Unsupported provider: {}", "model"))
+        match self.provider {
+            LLMProvider::OpenAI => Ok(format!("{}/{}", OPEN_AI_URL, OPEN_AI_CHAT_API)),
+            LLMProvider::Ollama => Ok(format!("{}/{}", self.api_url, constants::OLLAMA_CHAT_API)),
+            _ => Err(anyhow!("Unsupported provider: {}", "model")),
         }
     }
 
     #[allow(dead_code)]
     pub fn get_embed_api_url(&self) -> Result<String> {
-        if self.provider == LLMProvider::OpenAI {
-            Ok(format!("{}/{}", OPEN_AI_URL, constants::OPEN_AI_EMBED_API)) // Adjusted to use only one argument
-        } else if self.provider == LLMProvider::Ollama {
-            Ok(format!("{}/{}", self.api_url, constants::OLLAMA_EMBED_API)) // This is correct
-        } else {
-            Err(anyhow!("Unsupported provider: {}", "model"))
+        match self.provider {
+            LLMProvider::OpenAI => Ok(format!("{}/{}", OPEN_AI_URL, constants::OPEN_AI_EMBED_API)),
+            LLMProvider::Ollama => Ok(format!("{}/{}", self.api_url, constants::OLLAMA_EMBED_API)),
+            _ => Err(anyhow!("Unsupported provider: {}", "model")),
         }
     }
 }
