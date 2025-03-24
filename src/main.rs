@@ -16,7 +16,6 @@ fn main() -> Result<()> {
     // app::commands::dbg_cmd(); // Debugging
 
     let commands = build_args();
-    // let url = format!("{}/{}", CHAT_API_URL, "api/embed");
 
     let rt = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(4)

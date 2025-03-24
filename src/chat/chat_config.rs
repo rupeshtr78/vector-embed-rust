@@ -1,8 +1,9 @@
+use crate::app::constants::{self, OPEN_AI_CHAT_API, OPEN_AI_URL};
 use crate::chat::model_options::Options;
 use anyhow::Result;
 use anyhow::{anyhow, Context};
 use hyper::client::HttpConnector;
-use hyper::{body, Client, Uri};
+use hyper::{body, Client};
 use hyper::{Body, Request};
 use log::debug;
 use serde::{Deserialize, Serialize};
@@ -63,11 +64,29 @@ impl ChatMessage {
         }
     }
 }
+/// LLMProvider is an enum that represents the provider of the LLM
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub enum LLMProvider {
+    OpenAI,
+    Ollama,
+    // Add other providers
+}
+
+impl LLMProvider {
+    pub fn get_provider(provider: &str) -> Result<LLMProvider> {
+        match provider.to_lowercase().as_str() {
+            "ollama" => Ok(LLMProvider::Ollama),
+            "openai" => Ok(LLMProvider::OpenAI),
+            _ => Err(anyhow!("Unsupported provider: {}", provider)),
+        }
+    }
+}
 
 /// ChatRequest is a struct that represents a chat request
 // @TODO: Add provider to choose between OpenAI and other providers like ollama
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct ChatRequest {
+    pub provider: LLMProvider,
     pub model: String,
     pub api_url: String,
     pub api_key: String,
@@ -90,6 +109,7 @@ struct ChatBody {
 
 impl ChatRequest {
     pub(crate) fn new(
+        provider: &str,
         model: &str,
         api_url: String,
         api_key: String,
@@ -110,8 +130,11 @@ impl ChatRequest {
         let user_prompt = ChatMessage::new(ChatRole::User, prompt.prompt);
         messages.push(user_prompt);
 
+        let provider = LLMProvider::get_provider(provider).unwrap_or_else(|_| LLMProvider::Ollama); // Default to Ollama if not specified
+
         let model = model.to_string();
         ChatRequest {
+            provider,
             model,
             api_url,
             api_key,
@@ -136,6 +159,23 @@ impl ChatRequest {
 
         Ok(body)
     }
+
+    pub fn get_chat_api_url(&self) -> Result<String> {
+        match self.provider {
+            LLMProvider::OpenAI => Ok(format!("{}/{}", OPEN_AI_URL, OPEN_AI_CHAT_API)),
+            LLMProvider::Ollama => Ok(format!("{}/{}", self.api_url, constants::OLLAMA_CHAT_API)),
+            _ => Err(anyhow!("Unsupported provider: {}", "model")),
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn get_embed_api_url(&self) -> Result<String> {
+        match self.provider {
+            LLMProvider::OpenAI => Ok(format!("{}/{}", OPEN_AI_URL, constants::OPEN_AI_EMBED_API)),
+            LLMProvider::Ollama => Ok(format!("{}/{}", self.api_url, constants::OLLAMA_EMBED_API)),
+            _ => Err(anyhow!("Unsupported provider: {}", "model")),
+        }
+    }
 }
 
 /// Get chat response from the AI model
@@ -150,10 +190,8 @@ pub async fn ai_chat(
 ) -> Result<ChatResponse> {
     let chat_request = chat_request.read().await;
 
-    let url = chat_request
-        .api_url
-        .parse::<Uri>()
-        .context("Failed to parse URL")?;
+    let chat_url = chat_request.get_chat_api_url()?;
+    debug!("Chat URL: {:?}", chat_url);
 
     // Serialize the data to a JSON string, handling potential errors
     let chat_body = chat_request.create_chat_body()?;
@@ -161,7 +199,7 @@ pub async fn ai_chat(
 
     let request = Request::builder()
         .method("POST")
-        .uri(url)
+        .uri(&chat_url)
         .header("Content-Type", "application/json")
         .header("Authorization", format!("Bearer {}", chat_request.api_key))
         .body(request_body)
@@ -170,7 +208,11 @@ pub async fn ai_chat(
     // Send the request and await the response.
     let response = http_client.request(request).await?;
     if response.status() != 200 {
-        return Err(anyhow!("Failed to get response: {}", response.status()));
+        return Err(anyhow!(
+            "Failed to get response: {} from {}",
+            response.status(),
+            &chat_url
+        ));
     }
     debug!("Chat Response Status: {:?}", response.status());
 

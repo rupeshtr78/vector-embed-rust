@@ -176,6 +176,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
         }
         Commands::RagQuery {
             input,
+            llm_provider,
             embed_model,
             api_url,
             api_key,
@@ -197,9 +198,12 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 .parse()
                 .context("Failed to parse file_query flag")?;
             let system_prompt = system_prompt.as_str();
+            let provider = llm_provider.as_str();
 
             println!("Query command is run with below arguments:");
             println!(" Query: {:?}", input_list);
+            println!(" LLM Provider: {:?}", llm_provider);
+            println!(" API URL: {:?}", api_url);
             println!(" Embedding Model: {:?}", embed_model);
             println!(" AI Model: {:?}", ai_model);
             println!(" Table: {:?}", table);
@@ -239,6 +243,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 input_list.first().unwrap(),
                 Some(&context),
                 &http_client,
+                provider,
                 &api_url,
                 &api_key,
                 &ai_model,
@@ -249,6 +254,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
         }
         Commands::Generate {
             prompt,
+            llm_provider,
             api_url,
             api_key,
             ai_model,
@@ -256,6 +262,9 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             // let prompt = Commands::fetch_prompt_from_cli(Vec::new(), "Enter prompt: ");
             println!("Chat command is run with below arguments:");
             println!(" Prompt: {:?}", prompt);
+            println!(" LLM Provider: {:?}", llm_provider);
+            println!(" API URL: {:?}", api_url);
+            println!(" API Key: {:?}", api_key);
             println!(" AI Model: {:?}", ai_model);
 
             let context: Option<&str> = None;
@@ -267,6 +276,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 &prompt,
                 context,
                 &client,
+                llm_provider.as_str(),
                 &api_url,
                 &api_key,
                 &ai_model,

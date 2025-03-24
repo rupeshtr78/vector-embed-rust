@@ -103,6 +103,10 @@ pub enum Commands {
         #[clap(short, long)]
         input: Vec<String>,
         /// Provide the model to use for query embedding
+        #[clap(short = 'p', long)]
+        #[clap(default_value = "ollama")]
+        llm_provider: String,
+        /// Provide the model to use for query embedding
         #[clap(short, long)]
         #[clap(default_value = EMBEDDING_MODEL)]
         embed_model: String,
@@ -142,6 +146,10 @@ pub enum Commands {
         /// Prompt for AI
         #[clap(short, long)]
         prompt: String,
+        /// Provide the model to use for query embedding
+        #[clap(short = 'p', long)]
+        #[clap(default_value = "ollama")]
+        llm_provider: String,
         /// Provide the API endpoint to use
         #[clap(short, long)]
         #[clap(default_value = CHAT_API_URL)]
@@ -376,6 +384,7 @@ pub fn dbg_cmd() {
         }
         Commands::RagQuery {
             input,
+            llm_provider,
             embed_model,
             api_url,
             api_key,
@@ -389,6 +398,7 @@ pub fn dbg_cmd() {
             println!("Lance Query command");
             let cli_input = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
             println!("Query: {:?}", cli_input);
+            println!("LLM Provider: {:?}", llm_provider);
             println!("Model: {:?}", api_url);
             println!("API Key: {:?}", api_key);
             println!("Model: {:?}", embed_model);
@@ -401,12 +411,14 @@ pub fn dbg_cmd() {
         }
         Commands::Generate {
             prompt,
+            llm_provider,
             api_url,
             api_key,
             ai_model,
         } => {
             println!("Chat command");
             println!("Prompt: {:?}", prompt);
+            println!("LLM Provider: {:?}", llm_provider);
             println!("API URL: {:?}", api_url);
             println!("API Key: {:?}", api_key);
             println!("AI Model: {:?}", ai_model);
