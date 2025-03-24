@@ -18,4 +18,10 @@ pub const CHAT_RESPONSE_FORMAT: &str = "json";
 pub const SYSTEM_PROMPT_PATH: &str = "src/resources/rag_prompt.txt";
 pub const AI_MODEL: &str = "qwen2:7b"; //"mistral:latest";
 
+// pub const OLLAMA_CHAT_API: &str = "api/chat";
+// pub const OLLAMA_EMBED_API: &str = "api/embed";
+// pub const OPEN_API_URL: &str = "https://api.openai.com";
+// pub const OPEN_API_CHAT_API: &str = "v1/chat/completions";
+// pub const OPEN_API_EMBED_API: &str = "v1/embeddings";
+
 // pub const DEFAULT_CHUNK_SIZE: usize = 2048;

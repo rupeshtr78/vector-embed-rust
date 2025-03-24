@@ -163,6 +163,7 @@ pub async fn ai_chat(
         .method("POST")
         .uri(url)
         .header("Content-Type", "application/json")
+        .header("Authorization", format!("Bearer {}", chat_request.api_key))
         .body(request_body)
         .context("Failed to build request")?;
 

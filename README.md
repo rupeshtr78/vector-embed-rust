@@ -117,6 +117,8 @@ Configuration settings for embedding requests, database connections, and chat in
 
 The test suite requires PostgreSQL VectorDB and Ollama with an embedding model to be running in the correct configuration.
 
+* TODO missing test
+
 ```sh
 cargo test
 ```
