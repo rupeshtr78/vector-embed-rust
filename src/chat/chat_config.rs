@@ -65,7 +65,7 @@ impl ChatMessage {
 }
 
 /// ChatRequest is a struct that represents a chat request
-// @TODO: Add tools
+// @TODO: Add provider to choose between OpenAI and other providers like ollama
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct ChatRequest {
     pub model: String,
