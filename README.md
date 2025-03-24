@@ -1,6 +1,6 @@
 # Vector Embedding and Query with Chat Integration in Rust
 
-This repository contains a Rust-based system for managing vector embeddings, querying them using a LanceDB/PostgreSQL-backed vector database, and integrating chat functionalities with the Ollama LLM model. The system is designed to handle embedding generation, storage, querying, and interactive chat sessions.
+This repository contains a Rust-based system for managing vector embeddings, querying them using a LanceDB/PostgreSQL-backed vector database, chat with ai based on the retreived context currenly supports Ollama. The system is designed to handle embedding generation, storage, querying, and interactive chat sessions.
 
 ## Table of Contents
 
