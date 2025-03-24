@@ -26,6 +26,7 @@ pub async fn run_chat(
     ai_prompt: &str,
     context: Option<&str>,
     client: &Client<HttpConnector>,
+    provider: &str,
     api_url: &str,
     api_key: &str,
     ai_model: &str,
@@ -51,6 +52,7 @@ pub async fn run_chat(
     let chat_url = format!("{}/{}", api_url, "api/chat");
 
     let chat_request = chat_config::ChatRequest::new(
+        provider,
         ai_model,
         chat_url,
         api_key.to_string(),
@@ -87,6 +89,7 @@ pub async fn run_chat_with_history(
     initial_prompt: &str,
     context: Option<&str>,
     client: &Client<HttpConnector>,
+    provider: &str,
     api_url: &str,
     api_key: &str,
     ai_model: &str,
@@ -106,14 +109,12 @@ pub async fn run_chat_with_history(
             .await
             .context("Failed to create prompt")?;
 
-        // @TODO: Implement ChatProvider
-        let chat_url = format!("{}/{}", api_url, "api/chat");
-
         let options = model_options::OptionsBuilder::new().num_ctx(128000).build();
 
         let chat_request = chat_config::ChatRequest::new(
+            provider,
             ai_model,
-            chat_url,
+            api_url.to_string(),
             api_key.to_string(),
             false,
             CHAT_RESPONSE_FORMAT.to_string(),
