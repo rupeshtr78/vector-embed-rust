@@ -1,4 +1,4 @@
-use crate::app::constants::{CHAT_API_KEY, CHAT_API_URL, CHAT_RESPONSE_FORMAT};
+use crate::app::constants::CHAT_RESPONSE_FORMAT;
 use crate::chat::chat_config::{ai_chat, ChatMessage};
 use anyhow::Context;
 use chat_config::ChatResponse;
@@ -26,6 +26,8 @@ pub async fn run_chat(
     ai_prompt: &str,
     context: Option<&str>,
     client: &Client<HttpConnector>,
+    api_url: &str,
+    api_key: &str,
     ai_model: &str,
 ) -> anyhow::Result<ChatResponse> {
     info!("Starting LLM chat...");
@@ -46,12 +48,12 @@ pub async fn run_chat(
     // let template = prompt_template::get_template(&prompt, PROMPT_TEMPLATE_PATH)
     //     .context("Failed to get template")?;
 
-    let chat_url = format!("{}/{}", CHAT_API_URL, "api/chat");
+    let chat_url = format!("{}/{}", api_url, "api/chat");
 
     let chat_request = chat_config::ChatRequest::new(
         ai_model,
         chat_url,
-        CHAT_API_KEY.to_string(),
+        api_key.to_string(),
         false,
         CHAT_RESPONSE_FORMAT.to_string(),
         None,
@@ -85,6 +87,8 @@ pub async fn run_chat_with_history(
     initial_prompt: &str,
     context: Option<&str>,
     client: &Client<HttpConnector>,
+    api_url: &str,
+    api_key: &str,
     ai_model: &str,
 ) -> anyhow::Result<()> {
     println!("Starting LLM chat with history...");
@@ -102,15 +106,15 @@ pub async fn run_chat_with_history(
             .await
             .context("Failed to create prompt")?;
 
-        // @TODO: Implement ChatModel struct 
-        let chat_url = format!("{}/{}", CHAT_API_URL, "api/chat");
+        // @TODO: Implement ChatProvider
+        let chat_url = format!("{}/{}", api_url, "api/chat");
 
         let options = model_options::OptionsBuilder::new().num_ctx(128000).build();
 
         let chat_request = chat_config::ChatRequest::new(
             ai_model,
             chat_url,
-            CHAT_API_KEY.to_string(),
+            api_key.to_string(),
             false,
             CHAT_RESPONSE_FORMAT.to_string(),
             Some(options),

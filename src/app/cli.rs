@@ -176,7 +176,9 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
         }
         Commands::RagQuery {
             input,
-            model,
+            embed_model,
+            api_url,
+            api_key,
             ai_model,
             table,
             database,
@@ -185,7 +187,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             system_prompt,
         } => {
             let input_list = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
-            let embed_model = model.to_string();
+            let embed_model = embed_model.to_string();
             let vector_table = table.to_string();
             let db_uri = database.to_string();
             let whole_query: bool = whole_query
@@ -198,7 +200,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
 
             println!("Query command is run with below arguments:");
             println!(" Query: {:?}", input_list);
-            println!(" Embedding Model: {:?}", model);
+            println!(" Embedding Model: {:?}", embed_model);
             println!(" AI Model: {:?}", ai_model);
             println!(" Table: {:?}", table);
 
@@ -237,13 +239,20 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 input_list.first().unwrap(),
                 Some(&context),
                 &http_client,
+                &api_url,
+                &api_key,
                 &ai_model,
             ))
             .context("Failed to run chat")?;
 
             rt.shutdown_timeout(std::time::Duration::from_secs(1));
         }
-        Commands::Generate { prompt, ai_model } => {
+        Commands::Generate {
+            prompt,
+            api_url,
+            api_key,
+            ai_model,
+        } => {
             // let prompt = Commands::fetch_prompt_from_cli(Vec::new(), "Enter prompt: ");
             println!("Chat command is run with below arguments:");
             println!(" Prompt: {:?}", prompt);
@@ -258,6 +267,8 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 &prompt,
                 context,
                 &client,
+                &api_url,
+                &api_key,
                 &ai_model,
             ))
             .context("Failed to run chat")?;

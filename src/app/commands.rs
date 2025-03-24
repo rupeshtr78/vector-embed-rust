@@ -1,11 +1,12 @@
 use ::std::io::{self, Write};
 
 use crate::app::constants::{
-    EMBEDDING_MODEL, SYSTEM_PROMPT_PATH, VECTOR_DB_DIM_STR, VECTOR_DB_TABLE, VERSION,
-    AI_MODEL
+    AI_MODEL, EMBEDDING_MODEL, SYSTEM_PROMPT_PATH, VECTOR_DB_DIM_STR, VECTOR_DB_TABLE, VERSION,
 };
 use clap::{Parser, Subcommand, ValueEnum};
 use log::info;
+
+use super::constants::{CHAT_API_KEY, CHAT_API_URL};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -104,7 +105,15 @@ pub enum Commands {
         /// Provide the model to use for query embedding
         #[clap(short, long)]
         #[clap(default_value = EMBEDDING_MODEL)]
-        model: String,
+        embed_model: String,
+        /// Provide the API endpoint to use
+        #[clap(short = 'u', long)]
+        #[clap(default_value = CHAT_API_URL)]
+        api_url: String,
+        /// Provide the API key to use
+        #[clap(short = 'k', long)]
+        #[clap(default_value = CHAT_API_KEY)]
+        api_key: String,
         /// Provide the AI model to use for generation
         #[clap(short, long)]
         #[clap(default_value = AI_MODEL)]
@@ -133,6 +142,14 @@ pub enum Commands {
         /// Prompt for AI
         #[clap(short, long)]
         prompt: String,
+        /// Provide the API endpoint to use
+        #[clap(short, long)]
+        #[clap(default_value = CHAT_API_URL)]
+        api_url: String,
+        /// Provide the API key to use
+        #[clap(short, long)]
+        #[clap(default_value = CHAT_API_KEY)]
+        api_key: String,
         /// Provide the AI model to use for generation
         #[clap(short, long)]
         #[clap(default_value = AI_MODEL)]
@@ -359,7 +376,9 @@ pub fn dbg_cmd() {
         }
         Commands::RagQuery {
             input,
-            model,
+            embed_model,
+            api_url,
+            api_key,
             ai_model,
             table,
             database,
@@ -370,7 +389,9 @@ pub fn dbg_cmd() {
             println!("Lance Query command");
             let cli_input = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
             println!("Query: {:?}", cli_input);
-            println!("Model: {:?}", model);
+            println!("Model: {:?}", api_url);
+            println!("API Key: {:?}", api_key);
+            println!("Model: {:?}", embed_model);
             println!("AI Model: {:?}", ai_model);
             println!("Table: {:?}", table);
             println!("Database: {:?}", database);
@@ -378,9 +399,16 @@ pub fn dbg_cmd() {
             println!("File Query: {:?}", file_query);
             println!("System Prompt: {:?}", system_prompt);
         }
-        Commands::Generate { prompt, ai_model    } => {
+        Commands::Generate {
+            prompt,
+            api_url,
+            api_key,
+            ai_model,
+        } => {
             println!("Chat command");
             println!("Prompt: {:?}", prompt);
+            println!("API URL: {:?}", api_url);
+            println!("API Key: {:?}", api_key);
             println!("AI Model: {:?}", ai_model);
         }
     }
