@@ -1,4 +1,3 @@
-use crate::app::constants::CHAT_API_URL;
 use anyhow::{Context, Result};
 use app::cli;
 use app::commands::build_args;
@@ -24,8 +23,7 @@ fn main() -> Result<()> {
         .build()
         .context("Failed to build runtime")?;
 
-    // @TODO - make CHAT_API_URL based on chat provider ( openai vs ollama)
-    cli::cli(commands, rt, CHAT_API_URL).context("Failed to run Command")?;
+    cli::cli(commands, rt).context("Failed to run Command")?;
 
     println!("Exiting Chatbot");
 

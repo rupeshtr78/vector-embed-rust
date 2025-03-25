@@ -164,7 +164,6 @@ impl ChatRequest {
         match self.provider {
             LLMProvider::OpenAI => Ok(format!("{}/{}", OPEN_AI_URL, OPEN_AI_CHAT_API)),
             LLMProvider::Ollama => Ok(format!("{}/{}", self.api_url, constants::OLLAMA_CHAT_API)),
-            _ => Err(anyhow!("Unsupported provider: {}", "model")),
         }
     }
 
@@ -173,7 +172,6 @@ impl ChatRequest {
         match self.provider {
             LLMProvider::OpenAI => Ok(format!("{}/{}", OPEN_AI_URL, constants::OPEN_AI_EMBED_API)),
             LLMProvider::Ollama => Ok(format!("{}/{}", self.api_url, constants::OLLAMA_EMBED_API)),
-            _ => Err(anyhow!("Unsupported provider: {}", "model")),
         }
     }
 }

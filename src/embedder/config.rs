@@ -4,6 +4,10 @@ use tokio::sync::RwLock;
 #[derive(serde::Serialize, Debug, Clone)]
 
 pub struct EmbedRequest {
+    // @TODO - add provider and api_url
+    // pub provider: String,
+    // pub api_url: String,
+    // pub api_key: String,
     pub model: String,
     pub input: Vec<String>,
     pub metadata: Option<String>, // TODO - add metadata hashmap column JSON

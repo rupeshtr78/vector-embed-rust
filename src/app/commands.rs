@@ -27,6 +27,10 @@ pub enum Commands {
         /// provide the input string to use
         #[clap(short, long)]
         input: Vec<String>,
+        /// Provide the API endpoint to use
+        #[clap(short = 'u', long)]
+        #[clap(default_value = CHAT_API_URL)]
+        api_url: String,
         /// Provide the model to use
         #[clap(default_value = &EMBEDDING_MODEL)]
         #[clap(short, long)]
@@ -46,6 +50,10 @@ pub enum Commands {
         /// The query string to use
         #[clap(short, long)]
         input: Vec<String>,
+        /// Provide the API endpoint to use
+        #[clap(short = 'u', long)]
+        #[clap(default_value = CHAT_API_URL)]
+        api_url: String,
         /// Provide the model to use for query embedding
         #[clap(short, long)]
         #[clap(default_value = EMBEDDING_MODEL)]
@@ -78,6 +86,10 @@ pub enum Commands {
         /// The query string to use
         #[clap(short, long)]
         input: Vec<String>,
+        /// Provide the API endpoint to use
+        #[clap(short = 'u', long)]
+        #[clap(default_value = CHAT_API_URL)]
+        api_url: String,
         /// Provide the model to use for query embedding
         #[clap(short, long)]
         #[clap(default_value = EMBEDDING_MODEL)]
@@ -337,23 +349,27 @@ pub fn dbg_cmd() {
     match &commands {
         Commands::PgWrite {
             input,
+            api_url,
             model,
             table,
             dim,
         } => {
             println!("Write command");
             println!("Input: {:?}", input);
+            println!("API URL: {:?}", api_url);
             println!("Model: {:?}", model);
             println!("Table: {:?}", table);
             println!("Dimension: {:?}", dim);
         }
         Commands::PgQuery {
             input,
+            api_url,
             model,
             table,
         } => {
             println!("Query command");
             println!("Query: {:?}", input);
+            println!("API URL: {:?}", api_url);
             println!("Model: {:?}", model);
             println!("Table: {:?}", table);
         }
@@ -368,6 +384,7 @@ pub fn dbg_cmd() {
         }
         Commands::LanceQuery {
             input,
+            api_url,
             model,
             table,
             database,
@@ -376,6 +393,7 @@ pub fn dbg_cmd() {
         } => {
             println!("Lance Query command");
             println!("Query: {:?}", input);
+            println!("API URL: {:?}", api_url);
             println!("Model: {:?}", model);
             println!("Table: {:?}", table);
             println!("Database: {:?}", database);

@@ -1,5 +1,5 @@
 use crate::app::commands::Commands;
-use crate::app::constants::{VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
+use crate::app::constants::{self, VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
 use crate::lancevectordb;
 use crate::pgvectordb::run_embedding::run_embedding_load;
 use crate::pgvectordb::VectorDbConfig;
@@ -13,10 +13,11 @@ use log::{debug, info};
 use postgres::Client;
 use tokio::sync::Mutex;
 
-pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result<()> {
+pub fn cli(commands: Commands, rt: tokio::runtime::Runtime) -> Result<()> {
     match commands {
         Commands::PgWrite {
             input,
+            api_url,
             model,
             table,
             dim,
@@ -27,6 +28,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             let dimension = dim.to_string();
             info!("Using the Write arguments below:");
             info!(" Input Length: {:?}", input_list.len());
+            info!(" API URL: {:?}", api_url);
             info!(" Model: {:?}", model);
             info!(" Table: {:?}", table);
             info!(" Dimension: {:?}", dim);
@@ -47,7 +49,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             let http_client = HttpClient::new();
 
             rt.block_on(run_embedding_load(
-                url,
+                &api_url,
                 embed_model,
                 &input_list,
                 vector_table,
@@ -61,6 +63,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
         }
         Commands::PgQuery {
             input,
+            api_url,
             model,
             table,
         } => {
@@ -70,6 +73,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
 
             println!("Query to fetch context is run with below arguments:");
             println!(" Query: {:?}", input_list);
+            println!(" API URL: {:?}", api_url);
             println!(" Model: {:?}", model);
             println!(" Table: {:?}", table);
 
@@ -104,10 +108,14 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
             info!(" Chunk Size: {:?}", chunk_size);
 
             let http_client = HttpClient::new();
-            let embed_url = format!("{}/{}", url, "api/embed");
+            let embed_url = format!("{}/{}", constants::CHAT_API_URL, "api/embed");
 
-            rt.block_on(check_connection(&format!("{}/{}", url, "api/version")))
-                .context("Failed to check connection")?;
+            rt.block_on(check_connection(&format!(
+                "{}/{}",
+                constants::CHAT_API_URL,
+                "api/version"
+            )))
+            .context("Failed to check connection")?;
 
             // rt.block_on(check_client(
             //     &http_client,
@@ -128,6 +136,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
         }
         Commands::LanceQuery {
             input,
+            api_url,
             model,
             table,
             database,
@@ -146,6 +155,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime, url: &str) -> Result
                 .context("Failed to parse file_query flag")?;
 
             info!(" Query: {:?}", input_list);
+            info!(" API URL: {:?}", api_url);
             info!(" Model: {:?}", model);
             info!(" Table: {:?}", table);
             info!(" Whole Query: {:?}", whole_query);
