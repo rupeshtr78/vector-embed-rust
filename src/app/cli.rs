@@ -1,107 +1,15 @@
 use crate::app::commands::Commands;
-use crate::app::constants::{self, VECTOR_DB_HOST, VECTOR_DB_NAME, VECTOR_DB_PORT, VECTOR_DB_USER};
+use crate::app::constants;
 use crate::lancevectordb;
-use crate::pgvectordb::run_embedding::run_embedding_load;
-use crate::pgvectordb::VectorDbConfig;
-use crate::pgvectordb::{pg_vector, query_vector};
 use anyhow::Result;
 use anyhow::{Context, Ok};
 use hyper::client::connect::HttpInfo;
 use hyper::client::HttpConnector;
 use hyper::Client as HttpClient;
 use log::{debug, info};
-use postgres::Client;
-use tokio::sync::Mutex;
 
 pub fn cli(commands: Commands, rt: tokio::runtime::Runtime) -> Result<()> {
     match commands {
-        Commands::PgWrite {
-            input,
-            api_url,
-            model,
-            table,
-            dim,
-        } => {
-            let input_list = input;
-            let embed_model = model.to_string();
-            let vector_table = table.to_string();
-            let dimension = dim.to_string();
-            info!("Using the Write arguments below:");
-            info!(" Input Length: {:?}", input_list.len());
-            info!(" API URL: {:?}", api_url);
-            info!(" Model: {:?}", model);
-            info!(" Table: {:?}", table);
-            info!(" Dimension: {:?}", dim);
-
-            let db_config = VectorDbConfig::NewVectorDbConfig(
-                VECTOR_DB_HOST,
-                VECTOR_DB_PORT,
-                VECTOR_DB_USER,
-                VECTOR_DB_NAME,
-            );
-
-            // Initialize the client outside the thread and wrap it in Arc<Mutex>
-            let client: Mutex<Client> = pg_vector::pg_client(&db_config)
-                .context("Failed to create a new client")?
-                .into();
-
-            // Initialize the http client outside the thread // TODO wrap in Arc<Mutex>
-            let http_client = HttpClient::new();
-
-            rt.block_on(run_embedding_load(
-                &api_url,
-                embed_model,
-                &input_list,
-                vector_table,
-                dimension,
-                client,
-                &http_client,
-            ))
-            .context("Failed to run embedding load")?;
-
-            rt.shutdown_timeout(std::time::Duration::from_secs(1));
-        }
-        Commands::PgQuery {
-            input,
-            api_url,
-            model,
-            table,
-        } => {
-            let input_list = input;
-            let embed_model = model.to_string();
-            let vector_table = table.to_string();
-
-            println!("Query to fetch context is run with below arguments:");
-            println!(" Query: {:?}", input_list);
-            println!(" API URL: {:?}", api_url);
-            println!(" Model: {:?}", model);
-            println!(" Table: {:?}", table);
-
-            let db_config = VectorDbConfig::NewVectorDbConfig(
-                VECTOR_DB_HOST,
-                VECTOR_DB_PORT,
-                VECTOR_DB_USER,
-                VECTOR_DB_NAME,
-            );
-
-            let mut client =
-                pg_vector::pg_client(&db_config).context("Failed to create a new client")?;
-
-            // Initialize the http client outside the thread // TODO wrap in Arc<Mutex>
-            let http_client = HttpClient::new();
-
-            rt.block_on(query_vector::run_pg_vector_query(
-                &rt,
-                embed_model,
-                &input_list,
-                vector_table,
-                &mut client,
-                &http_client,
-            ))
-            .context("Failed to run query")?;
-
-            rt.shutdown_timeout(std::time::Duration::from_secs(1));
-        }
         Commands::Load { path, chunk_size } => {
             info!("Using the Load arguments below:");
             info!(" Path: {:?}", path);
