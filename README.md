@@ -1,6 +1,6 @@
 # Vector Embedding and RAG with LLM Integration in Rust
 
-This repository features a Rust-based system for managing vector embeddings, enabling queries through a LanceDB/PostgreSQL-backed vector database. It supports interaction with LLM models using the retrieved context (currently compatible with Ollama). The system is designed to handle tasks such as embedding generation, storage, querying, and engaging in interactive chat sessions.
+This repository features a Rust-based system for managing vector embeddings, enabling queries through a LanceDB vector database. It supports interaction with LLM models using the retrieved context (currently compatible with Ollama). The system is designed to handle tasks such as embedding generation, storage, querying, and engaging in interactive chat sessions.
 
 ## Table of Contents
 
@@ -28,7 +28,7 @@ The system is composed of several modules that handle different aspects of the e
 - **Config**: Manages configuration settings for embedding requests, database connections, and chat interactions.
 - **Constants**: Provides constant values used throughout the application.
 - **Embedding**: Contains logic for generating embeddings and persisting them to the database.
-- **VectorDB**: Handles interactions with the PostgreSQL/lancedb (TODO DI and abstraction) database for storing and querying vector embeddings.
+- **VectorDB**: Handles interactions with the lancedb vector database for storing and querying vector embeddings.
 - **Chat**: Integrates with the Ollama LLM model to provide interactive chat functionalities based on retrieved embeddings.
 - **TODO**: Chat History, Adding Tests, Adding PDF Support, Adding DI, Adding Abstraction for LanceDB, Adding Abstraction for Ollama, Adding Abstraction for Embedding Service.
 ## Features
@@ -42,7 +42,7 @@ The system is composed of several modules that handle different aspects of the e
     - Generate embeddings for text data using an external embedding service.
     - Store embeddings in LanceDB tables.
 - **CLI Interface**: Command-line interface for easy interaction with the tool.
-- **Database Persistence**: Store embeddings in a PostgreSQL database.
+- **Database Persistence**: Store embeddings in a lance vector database.
 - **Querying**: Query the database to find nearest neighbors based on vector embeddings.
 - **Chat Integration**: Interact with the Ollama LLM model using embeddings retrieved from the database.
 
@@ -51,7 +51,7 @@ The system is composed of several modules that handle different aspects of the e
 ### Prerequisites
 
 - Rust (latest stable version)
-- PostgreSQL Vector DB.
+- Lancedb Vector DB.
 - Docker (for running tests)
 - Active Ollama Service with `nomic-embed-text` or similar model.
 
@@ -71,10 +71,8 @@ The system is composed of several modules that handle different aspects of the e
 
 ### Running the Application
 
-1. Start the PostgreSQL vector database (if not already running).
-2. Ensure the Ollama service is running with the specified model.
-
-3. Run the application:
+1. Ensure the Ollama service is running with the specified model.
+2. Run the application:
 
    ```sh
    cargo run -- --help
@@ -115,7 +113,7 @@ Configuration settings for embedding requests, database connections, and chat in
 
 ## Testing
 
-The test suite requires PostgreSQL VectorDB and Ollama with an embedding model to be running in the correct configuration.
+The test suite requires Ollama with an embedding and LLM model to be running in the correct configuration.
 
 * TODO missing test
 
