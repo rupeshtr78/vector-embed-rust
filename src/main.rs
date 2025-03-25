@@ -24,7 +24,7 @@ fn main() -> Result<()> {
 
     cli::cli(commands, rt).context("Failed to run Command")?;
 
-    println!("Exiting Chatbot");
+    println!("Exiting application");
 
     Ok(())
 }
