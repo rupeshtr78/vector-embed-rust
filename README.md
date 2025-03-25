@@ -60,8 +60,8 @@ The system is composed of several modules that handle different aspects of the e
 1. Clone the repository:
 
    ```sh
-   git clone https://github.com/rupeshtr78/pg-vector-embed-rust.git
-   cd pg-vector-embed-rust
+   git clone https://github.com/rupeshtr78/vector-embed-rust.git
+   cd vector-embed-rust
    ```
 
 2. Install dependencies:
