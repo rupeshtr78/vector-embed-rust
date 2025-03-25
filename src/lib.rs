@@ -2,6 +2,8 @@
 #[allow(dead_code)]
 pub mod app;
 #[allow(unused)]
+mod chat;
+#[allow(unused)]
 #[allow(dead_code)]
 pub mod docsplitter;
 #[allow(unused)]
@@ -10,13 +12,5 @@ pub mod docsplitter;
 pub mod embedder;
 #[allow(unused)]
 pub mod lancevectordb;
-#[allow(unused)]
-#[allow(dead_code)]
-pub mod pgvectordb;
-#[allow(unused)]
-#[allow(dead_code)]
-pub mod tests;
-#[allow(unused)]
-mod chat;
 
 // const PROMPT_TEMPLATE_PATH: &str = "template/chat_template.hbs";

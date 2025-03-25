@@ -7,7 +7,6 @@ mod chat;
 mod docsplitter;
 mod embedder;
 mod lancevectordb;
-mod pgvectordb;
 
 fn main() -> Result<()> {
     println!("Starting Application");

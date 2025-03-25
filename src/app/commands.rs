@@ -1,8 +1,6 @@
 use ::std::io::{self, Write};
 
-use crate::app::constants::{
-    AI_MODEL, EMBEDDING_MODEL, SYSTEM_PROMPT_PATH, VECTOR_DB_DIM_STR, VECTOR_DB_TABLE, VERSION,
-};
+use crate::app::constants::{AI_MODEL, EMBEDDING_MODEL, SYSTEM_PROMPT_PATH, VERSION};
 use clap::{Parser, Subcommand, ValueEnum};
 use log::info;
 
@@ -22,47 +20,6 @@ pub struct Args {
 #[derive(Subcommand, Debug)]
 
 pub enum Commands {
-    /// Write embedding to Postgres Vector Database
-    PgWrite {
-        /// provide the input string to use
-        #[clap(short, long)]
-        input: Vec<String>,
-        /// Provide the API endpoint to use
-        #[clap(short = 'u', long)]
-        #[clap(default_value = CHAT_API_URL)]
-        api_url: String,
-        /// Provide the model to use
-        #[clap(default_value = &EMBEDDING_MODEL)]
-        #[clap(short, long)]
-        model: String,
-        /// Provide the table to use default is "from_rust"
-        #[clap(default_value = VECTOR_DB_TABLE)]
-        #[clap(short, long)]
-        table: String,
-        /// Provide the vector dimension to use default is 768
-        #[clap(default_value = VECTOR_DB_DIM_STR)]
-        #[clap(short, long)]
-        dim: String,
-    },
-
-    /// Query the PG Vector Database   
-    PgQuery {
-        /// The query string to use
-        #[clap(short, long)]
-        input: Vec<String>,
-        /// Provide the API endpoint to use
-        #[clap(short = 'u', long)]
-        #[clap(default_value = CHAT_API_URL)]
-        api_url: String,
-        /// Provide the model to use for query embedding
-        #[clap(short, long)]
-        #[clap(default_value = EMBEDDING_MODEL)]
-        model: String,
-        /// Provide the pg table to use to query
-        #[clap(short, long)]
-        #[clap(default_value = VECTOR_DB_TABLE)]
-        table: String,
-    },
     /// Get the version of the application
     Version {
         /// The version of the application
@@ -186,34 +143,6 @@ pub enum LogLevel {
 }
 
 impl Commands {
-    /// Checks if the command is a `Write` command.
-    pub fn is_write(&self) -> bool {
-        matches!(self, Commands::PgWrite { .. })
-    }
-
-    /// Returns an `Option` of `&Commands` if the command is a `Write` command.
-    pub fn write(&self) -> Option<&Commands> {
-        if let Commands::PgWrite { .. } = self {
-            Some(self)
-        } else {
-            None
-        }
-    }
-
-    /// Checks if the command is a `Query` command.
-    pub fn is_query(&self) -> bool {
-        matches!(self, Commands::PgQuery { .. })
-    }
-
-    /// Returns an `Option` of `&Commands` if the command is a `Query` command.
-    pub fn query(&self) -> Option<&Commands> {
-        if let Commands::PgQuery { .. } = self {
-            Some(self)
-        } else {
-            None
-        }
-    }
-
     /// Checks if the command is a `Version` command.
     pub fn is_version(&self) -> bool {
         matches!(self, Commands::Version { .. })
@@ -347,32 +276,6 @@ pub fn dbg_cmd() {
     };
 
     match &commands {
-        Commands::PgWrite {
-            input,
-            api_url,
-            model,
-            table,
-            dim,
-        } => {
-            println!("Write command");
-            println!("Input: {:?}", input);
-            println!("API URL: {:?}", api_url);
-            println!("Model: {:?}", model);
-            println!("Table: {:?}", table);
-            println!("Dimension: {:?}", dim);
-        }
-        Commands::PgQuery {
-            input,
-            api_url,
-            model,
-            table,
-        } => {
-            println!("Query command");
-            println!("Query: {:?}", input);
-            println!("API URL: {:?}", api_url);
-            println!("Model: {:?}", model);
-            println!("Table: {:?}", table);
-        }
         Commands::Version { version } => {
             println!("Version command");
             println!("Version: {:?}", version);
