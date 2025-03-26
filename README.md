@@ -30,7 +30,7 @@ The system is composed of several modules that handle different aspects of the e
 - **Embedding**: Contains logic for generating embeddings and persisting them to the database.
 - **VectorDB**: Handles interactions with the lancedb vector database for storing and querying vector embeddings.
 - **Chat**: Integrates with the Ollama LLM model to provide interactive chat functionalities based on retrieved embeddings.
-- **TODO**: Chat History, Adding Tests, Adding PDF Support, Adding DI, Adding Abstraction for LanceDB, Adding Abstraction for Ollama, Adding Abstraction for Embedding Service.
+- **TODO**: Https support, Adding Tests, Adding PDF Support, interactive cli 
 ## Features
 
 - **File Type Support**: The tool supports multiple file types including Rust (`rs`), Python (`py`), C++ (`cpp`), Java (`java`), JavaScript (`js`), TypeScript (`ts`), and text files. (TODO: Add PDF support)
@@ -76,9 +76,21 @@ The system is composed of several modules that handle different aspects of the e
 
    ```sh
    cargo run -- --help
+
+   
    ```
 
 ## Usage
+
+```
+Commands:
+  version      Get the version of the application
+  load         Load a directory of files into the lance vector database
+  lance-query  Query the Lance Vector Database
+  rag-query    Query the Lancedb and chat with the AI with context
+  generate     Chat with the AI
+  help         Print this message or the help of the given subcommand(s)
+```
 
 ### Commands
 
@@ -86,9 +98,6 @@ The application supports various commands and subcommands. Use the `--help` flag
 
 ```sh
 # Generate embeddings and store them in the database
-cargo run -- write --input "dog sound is called bark" --input "cat sounds is called purr" --model "nomic-embed-text" --table "from_rust2" --dim 768 --log-level "debug"
-
-# Load embeddings from a directory
 cargo run -- load -p /home/rupesh/aqrtr/gits/vector-embed-rust/src/scripts
 
 # Query the database for nearest neighbors
