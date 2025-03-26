@@ -1,6 +1,7 @@
 pub mod load_lancedb;
 pub mod query;
 use crate::docsplitter::code_loader;
+use crate::docsplitter::code_loader::chunk_embed_request_arc;
 use crate::embedder::fetch_embedding;
 use ::anyhow::Context;
 use ::anyhow::Result;
@@ -39,7 +40,10 @@ fn get_file_name(root_dir: &str) -> String {
 pub async fn run_embedding_pipeline(
     path: String,
     chunk_size: usize,
+    provider: &str,
     embed_url: &str,
+    api_key: &str,
+    model: &str,
     http_client: &Client<HttpConnector>,
 ) -> Result<()> {
     // Load the codebase into chunks
@@ -50,7 +54,7 @@ pub async fn run_embedding_pipeline(
     // Extract embed requests from the chunks
     let embed_requests: Vec<_> = chunks
         .iter()
-        .map(|chunk| chunk.embed_request_arc())
+        .map(|chunk| chunk_embed_request_arc(chunk, provider, embed_url, api_key, model))
         .collect();
 
     // Log embed requests for debugging
@@ -83,7 +87,7 @@ pub async fn run_embedding_pipeline(
         .await
         .context("Failed to open table")?;
     for (id, embed_request) in embed_requests.into_iter().enumerate() {
-        let embed_url = embed_url.to_string();
+        // let embed_url = embed_url.to_string();
         let http_client = http_client.clone();
         let table_schema = table_schema.clone();
         let table = table.clone();
@@ -91,7 +95,7 @@ pub async fn run_embedding_pipeline(
         // Spawn a task to fetch and insert embeddings in parallel
         let task = tokio::spawn(async move {
             // Fetch embeddings
-            let embed_response = fetch_embedding(&embed_url, &embed_request, &http_client)
+            let embed_response = fetch_embedding(&embed_request, &http_client)
                 .await
                 .context("Failed to fetch embeddings")?;
             info!("Embedding Response: {:?}", embed_response.embeddings.len());

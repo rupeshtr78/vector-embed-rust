@@ -1,5 +1,4 @@
 use crate::app::commands::Commands;
-use crate::app::constants;
 use crate::lancevectordb;
 use anyhow::Result;
 use anyhow::{Context, Ok};
@@ -10,20 +9,26 @@ use log::{debug, info};
 
 pub fn cli(commands: Commands, rt: tokio::runtime::Runtime) -> Result<()> {
     match commands {
-        Commands::Load { path, chunk_size } => {
+        Commands::Load {
+            path,
+            chunk_size,
+            llm_provider,
+            embed_model,
+            api_url,
+            api_key,
+        } => {
             info!("Using the Load arguments below:");
             info!(" Path: {:?}", path);
             info!(" Chunk Size: {:?}", chunk_size);
+            info!(" LLM Provider: {:?}", llm_provider);
+            info!(" Embedding Model: {:?}", embed_model);
+            info!(" API URL: {:?}", api_url);
 
             let http_client = HttpClient::new();
-            let embed_url = format!("{}/{}", constants::CHAT_API_URL, "api/embed");
+            // let embed_url = format!("{}/{}", constants::CHAT_API_URL, "api/embed");
 
-            rt.block_on(check_connection(&format!(
-                "{}/{}",
-                constants::CHAT_API_URL,
-                "api/version"
-            )))
-            .context("Failed to check connection")?;
+            rt.block_on(check_connection(&format!("{}/{}", api_url, "api/version")))
+                .context("Failed to check connection")?;
 
             // rt.block_on(check_client(
             //     &http_client,
@@ -34,7 +39,10 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime) -> Result<()> {
             rt.block_on(lancevectordb::run_embedding_pipeline(
                 path,
                 chunk_size,
-                &embed_url,
+                llm_provider.as_str(),
+                &api_url,
+                &api_key,
+                embed_model.as_str(),
                 &http_client,
             ))
             .context("Failed to run lancevectordb")?;
@@ -44,7 +52,9 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime) -> Result<()> {
         }
         Commands::LanceQuery {
             input,
+            llm_provider,
             api_url,
+            api_key,
             model,
             table,
             database,
@@ -63,6 +73,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime) -> Result<()> {
                 .context("Failed to parse file_query flag")?;
 
             info!(" Query: {:?}", input_list);
+            info!(" LLM Provider: {:?}", llm_provider);
             info!(" API URL: {:?}", api_url);
             info!(" Model: {:?}", model);
             info!(" Table: {:?}", table);
@@ -81,6 +92,9 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime) -> Result<()> {
             let content = rt
                 .block_on(lancevectordb::query::run_query(
                     &mut db,
+                    llm_provider.as_str(),
+                    api_url.as_str(),
+                    api_key.as_str(),
                     embed_model,
                     &input_list,
                     &vector_table,
@@ -90,7 +104,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime) -> Result<()> {
                 ))
                 .context("Failed to run query")?;
 
-            debug!("Query Response: {:?}", content);
+            println!("Query Response: {:?}", content);
         }
         Commands::RagQuery {
             input,
@@ -139,6 +153,9 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime) -> Result<()> {
             let content = rt
                 .block_on(lancevectordb::query::run_query(
                     &mut db,
+                    llm_provider.as_str(),
+                    api_url.as_str(),
+                    api_key.as_str(),
                     embed_model,
                     &input_list,
                     &vector_table,

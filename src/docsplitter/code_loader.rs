@@ -1,4 +1,3 @@
-use crate::app::constants::EMBEDDING_MODEL;
 use crate::embedder::config::EmbedRequest;
 use anyhow::anyhow;
 use anyhow::Context;
@@ -100,26 +99,44 @@ impl FileChunk {
             |s| s.to_str().unwrap_or("None").to_string(),
         )
     }
+}
 
-    pub fn embed_request(&self) -> EmbedRequest {
-        EmbedRequest {
-            model: EMBEDDING_MODEL.to_string(),
-            input: self.content.clone(),
-            metadata: Some(
-                self.file_path
-                    .file_name()
-                    .unwrap_or(OsStr::new("None"))
-                    .to_str()
-                    .unwrap_or("None")
-                    .to_string(),
-            ),
-            chunk_number: Some(self.chunk_number),
-        }
+pub fn chunk_embed_request(
+    chunk: &FileChunk,
+    provider: &str,
+    api_url: &str,
+    api_key: &str,
+    model: &str,
+) -> EmbedRequest {
+    EmbedRequest {
+        provider: provider.to_string(),
+        api_url: api_url.to_string(),
+        api_key: api_key.to_string(),
+        model: model.to_string(),
+        input: chunk.content.clone(),
+        metadata: Some(
+            chunk
+                .file_path
+                .file_name()
+                .unwrap_or(OsStr::new("None"))
+                .to_str()
+                .unwrap_or("None")
+                .to_string(),
+        ),
+        chunk_number: Some(chunk.chunk_number),
     }
+}
 
-    pub fn embed_request_arc(&self) -> Arc<RwLock<EmbedRequest>> {
-        Arc::new(RwLock::new(self.embed_request()))
-    }
+pub fn chunk_embed_request_arc(
+    chunk: &FileChunk,
+    provider: &str,
+    api_url: &str,
+    api_key: &str,
+    model: &str,
+) -> Arc<RwLock<EmbedRequest>> {
+    Arc::new(RwLock::new(chunk_embed_request(
+        chunk, provider, api_url, api_key, model,
+    )))
 }
 
 /// Load a codebase into chunks of text.

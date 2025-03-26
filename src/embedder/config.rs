@@ -1,13 +1,14 @@
 // add configs here
+use crate::app::constants;
 use tokio::sync::RwLock;
 
 #[derive(serde::Serialize, Debug, Clone)]
 
 pub struct EmbedRequest {
     // @TODO - add provider and api_url
-    // pub provider: String,
-    // pub api_url: String,
-    // pub api_key: String,
+    pub provider: String,
+    pub api_url: String,
+    pub api_key: String,
     pub model: String,
     pub input: Vec<String>,
     pub metadata: Option<String>, // TODO - add metadata hashmap column JSON
@@ -44,15 +45,21 @@ impl<'a> EmbedRequest {
     /// Create a new EmbedRequest thread safe Arc
     #[allow(non_snake_case)]
     pub fn NewArcEmbedRequest(
+        provider: &str,
+        api_url: &str,
+        api_key: &str,
         model: &String,
         input: &Vec<String>,
         metadata: &String,
         chunk_number: Option<i32>,
     ) -> std::sync::Arc<RwLock<EmbedRequest>> {
         let input: Vec<String> = input.iter().map(|s| s.to_string()).collect();
-        let model = model.to_string();
+        // let model = model.to_string();
         let data = EmbedRequest {
-            model,
+            provider: provider.to_string(),
+            api_url: api_url.to_string(),
+            api_key: api_key.to_string(),
+            model: model.to_string(),
             input,
             metadata: Some(metadata.to_string()),
             chunk_number,
@@ -64,6 +71,9 @@ impl<'a> EmbedRequest {
     /// Create a new EmbedRequest not thread safe
     #[allow(non_snake_case)]
     pub fn NewEmbedRequest(
+        provider: &str,
+        api_url: &str,
+        api_key: &str,
         model: &str,
         input: Vec<&str>,
         chunk_number: Option<i32>,
@@ -71,6 +81,9 @@ impl<'a> EmbedRequest {
         let input: Vec<String> = input.iter().map(|s| s.to_string()).collect();
         let model = model.to_string();
         EmbedRequest {
+            provider: provider.to_string(),
+            api_url: api_url.to_string(),
+            api_key: api_key.to_string(),
             model,
             input,
             metadata: None,
@@ -81,11 +94,30 @@ impl<'a> EmbedRequest {
     #[allow(non_snake_case)]
     pub fn EmptyEmbedRequest() -> EmbedRequest {
         EmbedRequest {
+            provider: "".to_string(),
+            api_url: "".to_string(),
+            api_key: "".to_string(),
             model: "".to_string(),
             input: vec![],
             metadata: None,
             chunk_number: None,
         }
+    }
+
+    pub fn get_embed_url(&self) -> String {
+        match self.provider.to_lowercase().as_str() {
+            "openai" => format!(
+                "{}/{}",
+                constants::OPEN_AI_URL,
+                constants::OPEN_AI_EMBED_API
+            ),
+            "ollama" => format!("{}/{}", self.api_url, constants::OLLAMA_EMBED_API),
+            _ => panic!("Unsupported provider"),
+        }
+    }
+
+    pub fn get_api_key(&self) -> String {
+        self.api_key.clone()
     }
 }
 

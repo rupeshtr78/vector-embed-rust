@@ -2,7 +2,7 @@ use anyhow::Context;
 use anyhow::Result;
 use hyper::client::HttpConnector;
 use hyper::Client as HttpClient;
-use hyper::{body, Client, Uri};
+use hyper::{body, Client};
 use hyper::{Body, Request};
 use log::debug;
 use std::str;
@@ -21,16 +21,17 @@ use config::{EmbedRequest, EmbedResponse};
 /// Returns:
 /// - EmbedResponse
 pub async fn fetch_embedding(
-    url: &str,
     embed_data: &Arc<RwLock<EmbedRequest>>,
     http_client: &HttpClient<HttpConnector>,
 ) -> Result<EmbedResponse> {
     debug!("Running Embedding");
     let embed_data = embed_data.read().await;
 
-    let response = create_embed_request(url, &embed_data, http_client)
+    let embed_url = embed_data.get_embed_url();
+
+    let response = create_embed_request(&embed_data, http_client)
         .await
-        .with_context(|| format!("Failed to fetch embedding from {}", url))?;
+        .with_context(|| format!("Failed to fetch embedding from api url {}", embed_url))?;
 
     debug!("Finished Running Embedding");
     Ok(response)
@@ -43,15 +44,13 @@ pub async fn fetch_embedding(
 /// Returns:
 /// - Result<EmbedResponse, Box<dyn Error + Send + Sync>>
 pub async fn create_embed_request(
-    url: &str,
     req: &EmbedRequest,
     http_client: &Client<HttpConnector>,
 ) -> Result<EmbedResponse> {
     debug!("Creating Embed Request");
-    // Create an HTTP connector.
-    // let client = Client::new();
-    // Construct a URI.
-    let url = url.parse::<Uri>()?;
+    // Get the embed URL and API key from the request
+    let embed_url = req.get_embed_url();
+    let api_key = req.get_api_key();
 
     // Serialize the data to a JSON string, handling potential errors
     let json_data = req.to_json()?;
@@ -60,8 +59,9 @@ pub async fn create_embed_request(
     // Build the HTTP GET request using the http crate.
     let request = Request::builder()
         .method("POST")
-        .uri(&url)
+        .uri(&embed_url)
         .header("Content-Type", "application/json")
+        .header("Authorization", format!("Bearer {}", api_key))
         .body(data_body)
         .context("Failed to build request")?;
 
@@ -69,7 +69,7 @@ pub async fn create_embed_request(
     let response_body = http_client
         .request(request)
         .await
-        .with_context(|| format!("Failed to send request to {}", &url))?;
+        .with_context(|| format!("Failed to send request to {}", &embed_url))?;
 
     debug!("Embedding Response status: {}", response_body.status());
     // let body = hyper::body::to_bytes(response.into_body()).await?;

@@ -1,4 +1,3 @@
-use crate::app::constants::CHAT_API_URL;
 use crate::embedder;
 use crate::embedder::config::EmbedRequest;
 use anyhow::{anyhow, Context, Result};
@@ -29,6 +28,9 @@ use log::{debug, error};
 /// - Result<Vec<String>>
 pub async fn run_query(
     db: &mut Connection,
+    provider: &str,
+    api_url: &str,
+    api_key: &str,
     embed_model: String,
     input_list: &Vec<String>,
     vector_table: &str,
@@ -48,14 +50,24 @@ pub async fn run_query(
         return Err(anyhow!("Query Input is empty"));
     }
 
-    let url = format!("{}/{}", CHAT_API_URL, "api/embed");
+    // let url = format!("{}/{}", CHAT_API_URL, "api/embed");
 
     // create embedder request for query
-    let query_request_arc =
-        EmbedRequest::NewArcEmbedRequest(&embed_model, input_list, &"".to_string(), None);
-    let query_response = embedder::fetch_embedding(&url, &query_request_arc, http_client)
+    let query_request_arc = EmbedRequest::NewArcEmbedRequest(
+        provider,
+        api_url,
+        api_key,
+        &embed_model,
+        input_list,
+        &"".to_string(),
+        None,
+    );
+
+    let embed_url = query_request_arc.read().await.get_embed_url();
+
+    let query_response = embedder::fetch_embedding(&query_request_arc, http_client)
         .await
-        .context("Failed to fetch embedding")?;
+        .with_context(|| format!("Failed to fetch embedding response from {}", &embed_url))?;
 
     let query_vector = query_response.embeddings[0].clone();
 
