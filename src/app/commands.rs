@@ -37,16 +37,40 @@ pub enum Commands {
         #[clap(short, long)]
         #[clap(default_value = "2048")]
         chunk_size: usize,
+        /// Provide the model to use for query embedding
+        #[clap(short = 'm', long)]
+        #[clap(default_value = "ollama")]
+        llm_provider: String,
+        /// Provide the model to use for query embedding
+        #[clap(short, long)]
+        #[clap(default_value = EMBEDDING_MODEL)]
+        embed_model: String,
+        /// Provide the API endpoint to use
+        #[clap(short = 'u', long)]
+        #[clap(default_value = CHAT_API_URL)]
+        api_url: String,
+        /// Provide the API key to use
+        #[clap(short = 'k', long)]
+        #[clap(default_value = CHAT_API_KEY)]
+        api_key: String,
     },
     /// Query the Lance Vector Database
     LanceQuery {
         /// The query string to use
         #[clap(short, long)]
         input: Vec<String>,
+        /// Provide the provider to use for query embedding
+        #[clap(short = 'p', long)]
+        #[clap(default_value = "ollama")]
+        llm_provider: String,
         /// Provide the API endpoint to use
         #[clap(short = 'u', long)]
         #[clap(default_value = CHAT_API_URL)]
         api_url: String,
+        /// Provide the API key to use
+        #[clap(short = 'k', long)]
+        #[clap(default_value = CHAT_API_KEY)]
+        api_key: String,
         /// Provide the model to use for query embedding
         #[clap(short, long)]
         #[clap(default_value = EMBEDDING_MODEL)]
@@ -280,14 +304,27 @@ pub fn dbg_cmd() {
             println!("Version command");
             println!("Version: {:?}", version);
         }
-        Commands::Load { path, chunk_size } => {
+        Commands::Load {
+            path,
+            chunk_size,
+            llm_provider,
+            embed_model,
+            api_url,
+            api_key,
+        } => {
             println!("Load command");
             println!("Path: {:?}", path);
             println!("Chunk size: {:?}", chunk_size);
+            println!("LLM Provider: {:?}", llm_provider);
+            println!("Embed Model: {:?}", embed_model);
+            println!("API URL: {:?}", api_url);
+            println!("API Key: {:?}", api_key);
         }
         Commands::LanceQuery {
             input,
+            llm_provider,
             api_url,
+            api_key,
             model,
             table,
             database,
@@ -296,7 +333,9 @@ pub fn dbg_cmd() {
         } => {
             println!("Lance Query command");
             println!("Query: {:?}", input);
+            println!("LLM Provider: {:?}", llm_provider);
             println!("API URL: {:?}", api_url);
+            println!("API Key: {:?}", api_key);
             println!("Model: {:?}", model);
             println!("Table: {:?}", table);
             println!("Database: {:?}", database);
