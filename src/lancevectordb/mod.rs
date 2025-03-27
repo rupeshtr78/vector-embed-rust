@@ -44,7 +44,7 @@ fn get_file_name(root_dir: &str) -> String {
 /// # Returns
 /// * `Result<()>` - The result of the operation
 pub async fn run_embedding_pipeline(
-    path: String,
+    path: &String,
     chunk_size: usize,
     provider: &str,
     embed_url: &str,

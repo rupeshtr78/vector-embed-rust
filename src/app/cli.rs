@@ -47,7 +47,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime) -> Result<()> {
             // .context("Failed to check client")?;
 
             rt.block_on(lancevectordb::run_embedding_pipeline(
-                path,
+                &path,
                 chunk_size,
                 llm_provider.as_str(),
                 &api_url,
@@ -72,9 +72,9 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime) -> Result<()> {
             file_context,
         } => {
             let input_list = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
-            let embed_model = model.to_string();
-            let vector_table = table.to_string();
-            let db_uri = database.to_string();
+            // let embed_model = model.to_string();
+            // let vector_table = table.to_string();
+            // let db_uri = database.to_string();
             let whole_query: bool = whole_query
                 .parse()
                 .context("Failed to parse whole_query flag")?;
@@ -95,7 +95,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime) -> Result<()> {
 
             // Initialize the database
             let mut db = rt
-                .block_on(lancedb::connect(&db_uri).execute())
+                .block_on(lancedb::connect(&database).execute())
                 .context("Failed to connect to the database")?;
 
             // Query the database
@@ -105,9 +105,9 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime) -> Result<()> {
                     llm_provider.as_str(),
                     api_url.as_str(),
                     api_key.as_str(),
-                    embed_model,
+                    model.as_str(),
                     &input_list,
-                    &vector_table,
+                    &table,
                     &https_client,
                     whole_query,
                     file_context,
@@ -130,17 +130,17 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime) -> Result<()> {
             system_prompt,
         } => {
             let input_list = Commands::fetch_prompt_from_cli(input.clone(), "Enter query: ");
-            let embed_model = embed_model.to_string();
-            let vector_table = table.to_string();
-            let db_uri = database.to_string();
+            // let embed_model = embed_model.to_string();
+            // let vector_table = table.to_string();
+            // let db_uri = database.to_string();
             let whole_query: bool = whole_query
                 .parse()
                 .context("Failed to parse whole_query flag")?;
             let file_context: bool = file_context
                 .parse()
                 .context("Failed to parse file_query flag")?;
-            let system_prompt = system_prompt.as_str();
-            let provider = llm_provider.as_str();
+            // let system_prompt = system_prompt.as_str();
+            // let provider = llm_provider.as_str();
 
             println!("Query command is run with below arguments:");
             println!(" Query: {:?}", input_list);
@@ -156,7 +156,7 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime) -> Result<()> {
 
             // Initialize the database
             let mut db = rt
-                .block_on(lancedb::connect(&db_uri).execute())
+                .block_on(lancedb::connect(&database).execute())
                 .context("Failed to connect to the database")?;
 
             // Query the database
@@ -166,9 +166,9 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime) -> Result<()> {
                     llm_provider.as_str(),
                     api_url.as_str(),
                     api_key.as_str(),
-                    embed_model,
+                    embed_model.as_str(),
                     &input_list,
-                    &vector_table,
+                    &table,
                     &https_client,
                     whole_query,
                     file_context,
@@ -184,11 +184,11 @@ pub fn cli(commands: Commands, rt: tokio::runtime::Runtime) -> Result<()> {
             // let system_prompt = "template/spark_prompt.txt";
             // let system_prompt = "template/spark-engineer.txt";
             rt.block_on(crate::chat::run_chat_with_history(
-                system_prompt,
+                system_prompt.as_str(),
                 input_list.first().unwrap(),
                 Some(&context),
                 &https_client,
-                provider,
+                llm_provider.as_str(),
                 &api_url,
                 &api_key,
                 &ai_model,

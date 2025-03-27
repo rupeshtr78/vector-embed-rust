@@ -21,12 +21,12 @@ pub struct EmbedResponse {
     pub embeddings: Vec<Vec<f32>>,
 }
 
-impl<'a> EmbedRequest {
+impl EmbedRequest {
     pub fn to_json(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(self)
     }
 
-    pub fn add_input(&mut self, input: &'a str) {
+    pub fn add_input(&mut self, input: &str) {
         self.input.push(input.to_string());
     }
 
@@ -48,8 +48,8 @@ impl<'a> EmbedRequest {
         provider: &str,
         api_url: &str,
         api_key: &str,
-        model: &String,
-        input: &Vec<String>,
+        model: &str,
+        input: &[String],
         metadata: &String,
         chunk_number: Option<i32>,
     ) -> std::sync::Arc<RwLock<EmbedRequest>> {
