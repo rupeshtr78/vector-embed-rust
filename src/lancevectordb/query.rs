@@ -1,13 +1,14 @@
 use crate::embedder;
 use crate::embedder::config::EmbedRequest;
+// use hyper::client::HttpConnector;
+// use ::hyper::Client as HttpClient;
+use crate::lancevectordb::HttpsClient;
 use anyhow::{anyhow, Context, Result};
 use arrow_array::{Array, StringArray};
 use arrow_array::{Int32Array, RecordBatch};
 use arrow_schema::DataType::{Int32, Utf8};
 use arrow_schema::SchemaRef;
 use futures::StreamExt;
-use hyper::client::HttpConnector;
-use ::hyper::Client as HttpClient;
 use lancedb::arrow::SendableRecordBatchStream;
 use lancedb::query::ExecutableQuery;
 use lancedb::query::IntoQueryVector;
@@ -34,7 +35,7 @@ pub async fn run_query(
     embed_model: String,
     input_list: &Vec<String>,
     vector_table: &str,
-    http_client: &HttpClient<HttpConnector>,
+    http_client: &HttpsClient,
     whole_query: bool,
     file_context: bool,
 ) -> Result<Vec<String>> {

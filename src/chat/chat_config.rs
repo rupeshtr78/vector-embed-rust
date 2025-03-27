@@ -1,10 +1,10 @@
 use crate::app::constants::{self, OPEN_AI_CHAT_API, OPEN_AI_URL};
 use crate::chat::model_options::Options;
+use crate::lancevectordb::HttpsClient;
 use anyhow::Result;
 use anyhow::{anyhow, Context};
-use hyper::client::HttpConnector;
-use hyper::{body, Client};
-use hyper::{Body, Request};
+use bytes::Bytes;
+use http_body_util::Full;
 use log::debug;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -184,7 +184,7 @@ impl ChatRequest {
 /// * `Result<ChatResponse>` - The result of the chat response
 pub async fn ai_chat(
     chat_request: &Arc<RwLock<ChatRequest>>,
-    http_client: &Client<HttpConnector>,
+    http_client: &HttpsClient,
 ) -> Result<ChatResponse> {
     let chat_request = chat_request.read().await;
 
@@ -193,9 +193,9 @@ pub async fn ai_chat(
 
     // Serialize the data to a JSON string, handling potential errors
     let chat_body = chat_request.create_chat_body()?;
-    let request_body = Body::from(chat_body);
+    let request_body = Full::new(Bytes::from(chat_body));
 
-    let request = Request::builder()
+    let request = http::Request::builder()
         .method("POST")
         .uri(&chat_url)
         .header("Content-Type", "application/json")
@@ -214,8 +214,10 @@ pub async fn ai_chat(
     }
     debug!("Chat Response Status: {:?}", response.status());
 
-    // Parse the response body
-    let body = body::to_bytes(response).await?;
+    // get the response body into bytes
+    let body = http_body_util::BodyExt::collect(response.into_body())
+        .await?
+        .to_bytes();
     // debug!("Response body: {:?}", body.len());
 
     let response_body: ChatResponse =
