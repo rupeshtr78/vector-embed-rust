@@ -1,9 +1,8 @@
 use crate::app::constants::CHAT_RESPONSE_FORMAT;
 use crate::chat::chat_config::{ai_chat, ChatMessage};
+use crate::lancevectordb::HttpsClient;
 use anyhow::Context;
 use chat_config::ChatResponse;
-use hyper::client::HttpConnector;
-use hyper::Client;
 use log::{debug, info};
 use serde_json::Value;
 use std::io::Write;
@@ -25,7 +24,7 @@ pub async fn run_chat(
     system_prompt: &str,
     ai_prompt: &str,
     context: Option<&str>,
-    client: &Client<HttpConnector>,
+    client: &HttpsClient,
     provider: &str,
     api_url: &str,
     api_key: &str,
@@ -88,7 +87,7 @@ pub async fn run_chat_with_history(
     system_prompt: &str,
     initial_prompt: &str,
     context: Option<&str>,
-    client: &Client<HttpConnector>,
+    client: &HttpsClient,
     provider: &str,
     api_url: &str,
     api_key: &str,
