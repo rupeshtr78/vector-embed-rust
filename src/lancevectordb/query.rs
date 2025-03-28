@@ -165,7 +165,7 @@ pub async fn query_vector_table(
 /// - table_column: &str
 /// Returns:
 /// - Result<Vec<String>>
-fn get_content_from_stream(
+pub fn get_content_from_stream(
     batches: &Vec<lancedb::error::Result<RecordBatch>>,
     table_column: &str,
 ) -> Result<Vec<String>> {
@@ -193,7 +193,7 @@ fn get_content_from_stream(
 /// - schema: SchemaRef
 /// Returns:
 /// - Result<Vec<String>>
-fn get_column_data_from_batch(
+pub fn get_column_data_from_batch(
     table_column: &str,
     batch_ref: &RecordBatch,
     schema: SchemaRef,
@@ -333,7 +333,7 @@ async fn query_content_based_on_chunks(
 /// Returns:
 /// - Result<SendableRecordBatchStream>
 #[allow(dead_code)]
-async fn query_content_based_on_metadata(
+pub async fn query_content_based_on_metadata(
     table: &Table,
     metadata: Vec<String>,
 ) -> Result<SendableRecordBatchStream> {

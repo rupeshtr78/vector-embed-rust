@@ -255,7 +255,7 @@ async fn check_connection(client: &HttpsClient, url: &str) -> Result<()> {
 }
 
 type HttpsClient = LegacyClient<HttpsConnector<HttpConnector>, Full<Bytes>>;
-fn get_https_client() -> Result<HttpsClient> {
+pub fn get_https_client() -> Result<HttpsClient> {
     // Install the crypto provider required by rustls
     match default_provider().install_default() {
         Result::Ok(_) => debug!("Crypto provider installed successfully"),
