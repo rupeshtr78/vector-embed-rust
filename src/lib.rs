@@ -12,5 +12,5 @@ pub mod docsplitter;
 pub mod embedder;
 #[allow(unused)]
 pub mod lancevectordb;
-
+mod tests;
 // const PROMPT_TEMPLATE_PATH: &str = "template/chat_template.hbs";

@@ -5,9 +5,9 @@ use anyhow::{Context, Ok};
 use arrow::array::{FixedSizeListArray, StringArray, TimestampSecondArray};
 use arrow_array::types::Float32Type;
 use arrow_array::{Int32Array, RecordBatch, RecordBatchIterator};
-use arrow_schema::Schema as ArrowSchema;
 use arrow_schema::TimeUnit;
 use arrow_schema::{DataType, Field};
+use arrow_schema::{Schema as ArrowSchema, Schema};
 use lancedb::index::scalar::FtsIndexBuilder;
 use lancedb::index::Index;
 use lancedb::{Connection, Table};
@@ -52,7 +52,7 @@ impl TableSchema {
         }
     }
 
-    fn create_schema(&self) -> ArrowSchema {
+    pub fn create_schema(&self) -> ArrowSchema {
         ArrowSchema::new(vec![
             Arc::clone(&self.id),
             Arc::clone(&self.content),
@@ -68,7 +68,13 @@ impl TableSchema {
         self.name.as_str()
     }
 
-    fn empty_batch(&self) -> Result<RecordBatch> {
+    #[allow(dead_code)]
+    /// Create an empty RecordBatch with the schema can be used for testing
+    /// Arguments:
+    /// - &self: &TableSchema
+    /// Returns:
+    /// - Result<RecordBatch> - The RecordBatch (Arrow)
+    pub fn empty_batch(&self) -> Result<RecordBatch> {
         RecordBatch::try_new(
             Arc::new(self.create_schema()),
             vec![
@@ -92,7 +98,7 @@ impl TableSchema {
     }
 }
 
-/// Create a table in the database with the given schema
+/// Create a table in the database with the given schema.
 /// Arguments:
 /// - db: &mut Connection
 /// - table_schema: &TableSchema
@@ -113,7 +119,26 @@ pub async fn create_lance_table(db: &mut Connection, table_schema: &TableSchema)
         .await
         .context("Failed to create a table")?;
 
-    // insert into table
+    log::info!("Table created successfully");
+
+    Ok(())
+}
+
+#[allow(dead_code)]
+/// Insert an empty batch into the database
+/// Arguments:
+/// - db: &mut Connection
+/// - table_schema: &TableSchema
+/// - table_name: &str
+/// - arrow_schema: Arc<Schema>
+/// Returns:
+/// - Result<(), Box<dyn Error>>
+async fn insert_empty_batch(
+    db: &mut Connection,
+    table_schema: &TableSchema,
+    table_name: &str,
+    arrow_schema: Arc<Schema>,
+) -> Result<()> {
     let table = db.open_table(table_name).execute().await?;
     let mut writer = table.merge_insert(&["id", "content"]);
     writer.when_not_matched_insert_all();
@@ -131,9 +156,6 @@ pub async fn create_lance_table(db: &mut Connection, table_schema: &TableSchema)
         .execute(Box::new(record_batch))
         .await
         .context("Failed to insert records")?;
-
-    log::info!("Table created successfully");
-
     Ok(())
 }
 
@@ -162,7 +184,7 @@ pub async fn insert_embeddings(
 
     if let Err(e) = write_result {
         log::error!("Failed to insert records: {:?}", e);
-        return Ok(());
+        return Err(anyhow::Error::msg("Failed to insert records"));
     }
 
     log::info!("Records inserted successfully");
